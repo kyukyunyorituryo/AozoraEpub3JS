@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html
+  xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:epub="http://www.idpf.org/2007/ops"
+  xml:lang="ja"
+  <% if (bookInfo.Vertical) { %>
+  class="hltr"
+  <% } else { %>
+  class="vrtl"
+  <% } %>
+>
+<head>
+  <link rel="stylesheet" type="text/css" href="../style/book-style.css"/>
+  <title><%= title %></title>
+</head>
+
+<% if (kindle) { %>
+<% kindle_cls = " kindle"; %>
+<% } else { %>
+<% kindle_cls = ""; %>
+<% } %>
+<body class="p-titlepage<%= kindle_cls %>">
+  <div class="main vrtl block-align-center">
+    <% if (PUBLISHER) { %>
+      <div class="publisher"><%= PUBLISHER %></div>
+      <br/>
+    <% } %>
+
+    <% if (CREATOR) { %>
+      <br/>
+    <% } %>
+    <% if (SUBCREATOR) { %>
+      <br/>
+    <% } %>
+
+    <div class="book-title start-2em">
+      <% if (SERIES) { %>
+        <div class="series book-title-before"><p><%= SERIES %></p></div>
+      <% } %>
+      <div class="title book-title-main"><p><%= TITLE %></p></div>
+      <% if (ORGTITLE) { %>
+        <div class="orgtitle pt1"><%= ORGTITLE %></div>
+      <% } %>
+      <% if (SUBTITLE) { %>
+        <div class="subtitle pt1"><%= SUBTITLE %></div>
+      <% } %>
+      <% if (SUBORGTITLE) { %>
+        <div class="suborgtitle pt2"><%= SUBORGTITLE %></div>
+      <% } %>
+    </div>
+    <% if (CREATOR) { %>
+      <div class="creator btm pb2 author"><%= CREATOR %></div>
+    <% } %>
+    <% if (SUBCREATOR) { %>
+      <div class="subcreator btm pb2 author"><%= SUBCREATOR %></div>
+    <% } %>
+  </div>
+</body>
+</html>

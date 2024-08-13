@@ -1,0 +1,35 @@
+{
+  "name": "aozoraepub3js",
+  "version": "1.0.0",
+  "description": "This is a tool to convert text files with notes from Aozora Bunko into ePub 3 files.",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "test": "mocha --require esm"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kyukyunyorituryo/AozoraEpub3JS.git"
+  },
+  "keywords": [
+    "aozora",
+    "bunko"
+  ],
+  "author": "kyukyunyorituryo",
+  "license": "GPL-3.0-or-later",
+  "bugs": {
+    "url": "https://github.com/kyukyunyorituryo/AozoraEpub3JS/issues"
+  },
+  "homepage": "https://github.com/kyukyunyorituryo/AozoraEpub3JS#readme",
+  "dependencies": {
+    "encoding-japanese": "^2.2.0",
+    "jimp": "^0.22.12",
+    "jszip": "^3.10.1",
+    "node-unrar-js": "^2.0.2",
+    "uuid": "^10.0.0"
+  },
+  "devDependencies": {
+    "chai": "^5.1.1",
+    "mocha": "^10.7.0"
+  }
+}
