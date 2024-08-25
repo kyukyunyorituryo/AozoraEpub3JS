@@ -4,18 +4,18 @@ import { fileURLToPath } from 'url';
 // Helper function to resolve the directory name in ES module
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-//import Epub3Writer from  './writer/Epub3Writer.js';
-//import AozoraEpub3Converter from  './converter/AozoraEpub3Converter.js';
+import Epub3Writer from  './writer/Epub3Writer.js';
+import AozoraEpub3Converter from  './converter/AozoraEpub3Converter.js';
 
 //const Epub3Writer = require('./writer/Epub3Writer.js');
 //const AozoraEpub3Converter = require('./converter/AozoraEpub3Converter.js');
 const jarPath = path.join(__dirname, '/');
-//const epub3Writer = new Epub3Writer(jarPath+"template/");
-//console.log(epub3Writer)
-/*
+const epub3Writer = new Epub3Writer(jarPath+"template/");
+console.log(epub3Writer)
+
 const ao = new AozoraEpub3Converter(epub3Writer, jarPath);
 //console.log(ao)
-*/
+/**/
 
 
 /*
@@ -169,4 +169,3 @@ import LogAppender from  './util/LogAppender.js';
 const la = new LogAppender();
 LogAppender.error(1,"あ")
 console.log(la)
-/

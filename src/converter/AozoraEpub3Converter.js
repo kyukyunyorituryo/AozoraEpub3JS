@@ -390,10 +390,10 @@ export default class AozoraEpub3Converter {
     // 外字フォント一覧取得
     const gaijiPath = writer.getGaijiFontPath(); // 仮定のパス
     if (fs.existsSync(gaijiPath) && fs.statSync(gaijiPath).isDirectory()) {
-      const utf16FontMap = new Map();
-      const utf32FontMap = new Map();
-      const ivs16FontMap = new Map();
-      const ivs32FontMap = new Map();
+      let utf16FontMap = new Map();
+      let utf32FontMap = new Map();
+      let ivs16FontMap = new Map();
+      let ivs32FontMap = new Map();
       let subPath = "";
 
       const fontFiles = fs.readdirSync(gaijiPath);
@@ -445,6 +445,18 @@ export default class AozoraEpub3Converter {
     }
     AozoraEpub3Converter.inited = true;
 
+
+    /** 本文があれば改ページするフラグ */
+    this.pageBreakTrigger = null; // Assuming PageBreakType is an external dependency
+
+    /** 左右中央の前の空行を除外するフラグ */
+    this.skipMiddleEmpty = false;
+
+    /** 改ページ前の空行 */
+    this.printEmptyLines = 0;
+
+    /** 直前で見出しが出力された行番号 複数出力防止用 */
+    this.lastChapterLine = -1;
   }
   /** 挿絵なし設定 */
   setNoIllust(noIllust) {
@@ -3523,23 +3535,7 @@ else {
   }
   	////////////////////////////////////////////////////////////////
 	// 出力処理
-	/** 本文があれば改ページするフラグ */
-  constructor() {
-    ////////////////////////////////////////////////////////////////////
-    // 出力処理
 
-    /** 本文があれば改ページするフラグ */
-    this.pageBreakTrigger = null; // Assuming PageBreakType is an external dependency
-
-    /** 左右中央の前の空行を除外するフラグ */
-    this.skipMiddleEmpty = false;
-
-    /** 改ページ前の空行 */
-    this.printEmptyLines = 0;
-
-    /** 直前で見出しが出力された行番号 複数出力防止用 */
-    this.lastChapterLine = -1;
-  }
   	/** 改ページ用のトリガを設定
 	 * 設定済みだが連続行で書かれていたり空行除外で改行されていない場合は上書きされて無視される
 	 * @param trigger 改ページトリガ nullなら改ページ設定キャンセル
