@@ -8,7 +8,7 @@
 * electronでデスクトップアプリにしたい
 
 ### 現状
-jsではJavaのライブラリが似た機能のライブラリを探す必要がある。使っているライブラリを置き換える必要がある。
+jsではJavaのライブラリが似た機能のライブラリを探す必要がある。
 
 * common compress、jszip
 * unrar、node-unrar-js
@@ -22,10 +22,9 @@ node.jsで同じファイル構造にすると、設定ファイルの変更が�
 
 ### どの箇所を移植し終えたか
 最低限のAozoraEpub3の部分だけ抽出してJSに移植しているが、どの箇所を移植し終えたかをメモっておく。
+
 　はじめはcommonjsで書いていたが、パッケージ化するときにes moduleに書き換えた。
- 
-「下記のJavaコードをコメントは書き換えないで、es moduleに書き換えて。」という指示が一番しっくり来た。読ませたコードに今度は「テストコードを書いて」と指示したりもした。
-テストコードをChatGPTに書かせるがmochaを使ったもので慣れていなかったのであまり使いこなせていない。
+
 
 
 そのまま使う
@@ -53,7 +52,7 @@ node.jsで同じファイル構造にすると、設定ファイルの変更が�
 * writer
 
 converterフォルダー　
-* AozoraEpub3Converter.java constructorが重複している。
+* AozoraEpub3Converter.java　確認済み
 * AozoraGaijiConverter.java　確認済みやや不安
 * GlyphConverter.java　未使用
 * JisConverter.java　確認済み
@@ -97,7 +96,7 @@ utilフォルダー
 * LogAppender.java
 
 writerフォルダー
-* Epub3ImageWriter.java 
+* Epub3ImageWriter.java まだ
 * Epub3Writer.java　ejsとjszipで圧縮しようかと
 
 AozoraEpub3JSの説明
