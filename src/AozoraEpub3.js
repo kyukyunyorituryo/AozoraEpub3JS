@@ -2,19 +2,19 @@ import fs from 'fs';
 import path from 'path';
 import { Command } from 'commander';
 import PropertiesReader from 'properties-reader';
-import { ZipFile } from 'yazl';
-import { Archive } from '@node-unrar-js/node-unrar-js';
-import { AozoraEpub3Converter } from './AozoraEpub3Converter.js';
-import { ImageInfoReader } from './ImageInfoReader.js';
-import { BookInfo } from './BookInfo.js';
-import { SectionInfo } from './SectionInfo.js';
-import { Detector } from './Detector.js';
-import { LogAppender } from './LogAppender.js';
-import { Epub3ImageWriter } from './Epub3ImageWriter.js';
-import { Epub3Writer } from './Epub3Writer.js';
+//import { ZipFile } from 'yazl';
+import Archive from 'node-unrar-js';
+import AozoraEpub3Converter from  './converter/AozoraEpub3Converter.js';
+import ImageInfoReader from './image/ImageInfoReader.js';
+import BookInfo from './info/BookInfo.js';
+import SectionInfo from './info/SectionInfo.js';
+import Detector from  './util/Detector.js';
+import LogAppender from  './util/LogAppender.js';
+//import Epub3ImageWriter from './writer/Epub3ImageWriter.js';
+import Epub3Writer from  './writer/Epub3Writer.js';
 
 /** コマンドライン実行用mainとePub3変換関数 */
-export class AozoraEpub3 {
+export default class AozoraEpub3 {
     static VERSION = "1.1.1b24Q";
 
     /** コマンドライン実行用 */
