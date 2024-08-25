@@ -11,13 +11,13 @@ import AozoraEpub3Converter from  './converter/AozoraEpub3Converter.js';
 //const AozoraEpub3Converter = require('./converter/AozoraEpub3Converter.js');
 const jarPath = path.join(__dirname, '/');
 const epub3Writer = new Epub3Writer(jarPath+"template/");
-console.log(epub3Writer)
+//console.log(epub3Writer)
 
 const ao = new AozoraEpub3Converter(epub3Writer, jarPath);
 //console.log(ao)
 /**/
-
-
+import AozoraEpub3 from  './AozoraEpub3.js';
+const ae = new AozoraEpub3();
 /*
 converterフォルダー
 */
