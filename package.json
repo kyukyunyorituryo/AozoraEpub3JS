@@ -22,10 +22,12 @@
   },
   "homepage": "https://github.com/kyukyunyorituryo/AozoraEpub3JS#readme",
   "dependencies": {
+    "commander": "^12.1.0",
     "encoding-japanese": "^2.2.0",
     "jimp": "^0.22.12",
     "jszip": "^3.10.1",
     "node-unrar-js": "^2.0.2",
+    "properties-reader": "^2.3.0",
     "uuid": "^10.0.0"
   },
   "devDependencies": {
