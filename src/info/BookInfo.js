@@ -742,40 +742,6 @@ class ChapterLineInfo {
     this.setMetaInfo(titleType, pubFirst, this.metaLines, this.metaLineStart, this.firstCommentLineNum);
   }
 
-  /** ファイル名からタイトルと著者名を取得 */
-  static getFileTitleCreator(fileName) {
-    // ファイル名からタイトル取得
-    let titleCreator = ["", ""];
-    let noExtName = fileName.replace(/\.[A-Z|a-z|0-9]+$/, "").replace(/\.[A-Z|a-z|0-9]+$/, "");
-    // 後ろの括弧から校正情報等を除外
-    noExtName = noExtName.replace(/（/g, "\\(").replace(/）/g, "\\)");
-    noExtName = noExtName.replace(/\(青空[^\)]*\)/g, "");
-    noExtName = noExtName.replace(/\([^\)]*(校正|軽量|表紙|挿絵|補正|修正|ルビ|Rev|rev)[^\)]*\)/g, "");
-
-    let m = noExtName.match(/\[|［(.+?)\]|］[ |　]*(.*)[ |　]*$/);
-    if (m) {
-      titleCreator[0] = m[2];
-      titleCreator[1] = m[1];
-    } else {
-      m = noExtName.match(/^(.*?)( |　)*(\(|（)/);
-      if (m) {
-        titleCreator[0] = m[1];
-      } else {
-        // 一致しなければ拡張子のみ除外
-        titleCreator[0] = noExtName;
-      }
-    }
-    // trimして長さが0ならnullにする
-    if (titleCreator[0] !== null) {
-      titleCreator[0] = titleCreator[0].trim();
-      if (titleCreator[0].length === 0) titleCreator[0] = null;
-    }
-    if (titleCreator[1] !== null) {
-      titleCreator[1] = titleCreator[1].trim();
-      if (titleCreator[1].length === 0) titleCreator[1] = null;
-    }
-    return titleCreator;
-  }
 
   /** ファイルまたはURLの文字列から画像を読み込んで表紙イメージとして設定 */
   loadCoverImage(path) {
@@ -842,3 +808,53 @@ BookInfo.TITLE_MIDDLE = 1;
 BookInfo.TITLE_HORIZONTAL = 2;
 
 //module.exports = BookInfo;
+
+
+//メソッドを関数化した
+/**
+ * ファイル名からタイトルと著者名を取得
+ * @param {string} fileName ファイル名
+ * @returns {Array<string|null>} タイトルと著者名を格納した配列
+ */
+export function getFileTitleCreator(fileName) {
+  // ファイル名からタイトル取得
+  let titleCreator = [null, null];
+  let noExtName = fileName
+    .replace(/\.\w+$/, '')
+    .replace(/\.\w+$/, '');
+
+  // 後ろの括弧から校正情報等を除外
+  noExtName = noExtName
+    .replace(/（/g, '(')
+    .replace(/）/g, ')');
+  noExtName = noExtName
+    .replace(/\(青空[^\)]*\)/g, '')
+    .replace(/\([^\)]*(校正|軽量|表紙|挿絵|補正|修正|ルビ|Rev|rev)[^\)]*\)/g, '');
+
+  let m = noExtName.match(/[\[［](.+?)[\]］][ 　]*(.*)[ 　]*$/);
+  if (m) {
+    titleCreator[0] = m[2];
+    titleCreator[1] = m[1];
+  } else {
+    m = noExtName.match(/^(.*?)( |　)*(\(|（)/);
+    if (m) {
+      titleCreator[0] = m[1];
+    } else {
+      // 一致しなければ拡張子のみ除外
+      titleCreator[0] = noExtName;
+    }
+  }
+
+  // trimして長さが0ならnullにする
+  if (titleCreator[0] != null) {
+    titleCreator[0] = titleCreator[0].trim();
+    if (titleCreator[0].length === 0) titleCreator[0] = null;
+  }
+  if (titleCreator[1] != null) {
+    titleCreator[1] = titleCreator[1].trim();
+    if (titleCreator[1].length === 0) titleCreator[1] = null;
+  }
+
+  return titleCreator;
+}
+
