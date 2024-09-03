@@ -11,6 +11,7 @@ import PageBreakType from './PageBreakType.js';
 import LatinConverter from './LatinConverter.js';
 import AozoraGaijiConverter from './AozoraGaijiConverter.js';
 import LogAppender from '../util/LogAppender.js';
+import BookInfo from '../info/BookInfo.js';
 export default class AozoraEpub3Converter {
   //---------------- Properties ----------------//
   /** UTF-8以外の文字を代替文字に変換 */
