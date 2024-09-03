@@ -9,7 +9,7 @@ export default class Detector {
             const detectedEncoding = encoding.detect(data);
             return detectedEncoding;
           } catch (err) {
-            throw new Error(`Error reading file: ${err.message}`);
+            console.error(err);
           }
     }
 }
