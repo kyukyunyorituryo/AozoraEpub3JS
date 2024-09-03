@@ -1,103 +1,3 @@
-> <?xml version="1.0" encoding="UTF-8"?>
-> <!DOCTYPE html>
-> <html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops" lang="ja" xml:lang="ja">
-> <head>
-> <meta charset="UTF-8"/>
-> <title><%= title %></title>
-> <style type="text/css">
-> <% if (bookInfo.TocVertical) { %>
-> @page {margin:.5em .5em 0 0;}
-> html {
-> 	writing-mode: vertical-rl;
-> 	-webkit-writing-mode: vertical-rl;
-> 	-epub-writing-mode: vertical-rl;
-> }
-> h1 {font-size:1.5em; padding-top:1em;}
-> li {padding:0 .25em 0 0;}
-> li a {text-decoration:none; border-right-width:1px; border-right-style:solid; padding-right: 1px;}
-> .tcy {
->   -webkit-text-combine: horizontal;
->   -webkit-text-combine-upright: all;
->   text-combine-upright: all;
->   -epub-text-combine: horizontal;
-> }
-> .upr {
-> text-orientation: upright;
-> -webkit-text-orientation: upright;
-> -epub-text-orientation: upright;
-> }
-> <% } else { %>
-> @page {margin:.5em 0 0 .5em;}
-> html {
-> 	writing-mode: horizontal-tb;
-> 	-webkit-writing-mode: horizontal-tb;
-> 	-epub-writing-mode: horizontal-tb;
-> }
-> h1 {font-size:1.5em; text-align:center;}
-> li {padding:.25em 0 0 0;}
-> li a {text-decoration:none; border-bottom-width:1px; border-bottom-style:solid; padding-right: 1px;}
-> <% } %>
-> li {list-style:none;}
-> li.chapter {list-style:disc; line-height:1.75em;}
-> nav#landmarks { display:none; }
-> </style>
-> </head>
-> 
-> <body>
-> ## epub3 landmarks nav ==========================
-> 	<nav epub:type="landmarks" id="landmarks" hidden="">
-> 		<h2>Guide</h2>
-> 		<ol>
-> <% if (bookInfo.InsertCoverPage) { %>
-> 			<li><a epub:type="cover" href="xhtml/cover.xhtml">表紙</a></li>
-> <% } %>
-> <% if (bookInfo.InsertTocPage) { %>
-> 			<li><a epub:type="toc" href="nav.xhtml">目次</a></li>
-> <% } %>
-> <% if (title_page) { %>
-> 			<li><a epub:type="titlepage" href="xhtml/title.xhtml">扉</a></li>
-> <% } %>
-> <% sections.forEach(function(sectionInfo) { %>
-> 			<li><a epub:type="bodymatter" href="xhtml/<%= sectionInfo.SectionId %>.xhtml">本文</a></li>
-> <% }) %>
-> 		</ol>
-> 	</nav>
-> ## epub3 toc nav ================================
-> 	<nav epub:type="toc" id="toc">
-> 		<h1>目　次</h1>
-> 		<ol>
-> <% if (bookInfo.InsertCoverPage && bookInfo.InsertCoverPageToc) { %>
-> 			<li class="chapter" id="toccover"><a href="xhtml/cover.xhtml"><%= cover_name %></a></li>
-> <% } %>
-> <% 
-> let idx = 0;
-> chapters.forEach(function(chapter) {
->   if (chapter.ChapterName) {
->     idx += 1;
->     if ((!chapter.LevelStart && idx > 1) || (!navNest && idx !== 1)) { %>
-> </li>
-> <%   }
->     if (navNest) {
->       chapter.LevelStart.forEach(function() { %>
-> 		<ol>
-> <%     });
->     }
->     if (chapter.ChapterId) { %>
-> 			<li><a href="xhtml/<%= chapter.SectionId %>.xhtml#<%= chapter.ChapterId %>"><%= chapter.ChapterName %></a>
-> <%   } else { %>
-> 			<li><a href="xhtml/<%= chapter.SectionId %>.xhtml"><%= chapter.ChapterName %></a>
-> <%   }
->     if (navNest) {
->       chapter.LevelEnd.forEach(function() { %>
-> 		</li></ol>
-> <%     });
->     }
->   }
-> }); %>
-> 		</li></ol>
-> 	</nav>
-> </body>
-> </html>
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops" lang="ja" xml:lang="ja">
@@ -116,10 +16,10 @@ h1 {font-size:1.5em; padding-top:1em;}
 li {padding:0 .25em 0 0;}
 li a {text-decoration:none; border-right-width:1px; border-right-style:solid; padding-right: 1px;}
 .tcy {
-  -webkit-text-combine: horizontal;
+  -webkit-text-combine:         horizontal;
   -webkit-text-combine-upright: all;
-  text-combine-upright: all;
-  -epub-text-combine: horizontal;
+  text-combine-upright:         all;
+  -epub-text-combine:           horizontal;
 }
 .upr {
 text-orientation: upright;
@@ -129,9 +29,9 @@ text-orientation: upright;
 <% } else { %>
 @page {margin:.5em 0 0 .5em;}
 html {
-	writing-mode: horizontal-tb;
-	-webkit-writing-mode: horizontal-tb;
-	-epub-writing-mode: horizontal-tb;
+	writing-mode:horizontal-tb;
+	-webkit-writing-mode:horizontal-tb;
+	-epub-writing-mode:horizontal-tb;
 }
 h1 {font-size:1.5em; text-align:center;}
 li {padding:.25em 0 0 0;}
@@ -144,7 +44,7 @@ nav#landmarks { display:none; }
 </head>
 
 <body>
-## epub3 landmarks nav ==========================
+<%-- epub3 landmarks nav --%>
 	<nav epub:type="landmarks" id="landmarks" hidden="">
 		<h2>Guide</h2>
 		<ol>
@@ -159,41 +59,40 @@ nav#landmarks { display:none; }
 <% } %>
 <% sections.forEach(function(sectionInfo) { %>
 			<li><a epub:type="bodymatter" href="xhtml/<%= sectionInfo.SectionId %>.xhtml">本文</a></li>
-<% }) %>
+<% break; }); %>
 		</ol>
 	</nav>
-## epub3 toc nav ================================
+<%-- epub3 toc nav --%>
 	<nav epub:type="toc" id="toc">
 		<h1>目　次</h1>
 		<ol>
 <% if (bookInfo.InsertCoverPage && bookInfo.InsertCoverPageToc) { %>
 			<li class="chapter" id="toccover"><a href="xhtml/cover.xhtml"><%= cover_name %></a></li>
 <% } %>
-<% 
-let idx = 0;
-chapters.forEach(function(chapter) {
-  if (chapter.ChapterName) {
-    idx += 1;
-    if ((!chapter.LevelStart && idx > 1) || (!navNest && idx !== 1)) { %>
+<% let idx = 0; %>
+<% chapters.forEach(function(chapter) { %>
+<% if (chapter.ChapterName) { %>
+<% idx += 1; %>
+<% if ((!chapter.LevelStart && idx > 1) || (!navNest && idx != 1)) { %>
 </li>
-<%   }
-    if (navNest) {
-      chapter.LevelStart.forEach(function() { %>
+<% } %>
+<% if (navNest) { %>
+<% chapter.LevelStart.forEach(function() { %>
 		<ol>
-<%     });
-    }
-    if (chapter.ChapterId) { %>
+<% }); %>
+<% } %>
+<% if (chapter.ChapterId) { %>
 			<li><a href="xhtml/<%= chapter.SectionId %>.xhtml#<%= chapter.ChapterId %>"><%= chapter.ChapterName %></a>
-<%   } else { %>
+<% } else { %>
 			<li><a href="xhtml/<%= chapter.SectionId %>.xhtml"><%= chapter.ChapterName %></a>
-<%   }
-    if (navNest) {
-      chapter.LevelEnd.forEach(function() { %>
+<% } %>
+<% if (navNest) { %>
+<% chapter.LevelEnd.forEach(function() { %>
 		</li></ol>
-<%     });
-    }
-  }
-}); %>
+<% }); %>
+<% } %>
+<% } %>
+<% }); %>
 		</li></ol>
 	</nav>
 </body>
