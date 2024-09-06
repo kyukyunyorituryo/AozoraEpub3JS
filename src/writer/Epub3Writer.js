@@ -876,7 +876,7 @@ export default class Epub3Writer {
                     //fis.close();
                     //zos.closeArchiveEntry();
  
-                    zos.file(`${this.templatePath}${outFileName}`, await fs.read(path.resolve(__dirname,outFileName))); 
+                    zos.file(`${this.templatePath}${outFileName}`, await fs.readFileSync(path.resolve(__dirname,outFileName))); 
             
                 }
             }
@@ -893,7 +893,7 @@ export default class Epub3Writer {
                 //fis.close();
                 //zos.closeArchiveEntry();
 
-                zos.file(gaijiFile, await fs.read(path.resolve(__dirname,outFileName))); 
+                zos.file(gaijiFile, fs.readFileSync(path.resolve(__dirname,outFileName))); 
             }
         }
 
@@ -919,16 +919,22 @@ export default class Epub3Writer {
                 }
                 if (bookInfo.coverImage) {
                     // プレビューで編集されている場合
-                    zos.putArchiveEntry(new ZipArchiveEntry(`${this.OPSPATH}${this.IMAGES_PATH}${this.coverImageInfo.getOutFileName()}`));
+                    //zos.putArchiveEntry(new ZipArchiveEntry(`${this.OPSPATH}${this.IMAGES_PATH}${this.coverImageInfo.getOutFileName()}`));
                     this.writeCoverImage(bookInfo.coverImage, zos, this.coverImageInfo);
-                    zos.closeArchiveEntry();
-                    bookInfo.coverImage = null; // 同じ画像が使われている場合は以後はファイルから読み込ませる
+                    //zos.closeArchiveEntry();
+                    //zos.file(`${this.OPSPATH}${this.IMAGES_PATH}${this.coverImageInfo.getOutFileName()}`, zosdata); 
+                    bookInfo.coverImage = null; // 同じ画像が使われている場合は以後はファイルから読み込ませる   
+                   
+
+
                 } else {
                     const bais = new Buffer.from(this.coverImageBytes);
-                    zos.putArchiveEntry(new ZipArchiveEntry(`${this.OPSPATH}${this.IMAGES_PATH}${this.coverImageInfo.getOutFileName()}`));
+                    //zos.putArchiveEntry(new ZipArchiveEntry(`${this.OPSPATH}${this.IMAGES_PATH}${this.coverImageInfo.getOutFileName()}`));
                     this.writeCoverImage(bais, zos, this.coverImageInfo);
-                    zos.closeArchiveEntry();
-                    bais.close();
+                    //zos.closeArchiveEntry();
+                    //bais.close();
+
+                    zos.file(`${this.OPSPATH}${this.IMAGES_PATH}${this.coverImageInfo.getOutFileName()}`, bais); 
                 }
                 this.imageInfos.shift(); // カバー画像は出力済みなので削除
                 if (this.jProgressBar) this.jProgressBar.value += 10;
@@ -952,11 +958,16 @@ export default class Epub3Writer {
                         } else {
                             const imageFile = imageInfoReader.getImageFile(srcImageFileName);
                             if (imageFile.exists()) {
-                                const fis = fs.createReadStream(imageFile);
-                                zos.putArchiveEntry(new ZipArchiveEntry(`${this.OPSPATH}${this.IMAGES_PATH}${imageInfo.getOutFileName()}`));
+                                //const fis = fs.createReadStream(imageFile);
+                                //zos.putArchiveEntry(new ZipArchiveEntry(`${this.OPSPATH}${this.IMAGES_PATH}${imageInfo.getOutFileName()}`));
                                 await this.writeImage(fis, zos, imageInfo);
-                                zos.closeArchiveEntry();
-                                fis.close();
+                                //zos.closeArchiveEntry();
+                                //fis.close();
+
+                                const fis =fs.readFileSync(path.resolve(imageFile));     
+                                zos.file(`${this.OPSPATH}${this.IMAGES_PATH}${imageInfo.getOutFileName()}`, fis); 
+
+
                                 this.outImageFileNames.delete(srcImageFileName);
                             }
                         }
@@ -1014,12 +1025,7 @@ export default class Epub3Writer {
         } catch (e) {
             e.printStackTrace();
         } finally {
-            try {
-                // ePub3出力ファイルを閉じる
-                if (zos) zos.close();
-            } catch (e) {
-                e.printStackTrace();
-            }
+
             // メンバ変数解放
             this.velocityContext = null;
             this.bookInfo = null;
@@ -1046,6 +1052,7 @@ export default class Epub3Writer {
                 }
                 this.zos.putArchiveEntry(new ZipArchiveEntry(this.OPS_PATH + this.IMAGES_PATH + imageInfo.getOutFileName()));
                 // Zip, Rarからの直接読み込みは失敗するので一旦バイト配列にする
+                /*
                 const baos = new ByteArrayOutputStream();
                 const bufferedInputStream = new BufferedInputStream(is, 16384);
                 await bufferedInputStream.transferTo(baos);
@@ -1055,6 +1062,10 @@ export default class Epub3Writer {
                 await this.writeImage(bais, this.zos, imageInfo);
                 bais.close();
                 this.zos.closeArchiveEntry();
+*/
+                const fis =fs.readFileSync(path.resolve(imageFile));     
+                zos.file(this.OPS_PATH + this.IMAGES_PATH + imageInfo.getOutFileName(), is); 
+
             }
             if (this.canceled) return;
             if (this.jProgressBar) this.jProgressBar.setValue(this.jProgressBar.getValue() + 10);
@@ -1149,22 +1160,32 @@ export default class Epub3Writer {
         this.zos.putArchiveEntry(new ZipArchiveEntry(this.OPS_PATH + this.XHTML_PATH + sectionId + ".xhtml"));
 
         // ヘッダ出力
-        let bw = new BufferedWriter(new OutputStreamWriter(this.zos, "UTF-8"));
+        //let bw = new BufferedWriter(new OutputStreamWriter(this.zos, "UTF-8"));
         // 出力開始するセクションに対応したSectionInfoを設定
-        this.velocityContext.put("sectionInfo", sectionInfo);
-        Velocity.mergeTemplate(this.templatePath + this.OPS_PATH + this.XHTML_PATH + this.XHTML_HEADER_EJS, "UTF-8", this.velocityContext, bw);
-        await bw.flush();
+        //this.velocityContext.put("sectionInfo", sectionInfo);
+        this.ejsData.sectionInfo=sectionInfo;
+        //Velocity.mergeTemplate(this.templatePath + this.OPS_PATH + this.XHTML_PATH + this.XHTML_HEADER_EJS, "UTF-8", this.velocityContext, bw);
+        //await bw.flush();
+                    
+        const bw =fs.readFileSync(path.resolve(__dirname, this.templatePath + this.OPS_PATH + this.XHTML_PATH + this.XHTML_HEADER_EJS), 'utf-8');
+        const zosdata=ejs.render(bw,this.ejsData)      
+        zos.file(this.OPS_PATH + this.XHTML_PATH + sectionId + ".xhtml", this.zos); 
     }
 
     /** セクション終了.
      * @throws IOException */
     async endSection() {
         // フッタ出力
-        let bw = new BufferedWriter(new OutputStreamWriter(this.zos, "UTF-8"));
-        Velocity.mergeTemplate(this.templatePath + this.OPS_PATH + this.XHTML_PATH + this.XHTML_FOOTER_EJS, "UTF-8", this.velocityContext, bw);
-        await bw.flush();
+       // let bw = new BufferedWriter(new OutputStreamWriter(this.zos, "UTF-8"));
+        //Velocity.mergeTemplate(this.templatePath + this.OPS_PATH + this.XHTML_PATH + this.XHTML_FOOTER_EJS, "UTF-8", this.velocityContext, bw);
+        //await bw.flush();
 
-        this.zos.closeArchiveEntry();
+        //this.zos.closeArchiveEntry();
+
+
+        const bw =fs.readFileSync(path.resolve(__dirname, this.templatePath + this.OPS_PATH + this.XHTML_PATH + this.XHTML_FOOTER_EJS), 'utf-8');
+        const zosdata=ejs.render(bw,this.ejsData)      
+        zos.file(this.zos, zosdata); 
     }
 
     /** 章を追加 */
