@@ -13,6 +13,7 @@ import LogAppender from './util/LogAppender.js';
 //import Epub3ImageWriter from './writer/Epub3ImageWriter.js';
 import Epub3Writer from './writer/Epub3Writer.js';
 import { fileURLToPath } from 'url';
+import encoding from 'encoding-japanese';
 // Helper function to resolve the directory name in ES module
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -42,6 +43,8 @@ const propFileName = "AozoraEpub3.ini";
 /** 出力先パス */
 let dstPath = null;
 
+//メイン関数　即時関数
+(async function main() {
 // コマンドライン オプション設定
 const options = new Command();
 options
@@ -62,8 +65,7 @@ options
 
 options.parse(process.argv);
 
-//メイン関数　即時関数
-(async function main() {
+
 
   if (options.args.length === 0) {
     options.help();
@@ -103,7 +105,6 @@ options.parse(process.argv);
   // ePub出力クラス初期化
   let epub3Writer = new Epub3Writer(`${jarPath}template/`);
   //let epub3ImageWriter = new Epub3ImageWriter(`${jarPath}template/`);
-
   // 設定ファイルの読み込み
   if (commandLine.ini) {
     props = PropertiesReader(commandLine.ini);
@@ -134,26 +135,26 @@ options.parse(process.argv);
   let maxEmptyLine = 0;
   maxEmptyLine = parseInt(props.get('MaxEmptyLine'));
   // 画面サイズと画像リサイズ
-  let dispW = 600; try { dispW = parseInt(props.get("DispW")); } catch (e) { }
-  let dispH = 800; try { dispH = parseInt(props.get("DispH")); } catch (e) { }
-  let coverW = 600; try { coverW = parseInt(props.get("CoverW")); } catch (e) { }
-  let coverH = 800; try { coverH = parseInt(props.get("CoverH")); } catch (e) { }
+  let dispW = 600; dispW = parseInt(props.get("DispW")); 
+  let dispH = 800;  dispH = parseInt(props.get("DispH")); 
+  let coverW = 600;  coverW = parseInt(props.get("CoverW")); 
+  let coverH = 800;  coverH = parseInt(props.get("CoverH")); 
 
-  let resizeW = 0; if ("1" == props.get("ResizeW")) try { resizeW = parseInt(props.get("ResizeNumW")); } catch (e) { }
-  let resizeH = 0; if ("1" == props.get("ResizeH")) try { resizeH = parseInt(props.get("ResizeNumH")); } catch (e) { }
-  let singlePageSizeW = 480; try { singlePageSizeW = parseInt(props.get("SinglePageSizeW")); } catch (e) { }
-  let singlePageSizeH = 640; try { singlePageSizeH = parseInt(props.get("SinglePageSizeH")); } catch (e) { }
-  let singlePageWidth = 600; try { singlePageWidth = parseInt(props.get("SinglePageWidth")); } catch (e) { }
-  let imageScale = 1; try { imageScale = parseFloat(props.get("ImageScale")); } catch (e) { }
-  let imageFloatType = 0; try { imageFloatType = parseInt(props.get("ImageFloatType")); } catch (e) { }
-  let imageFloatW = 0; try { imageFloatW = parseInt(props.get("ImageFloatW")); } catch (e) { }
-  let imageFloatH = 0; try { imageFloatH = parseInt(props.get("ImageFloatH")); } catch (e) { }
-  let imageSizeType = SectionInfo.IMAGE_SIZE_TYPE_HEIGHT; try { imageSizeType = parseInt(props.get("ImageSizeType")); } catch (e) { }
+  let resizeW = 0; if ("1" == props.get("ResizeW"))  resizeW = parseInt(props.get("ResizeNumW")); 
+  let resizeH = 0; if ("1" == props.get("ResizeH"))  resizeH = parseInt(props.get("ResizeNumH")); 
+  let singlePageSizeW = 480;  singlePageSizeW = parseInt(props.get("SinglePageSizeW")); 
+  let singlePageSizeH = 640;  singlePageSizeH = parseInt(props.get("SinglePageSizeH")); 
+  let singlePageWidth = 600;  singlePageWidth = parseInt(props.get("SinglePageWidth")); 
+  let imageScale = 1;  imageScale = parseFloat(props.get("ImageScale")); 
+  let imageFloatType = 0;  imageFloatType = parseInt(props.get("ImageFloatType")); 
+  let imageFloatW = 0;  imageFloatW = parseInt(props.get("ImageFloatW")); 
+  let imageFloatH = 0;  imageFloatH = parseInt(props.get("ImageFloatH")); 
+  let imageSizeType = SectionInfo.IMAGE_SIZE_TYPE_HEIGHT;  imageSizeType = parseInt(props.get("ImageSizeType")); 
   let fitImage = "1" == props.get("FitImage");
   let svgImage = "1" == props.get("SvgImage");
   let rotateImage = 0; if ("1" == props.get("RotateImage")) rotateImage = 90; else if ("2" == props.get("RotateImage")) rotateImage = -90;
-  let jpegQualty = 0.8; try { jpegQualty = parseInt(props.get("JpegQuality")) / 100; } catch (e) { }
-  let gamma = 1.0; if ("1" == props.get("Gamma")) try { gamma = parseFloat(props.get("GammaValue")); } catch (e) { }
+  let jpegQualty = 0.8;  jpegQualty = parseInt(props.get("JpegQuality")) / 100; 
+  let gamma = 1.0; if ("1" == props.get("Gamma"))  gamma = parseFloat(props.get("GammaValue")); 
   let autoMarginLimitH = 0;
   let autoMarginLimitV = 0;
   let autoMarginWhiteLevel = 80;
@@ -161,21 +162,21 @@ options.parse(process.argv);
   let autoMarginNombre = 0;
   let nobreSize = 0.03;
   if ("1" == props.get("AutoMargin")) {
-    try { autoMarginLimitH = parseInt(props.get("AutoMarginLimitH")); } catch (e) { }
-    try { autoMarginLimitV = parseInt(props.get("AutoMarginLimitV")); } catch (e) { }
-    try { autoMarginWhiteLevel = parseInt(props.get("AutoMarginWhiteLevel")); } catch (e) { }
-    try { autoMarginPadding = parseFloat(props.get("AutoMarginPadding")); } catch (e) { }
-    try { autoMarginNombre = parseInt(props.get("AutoMarginNombre")); } catch (e) { }
-    try { autoMarginPadding = parseFloat(props.get("AutoMarginNombreSize")); } catch (e) { }
+     autoMarginLimitH = parseInt(props.get("AutoMarginLimitH")); 
+     autoMarginLimitV = parseInt(props.get("AutoMarginLimitV")); 
+     autoMarginWhiteLevel = parseInt(props.get("AutoMarginWhiteLevel"));
+     autoMarginPadding = parseFloat(props.get("AutoMarginPadding")); 
+     autoMarginNombre = parseInt(props.get("AutoMarginNombre")); 
+     autoMarginPadding = parseFloat(props.get("AutoMarginNombreSize")); 
   }
-  epub3Writer.setImageParam(dispW, dispH, coverW, coverH, resizeW, resizeH, singlePageSizeW, singlePageSizeH, singlePageWidth, imageSizeType, fitImage, svgImage, rotateImage,
+  await epub3Writer.setImageParam(dispW, dispH, coverW, coverH, resizeW, resizeH, singlePageSizeW, singlePageSizeH, singlePageWidth, imageSizeType, fitImage, svgImage, rotateImage,
     imageScale, imageFloatType, imageFloatW, imageFloatH, jpegQualty, gamma, autoMarginLimitH, autoMarginLimitV, autoMarginWhiteLevel, autoMarginPadding, autoMarginNombre, nobreSize);
   /*epub3ImageWriter.setImageParam(dispW, dispH, coverW, coverH, resizeW, resizeH, singlePageSizeW, singlePageSizeH, singlePageWidth, imageSizeType, fitImage, svgImage, rotateImage,
       imageScale, imageFloatType, imageFloatW, imageFloatH, jpegQualty, gamma, autoMarginLimitH, autoMarginLimitV, autoMarginWhiteLevel, autoMarginPadding, autoMarginNombre, nobreSize);
       */
+ 
   // 目次階層化設定
-  epub3Writer.setTocParam("1" == (props.get("NavNest")), "1" == (props.get("NcxNest")));
-
+  await epub3Writer.setTocParam("1" == (props.get("NavNest")), "1" == (props.get("NcxNest")));
 
   // スタイル設定
   let pageMargin = [];
@@ -292,7 +293,6 @@ options.parse(process.argv);
   ////////////////////////////////
   // 各ファイルを変換処理
   ////////////////////////////////
-
   for (const fileName of fileNames) {
     LogAppender.println("--------");
     const srcFile = fileName;
@@ -302,7 +302,6 @@ options.parse(process.argv);
     }
 
     let ext =path.parse(srcFile).ext.slice(1).toLowerCase();
-console.log(ext)
     let coverImageIndex = -1;
     if (coverFileName != null) {
         if (coverFileName === "0") {
@@ -342,11 +341,11 @@ console.log(ext)
         // 文字コード判別
         let encauto = "";
 
-        encauto = getTextCharset(srcFile, ext, imageInfoReader, txtIdx);
+        encauto = await getTextCharset(srcFile, ext, imageInfoReader, txtIdx);
        // if (encauto === "SHIFT_JIS") encauto = "MS932";
         if (encType === "AUTO") encType = encauto;
         if (!imageOnly) {
-            bookInfo = getBookInfo(srcFile, ext, txtIdx, imageInfoReader, aozoraConverter, encType, BookInfo.TitleType.indexOf(titleIndex), false);
+            bookInfo = await getBookInfo(srcFile, ext, txtIdx, imageInfoReader, aozoraConverter, encType, BookInfo.TitleType.indexOf(titleIndex), false);
             bookInfo.vertical = vertical;
             bookInfo.insertTocPage = tocPage;
             bookInfo.setTocVertical = tocVertical;
@@ -355,6 +354,7 @@ console.log(ext)
             // 表題ページ
             bookInfo.titlePageType = titlePage;
         }
+        console.log(bookInfo)
 
         let writer = epub3Writer;
         if (!isFile) {
@@ -439,7 +439,7 @@ console.log(ext)
 
  
 	/** 出力ファイルを生成 */
-  function getOutFile(srcFile, dstPath, bookInfo, autoFileName, outExt) {
+  async function getOutFile(srcFile, dstPath, bookInfo, autoFileName, outExt) {
     // 出力ファイル
     if (dstPath === null) dstPath = path.dirname(srcFile);
     let outFileName = "";
@@ -466,7 +466,7 @@ console.log(ext)
   }
 
   /** 前処理で一度読み込んでタイトル等の情報を取得 */
-  async function  getBookInfo(srcFile, ext, txtIdx, imageInfoReader, aozoraConverter, encType, titleType, pubFirst) {
+  async function getBookInfo(srcFile, ext, txtIdx, imageInfoReader, aozoraConverter, encType, titleType, pubFirst) {
     try {
       const textEntryName = [null];
       const is = await getTextInputStream(srcFile, ext, imageInfoReader, textEntryName, txtIdx);
@@ -586,7 +586,9 @@ async function getTextCharset(srcFile, ext, imageInfoReader, txtIdx) {
     let cs = '';
     if (ext === 'txt') {
       const is = srcFile;
-      cs = await Detector.getCharset(is);
+      const data = fs.readFileSync(is);
+      const cs = encoding.detect(data);
+      //cs = Detector.getCharset(is);
       return cs;
     } else if (ext === 'zip' || ext === 'txtz') {
       const zis = new ZipArchiveInputStream(fs.createReadStream(srcFile), 'MS932', false);
@@ -595,7 +597,7 @@ async function getTextCharset(srcFile, ext, imageInfoReader, txtIdx) {
         const entryName = entry.getName();
         if (entryName.substring(entryName.lastIndexOf('.') + 1).toLowerCase() === 'txt' && txtIdx-- === 0) {
           if (imageInfoReader) imageInfoReader.setArchiveTextEntry(entryName);
-          cs = await Detector.getCharset(zis);
+          const cs = encoding.detect(zis)
           return cs;
         }
       }
@@ -676,7 +678,7 @@ async function countRarText(rarFile) {
 
   /** 入力ファイルと同じ名前の画像を取得
    * png, jpg, jpegの順で探す  */
-  function getSameCoverFileName(srcFile) {
+  async function getSameCoverFileName(srcFile) {
     let baseFileName = srcFile;
     baseFileName = baseFileName.substring(0, baseFileName.lastIndexOf('.') + 1);
     const extensions = ['png', 'jpg', 'jpeg', 'PNG', 'JPG', 'JPEG', 'Png', 'Jpg', 'Jpeg'];
