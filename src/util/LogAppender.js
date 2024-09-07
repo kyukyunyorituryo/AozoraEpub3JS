@@ -6,11 +6,7 @@ export default class LogAppender {
   }
 
   static println(log) {
-    this.append(log);
-    this.append("\n");
-  }
-
-  static println() {
+    if(log)this.append(log);
     this.append("\n");
   }
 
