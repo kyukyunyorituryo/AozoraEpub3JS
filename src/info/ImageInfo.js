@@ -2,7 +2,7 @@
 
 import fs from 'fs';
 import path from 'path';
-//const sharp = require('sharp');
+import sharp  from 'sharp';
 
 export default class ImageInfo {
     /**
