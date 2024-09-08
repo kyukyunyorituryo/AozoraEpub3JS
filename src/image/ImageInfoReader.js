@@ -194,7 +194,7 @@ export default class ImageInfoReader {
      * @throws {IOException}
      */
     async loadZipImageInfos(srcFile, addFileName) {
-        const fileContent = fs.readFileSync(srcFile, 'MS932').buffer;
+        const fileContent = fs.readFileSync(srcFile).buffer;
         const zip = new JSZip();
         await zip.loadAsync(fileContent);
         try {
