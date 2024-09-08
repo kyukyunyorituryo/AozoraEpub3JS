@@ -12,6 +12,8 @@ import LatinConverter from './LatinConverter.js';
 import AozoraGaijiConverter from './AozoraGaijiConverter.js';
 import LogAppender from '../util/LogAppender.js';
 import BookInfo from '../info/BookInfo.js';
+import CharUtils from '../util/CharUtils.js';
+
 export default class AozoraEpub3Converter {
   //---------------- Properties ----------------//
   /** UTF-8以外の文字を代替文字に変換 */
@@ -673,7 +675,10 @@ export default class AozoraEpub3Converter {
       // ブロック見出し注記、次の行を繋げる場合に設定
       let preChapterLineInfo = null;
       // 最後まで回す 
-      while ((line = await src.readLine()) !== null) {
+      var lines = src.toString().split('¥n');
+      for (let i = 0; i < lines.length; i++) {
+        let line =lines[i];
+     // while ((line = await src.readLine()) !== null) {
         this.lineNum++;
 
         // 見出し等の取得のため前方参照注記は変換 外字文字は置換
@@ -1434,16 +1439,15 @@ export default class AozoraEpub3Converter {
     ・アクセント 〔e'tiquette〕
     ・くの字点 〳〴〵
     */
-
-    let m = gaijiChukiPattern.matcher(line);
+    let m = line.match(this.gaijiChukiPattern);
     let begin = 0;
     let chukiStart = 0;
 
     // 外字が無ければそのまま返却
-    if (!m.find()) return line;
+    if (!m) return line;
 
     // 変換後の文字列を出力するバッファ
-    let buf = new StringBuilder();
+    let buf = [];
 
     do {
       let chuki = m.group();
