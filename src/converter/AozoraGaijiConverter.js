@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import JisConverter from './JisConverter.js'
 
 // もし __dirname がない場合は以下の方法で定義します
 const __filename = fileURLToPath(import.meta.url);
@@ -84,7 +85,8 @@ export default class AozoraGaijiConverter {
                 const codes = code.startsWith("第3水準") || code.startsWith("第4水準")
                     ? code.substring(4).split("-")
                     : code.split("-");
-                return this.jisToCharString(parseInt(codes[0]), parseInt(codes[1]), parseInt(codes[2]));
+                return JisConverter.getConverter().toCharString(parseInt(codes[0]), parseInt(codes[1]), parseInt(codes[2]));
+                //return this.jisToCharString(parseInt(codes[0]), parseInt(codes[1]), parseInt(codes[2]));
             }
         } catch (error) {
             console.error(error);
@@ -112,8 +114,4 @@ export default class AozoraGaijiConverter {
         return new DataView(buffer).getInt32(0, false);
     }
 
-    jisToCharString(code1, code2, code3) {
-        // ここにJISコードから文字列への変換ロジックを実装
-        return String.fromCodePoint(code1, code2, code3);
-    }
 }
