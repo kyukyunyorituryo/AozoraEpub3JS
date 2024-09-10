@@ -726,7 +726,7 @@ export default class AozoraEpub3Converter {
 
         // 2行前が改ページと画像の行かをチェックして行番号をbookInfoに保存
         if (!this.noIllust)
-          this.checkImageOnly(bookInfo, this.preLines, noRubyLine, this.lineNum);
+          this.checkImageOnly(bookInfo, preLines, noRubyLine, this.lineNum);
 
         // 見出しのChapter追加
         if (this.addChapterName) {
@@ -1130,7 +1130,7 @@ export default class AozoraEpub3Converter {
   /** 改ページ処理があったら次のセクションの情報をbookInfoに追加 */
   checkImageOnly(bookInfo, preLines, line, lineNum) {
     // 現在の行が改ページ
-    if (!preLines[0]) return;
+    if (preLines[0]==null) return;
     if (line.indexOf('］') <= 3) return;
     const curChuki = line.substring(2, line.indexOf('］')); // 現在行の行頭注記
     if (this.chukiFlagPageBreak.includes(curChuki)) {
