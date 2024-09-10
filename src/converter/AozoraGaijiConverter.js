@@ -21,7 +21,7 @@ export default class AozoraGaijiConverter {
 
     loadChukiFile(srcFile, chukiMap) {
         const src = fs.readFileSync(srcFile, 'utf-8');
-        const lines = src.split('\n');
+        const lines = src.split('\r\n');
         let lineNum = 0;
 
         for (const line of lines) {
