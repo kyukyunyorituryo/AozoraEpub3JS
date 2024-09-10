@@ -50,7 +50,7 @@ export default class ImageInfoReader {
      * @param {string} imageFileName
      */
     addImageFileName(imageFileName) {
-        this.imageFileNames.add(path.join(this.archiveTextParentPath, imageFileName));
+        this.imageFileNames.push(path.join(this.archiveTextParentPath, imageFileName));
     }
 
     /**
