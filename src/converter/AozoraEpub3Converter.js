@@ -147,17 +147,17 @@ export default class AozoraEpub3Converter {
 
   //---------------- パターン ----------------//
   /** 注記パターン */
-  chukiPattern = /(［＃.+?］)|(<.+?>)/;
+  chukiPattern = /(［＃.+?］)|(<.+?>)/g;
   /** 外字注記パターン */
-  gaijiChukiPattern = /(※［＃.+?］)|(〔.+?〕)|(／"?＼)/;
+  gaijiChukiPattern = /(※［＃.+?］)|(〔.+?〕)|(／"?＼)/g;
   /** 前方参照注記パターン ［＃「○○」は～］ 注記内に注記があったら途中までしかマッチしないので外字変換と除外処理をしておく */
-  chukiSufPattern = /［＃「([^］]+)」([^」|^］]+)］/;
+  chukiSufPattern = /［＃「([^］]+)」([^」|^］]+)］/g;
   /** 前方参照注記パターン2 ［＃「○○」に「××」の注記］ */
-  chukiSufPattern2 = /［＃「([^］]+)」([^」|^］]*「[^」|^］]+」[^」|^］]*)］/;
+  chukiSufPattern2 = /［＃「([^］]+)」([^」|^］]*「[^」|^］]+」[^」|^］]*)］/g;
   /** 先頭注記内側のパターン */
-  chukiLeftPattern = /^［＃(.+?)］/;
+  chukiLeftPattern = /^［＃(.+?)］/g;
   /** ファイル名 [著作者] 表題.txt から抽出するパターン */
-  fileNamePattern = /\[(.+?)\]( |　)*(.+?)(\(|（|\.)/;
+  fileNamePattern = /\[(.+?)\]( |　)*(.+?)(\(|（|\.)/g;
 
   //---------------- 変換用テーブル ----------------//
   /** 変換関連が初期化済みならtrue */
@@ -678,9 +678,9 @@ export default class AozoraEpub3Converter {
       var lines = src.toString().split('¥n');
       for (let i = 0; i < lines.length; i++) {
         let line =lines[i];
+ 
      // while ((line = await src.readLine()) !== null) {
         this.lineNum++;
-
         // 見出し等の取得のため前方参照注記は変換 外字文字は置換
         line = CharUtils.removeSpace(
           this.replaceChukiSufTag(this.convertGaijiChuki(line, true, false))
@@ -1045,7 +1045,7 @@ export default class AozoraEpub3Converter {
       }
       // 行数設定
       this.bookInfo.totalLineNum = this.lineNum;
-
+   
       if (this.inComment) {
         LogAppender.error(this.commentLineStart, "コメントが閉じていません");
       }
@@ -1413,12 +1413,14 @@ export default class AozoraEpub3Converter {
 	 * ・特殊文字のうち※《》｜＃ は文字の前に※をつけてエスケープ
 	 * @param line 行文字列
 	 * @param escape ※での特殊文字のエスケープをするならtrue
-	 * @return 外字変換済の行文字列 */
+	 * @return 外字変換済の行文字列 
   convertGaijiChuki(line, escape) {
     return this.convertGaijiChuki(line, escape, true);
   }
+*/    
 
   convertGaijiChuki(line, escape, logged) {
+    if(logged==null)logged=true
     /*
     ・外字
      ※の場合は外字に変換
@@ -1439,30 +1441,32 @@ export default class AozoraEpub3Converter {
     ・アクセント 〔e'tiquette〕
     ・くの字点 〳〴〵
     */
-    let m = line.match(this.gaijiChukiPattern);
+    let match;
     let begin = 0;
     let chukiStart = 0;
-
-    // 外字が無ければそのまま返却
-    if (!m) return line;
-
     // 変換後の文字列を出力するバッファ
     let buf = [];
+    // 外字が無ければそのまま返却
+    if (!this.gaijiChukiPattern.test(line)) return line;
+    // 正規表現の再初期化
+    this.gaijiChukiPattern.lastIndex = 0;
 
-    do {
-      let chuki = m.group();
-      chukiStart = m.start();
-
-      buf.append(line.substring(begin, chukiStart));
+    while ((match = this.gaijiChukiPattern.exec(line)) !== null) {
+    //  for(let i=0;i++;i>1){
+    //  match = this.gaijiChukiPattern.exec(line)
+      let chuki = match[0];
+      chukiStart = match.index;
+      buf.push(line.slice(begin, chukiStart));
 
       // 外字はUTF-8に変換してそのまま継続
-      if (chuki.charAt(0) === '※') {
-        let chukiInner = chuki.substring(3, chuki.length - 1);
+      if (chuki.startsWith('※')) {
+        let chukiInner = chuki.slice(3, chuki.length - 1);
+
         // U+のコードのみの注記
         if (chukiInner.startsWith("U+") || chukiInner.startsWith("u+")) {
-          let gaiji = gaijiConverter.codeToCharString(chukiInner);
-          if (gaiji != null) {
-            buf.append(gaiji);
+          let gaiji = this.gaijiConverter.codeToCharString(chukiInner);
+          if (gaiji) {
+            buf.push(gaiji);
             begin = chukiStart + chuki.length;
             continue;
           }
@@ -1470,87 +1474,83 @@ export default class AozoraEpub3Converter {
         // 、の後ろにコードがある場合
         let chukiValues = chukiInner.split("、");
         // 注記文字グリフ or 代替文字変換
-        let gaiji = gaijiConverter.toAlterString(chukiValues[0]);
-        // 注記内なら注記タグは除外する
-        if (gaiji != null) {
-          if (hasInnerChuki(line, m.start())) {
-            gaiji = gaiji.replaceAll(chukiPattern.pattern(), "");
-          }
+        let gaiji = this.gaijiConverter.toAlterString(chukiValues[0]);
+
+        // 注記内なら注記タグは除外
+        if (gaiji && this.hasInnerChuki(line, chukiStart)) {
+          gaiji = gaiji.replace(this.gaijiChukiPattern, "");
         }
+
         // コード変換
-        if (gaiji == null && chukiValues.length > 3) {
-          gaiji = gaijiConverter.codeToCharString(chukiValues[3]);
+        if (!gaiji && chukiValues.length > 3) {
+          gaiji = this.gaijiConverter.codeToCharString(chukiValues[3]);
         }
-        // コード変換
-        if (gaiji == null && chukiValues.length > 2) {
-          gaiji = gaijiConverter.codeToCharString(chukiValues[2]);
+        if (!gaiji && chukiValues.length > 2) {
+          gaiji = this.gaijiConverter.codeToCharString(chukiValues[2]);
         }
-        // コード変換
-        if (gaiji == null && chukiValues.length > 1) {
-          gaiji = gaijiConverter.codeToCharString(chukiValues[1]);
+        if (!gaiji && chukiValues.length > 1) {
+          gaiji = this.gaijiConverter.codeToCharString(chukiValues[1]);
         }
+
         // 注記名称で変換
-        if (gaiji == null) {
-          gaiji = gaijiConverter.toUtf(chukiValues[0]);
+        if (!gaiji) {
+          gaiji = this.gaijiConverter.toUtf(chukiValues[0]);
         }
+
         // 外字注記変換をログに出力
-        if (gaiji != null) {
-          // if (logged) LogAppender.info(lineNum, "外字注記", chuki+" → U+"+Integer.toHexString(AozoraGaijiConverter.toUtfCode(gaiji)));
+        if (gaiji) {
           if (gaiji.length === 1 && escape) {
-            // 特殊文字は前に※をつけて文字出力時に例外処理
-            switch (gaiji.charAt(0)) {
-              case '※': buf.append('※'); break;
-              case '》': buf.append('※'); break;
-              case '《': buf.append('※'); break;
-              case '｜': buf.append('※'); break;
-              case '＃': buf.append('※'); break;
+            switch (gaiji) {
+              case '※': case '》': case '《': case '｜': case '＃':
+                buf.push('※');
+                break;
             }
           }
-          buf.append(gaiji);
+          buf.push(gaiji);
           begin = chukiStart + chuki.length;
           continue;
         }
 
         // 変換不可 画像指定付き外字なら画像注記に変更
-        if (hasInnerChuki(line, m.start())) {
+        if (this.hasInnerChuki(line, chukiStart)) {
           gaiji = "〓";
           LogAppender.warn(lineNum, "外字注記内に注記があります", chuki);
         } else {
           // 画像指定外字
           let imageStartIdx = chuki.indexOf('（', 2);
           if (imageStartIdx > -1 && chuki.indexOf('.', 2) !== -1) {
-            // ※を消して内部処理用画像注記に変更 ［＃（ファイル名）#GAIJI#］
-            gaiji = chuki.substring(1, chuki.length - 1) + "#GAIJI#］";
+             // ※を消して内部処理用画像注記に変更 ［＃（ファイル名）#GAIJI#］
+            gaiji = chuki.slice(1, chuki.length - 1) + "#GAIJI#］";
           } else {
-            // 画像以外
-            if (logged) LogAppender.info(lineNum, "外字未変換", chuki);
-            gaiji = "〓［＃行右小書き］（" + chukiValues[0] + "）［＃行右小書き終わり］";
+            if (logged) console.info(`外字未変換: ${chuki}`);
+            gaiji = `〓［＃行右小書き］（${chukiValues[0]}）［＃行右小書き終わり］`;
           }
         }
-        buf.append(gaiji);
-
-      } else if (chuki.charAt(0) === '〔') {
+        buf.push(gaiji);
+      } else if (chuki.startsWith('〔')) {
         // 拡張ラテン文字変換
-        let inner = chuki.substring(1, chuki.length - 1);
+        let inner = chuki.slice(1, chuki.length - 1);
         // 〔の次が半角でなければ〔の中を再度外字変換
-        if (!CharUtils.isHalfSpace(inner.toCharArray())) {
-          buf.append('〔').append(this.convertGaijiChuki(inner, true)).append('〕');
+        if (!CharUtils.isHalfSpace(inner)) {
+          buf.push('〔' + this.convertGaijiChuki(inner, true, logged) + '〕');
         } else {
-          // System.out.println(chuki);
-          buf.append(latinConverter.toLatinString(inner));
+          buf.push(this.toLatinString(inner));
         }
-      } else if (chuki.charAt(0) === '／') {
+      } else if (chuki.startsWith('／')) {
         // くの字点
-        if (chuki.charAt(1) === '″') buf.append("〴");
-        else buf.append("〳");
-        buf.append("〵");
+        if (chuki[1] === '″') {
+          buf.push("〴");
+        } else {
+          buf.push("〳");
+        }
+        buf.push("〵");
       }
 
       begin = chukiStart + chuki.length;
-    } while (m.find());
+    }
 
     // 残りの文字をつなげて返却
-    return buf.toString() + line.substring(begin);
+    return buf.join('') + line.slice(begin);
   }
   
 	/** 注記内かチェック
@@ -1607,7 +1607,7 @@ export default class AozoraEpub3Converter {
       line = buf.join('');
   
       // "［＃「([^］]+)」([^」|^］]+)］"
-      let m = chukiSufPattern.exec(line);
+      let m = this.chukiSufPattern.exec(line);
       if (!m) return line;
   
       let chOffset = 0;
@@ -1615,7 +1615,7 @@ export default class AozoraEpub3Converter {
       do {
         let target = m[1];
         let chuki = m[2];
-        let tags = sufChukiMap.get(chuki);
+        let tags = this.sufChukiMap.get(chuki);
         let chukiTagStart = m.index;
         let chukiTagEnd = m.index + m[0].length;
   
@@ -1652,12 +1652,12 @@ export default class AozoraEpub3Converter {
   
           chOffset += tags[0].length + tags[1].length + 6 - (chukiTagEnd - chukiTagStart);
         }
-      } while ((m = chukiSufPattern.exec(line)) !== null);
+      } while ((m = this.chukiSufPattern.exec(line)) !== null);
   
       // 注記タグ等を再度変換
       line = buf[0];
       // 「」が2つある注記 「○○」に「××」の注記
-      m = chukiSufPattern2.exec(line);
+      m = this.chukiSufPattern2.exec(line);
       // マッチしなければそのまま返却
       if (!m) return line;
       chOffset = 0;
