@@ -746,84 +746,83 @@ export default class AozoraEpub3Converter {
             this.preChapterLineInfo = null;
           }
         }
-        // 画像のファイル名の順にimageInfoReaderにファイル名を追加
-        const m = this.chukiPattern.matcher(noRubyLine);
-        while (m.find()) {
-          const chukiTag = m.group();
-          const chukiName = chukiTag.substring(2, chukiTag.length - 1);
+// 画像のファイル名の順にimageInfoReaderにファイル名を追加
+let m = this.chukiPattern.exec(noRubyLine);
+while (m !== null) {
+  const chukiTag = m[0];
+  const chukiName = chukiTag.substring(2, chukiTag.length - 1);
 
-          if (this.chukiFlagPageBreak.has(chukiName)) {
-            // 改ページ注記ならフラグON
-            this.addSectionChapter = true;
-          } else if (this.chapterChukiMap.has(chukiName)) {
-            // 見出し注記
-            // 注記の後に文字がなければブロックなので次の行 (次の行にブロック注記はこない？)
-            const chapterType = this.chapterChukiMap.get(chukiName);
-            if (noRubyLine.length === m.start() + chukiTag.length) {
-              this.preChapterLineInfo = new ChapterLineInfo(
-                this.lineNum + 1,
-                chapterType,
-                this.addSectionChapter,
-                ChapterLineInfo.getLevel(chapterType),
-                this.lastEmptyLine === this.lineNum - 1
-              );
-              bookInfo.addChapterLineInfo(this.preChapterLineInfo);
-              this.addChapterName = true; // 次の行を見出しとして利用
-              this.addNextChapterName = -1;
-            } else {
-              bookInfo.addChapterLineInfo(
-                new ChapterLineInfo(
-                  this.lineNum,
-                  chapterType,
-                  this.addSectionChapter,
-                  ChapterLineInfo.getLevel(chapterType),
-                  this.lastEmptyLine === this.lineNum - 1,
-                  this.getChapterName(noRubyLine.substring(m.end()))
-                )
-              );
-              if (this.useNextLineChapterName) this.addNextChapterName = this.lineNum + 1; // 次の行を連結
-              this.addChapterName = false; // 次の行を見出しとして利用しない
-            }
-            this.addSectionChapter = false; // 改ページ後のChapter出力を抑止
-          }
+  if (this.chukiFlagPageBreak.has(chukiName)) {
+    // 改ページ注記ならフラグON
+    this.addSectionChapter = true;
+  } else if (this.chapterChukiMap.has(chukiName)) {
+    // 見出し注記
+    const chapterType = this.chapterChukiMap.get(chukiName);
+    if (noRubyLine.length === m.index + chukiTag.length) {
+      this.preChapterLineInfo = {
+        lineNum: this.lineNum + 1,
+        chapterType: chapterType,
+        addSectionChapter: this.addSectionChapter,
+        level: ChapterLineInfo.getLevel(chapterType),
+        isAfterEmptyLine: this.lastEmptyLine === this.lineNum - 1
+      };
+      bookInfo.addChapterLineInfo(this.preChapterLineInfo);
+      this.addChapterName = true; // 次の行を見出しとして利用
+      this.addNextChapterName = -1;
+    } else {
+      bookInfo.addChapterLineInfo({
+        lineNum: this.lineNum,
+        chapterType: chapterType,
+        addSectionChapter: this.addSectionChapter,
+        level: ChapterLineInfo.getLevel(chapterType),
+        isAfterEmptyLine: this.lastEmptyLine === this.lineNum - 1,
+        chapterName: this.getChapterName(noRubyLine.substring(m.index + chukiTag.length))
+      });
+      if (this.useNextLineChapterName) this.addNextChapterName = this.lineNum + 1; // 次の行を連結
+      this.addChapterName = false; // 次の行を見出しとして利用しない
+    }
+    this.addSectionChapter = false; // 改ページ後のChapter出力を抑止
+  }
 
-          const lowerChukiTag = chukiTag.toLowerCase();
-          const imageStartIdx = chukiTag.lastIndexOf('（');
-          if (imageStartIdx > -1) {
-            const imageEndIdx = chukiTag.indexOf('）', imageStartIdx);
-            const imageDotIdx = chukiTag.indexOf('.', imageStartIdx);
-            // 訓点送り仮名チェック ＃の次が（で.を含まない
-            if (imageDotIdx > -1 && imageDotIdx < imageEndIdx) {
-              // 画像ファイル名を取得し画像情報を格納
-              const imageFileName = this.getImageChukiFileName(chukiTag, imageStartIdx);
-              if (imageFileName !== null) {
-                imageInfoReader.addImageFileName(imageFileName);
-                if (bookInfo.firstImageLineNum === -1) {
-                  // 小さい画像は無視
-                  const imageInfo = imageInfoReader.getImageInfo(imageInfoReader.correctExt(imageFileName));
-                  if (imageInfo && imageInfo.getWidth() > 64 && imageInfo.getHeight() > 64) {
-                    bookInfo.firstImageLineNum = this.lineNum;
-                    bookInfo.firstImageIdx = imageInfoReader.countImageFileNames() - 1;
-                  }
-                }
-              }
-            }
-          } else if (lowerChukiTag.startsWith('<img')) {
-            // src=の値抽出
-            const imageFileName = this.getTagAttr(chukiTag, 'src');
-            if (imageFileName !== null) {
-              imageInfoReader.addImageFileName(imageFileName); // 画像がなければそのまま追加
-              if (bookInfo.firstImageLineNum === -1) {
-                // 小さい画像は無視
-                const imageInfo = imageInfoReader.getImageInfo(imageInfoReader.correctExt(imageFileName));
-                if (imageInfo && imageInfo.getWidth() > 64 && imageInfo.getHeight() > 64) {
-                  bookInfo.firstImageLineNum = this.lineNum;
-                  bookInfo.firstImageIdx = imageInfoReader.countImageFileNames() - 1;
-                }
-              }
-            }
+  const lowerChukiTag = chukiTag.toLowerCase();
+  const imageStartIdx = chukiTag.lastIndexOf('（');
+  if (imageStartIdx > -1) {
+    const imageEndIdx = chukiTag.indexOf('）', imageStartIdx);
+    const imageDotIdx = chukiTag.indexOf('.', imageStartIdx);
+    // 訓点送り仮名チェック ＃の次が（で.を含まない
+    if (imageDotIdx > -1 && imageDotIdx < imageEndIdx) {
+      // 画像ファイル名を取得し画像情報を格納
+      const imageFileName = this.getImageChukiFileName(chukiTag, imageStartIdx);
+      if (imageFileName !== null) {
+        imageInfoReader.addImageFileName(imageFileName);
+        if (bookInfo.firstImageLineNum === -1) {
+          const imageInfo = imageInfoReader.getImageInfo(imageInfoReader.correctExt(imageFileName));
+          if (imageInfo && imageInfo.width > 64 && imageInfo.height > 64) {
+            bookInfo.firstImageLineNum = this.lineNum;
+            bookInfo.firstImageIdx = imageInfoReader.countImageFileNames() - 1;
           }
         }
+      }
+    }
+  } else if (lowerChukiTag.startsWith('<img')) {
+    // src=の値抽出
+    const imageFileName = this.getTagAttr(chukiTag, 'src');
+    if (imageFileName !== null) {
+      imageInfoReader.addImageFileName(imageFileName); // 画像がなければそのまま追加
+      if (bookInfo.firstImageLineNum === -1) {
+        const imageInfo = imageInfoReader.getImageInfo(imageInfoReader.correctExt(imageFileName));
+        if (imageInfo && imageInfo.width > 64 && imageInfo.height > 64) {
+          bookInfo.firstImageLineNum = this.lineNum;
+          bookInfo.firstImageIdx = imageInfoReader.countImageFileNames() - 1;
+        }
+      }
+    }
+  }
+
+  // 次のマッチを探す
+  m = this.chukiPattern.exec(noRubyLine);
+}
+
         // 見出し行パターン抽出 パターン抽出時はレベル+10
         // TODO パターンと目次レベルは設定可能にする 空行指定の場合はpreLines利用
         if (this.autoChapter && bookInfo.getChapterLevel(this.lineNum) === 0) {
@@ -1006,7 +1005,7 @@ export default class AozoraEpub3Converter {
         }
 
         // 見出しの次の行＆見出しでない
-        if (this.addNextChapterName === lineNum && bookInfo.getChapterLineInfo(lineNum) === null) {
+        if (this.addNextChapterName === this.lineNum && bookInfo.getChapterLineInfo(this.lineNum) === null) {
           // 見出しの次の行を繋げる
           const name = this.getChapterName(noRubyLine);
           if (name.length > 0) {
@@ -1044,14 +1043,14 @@ export default class AozoraEpub3Converter {
         preLines[0] = noRubyLine;
       }
       // 行数設定
-      this.bookInfo.totalLineNum = this.lineNum;
+      bookInfo.totalLineNum = this.lineNum;
    
       if (this.inComment) {
         LogAppender.error(this.commentLineStart, "コメントが閉じていません");
       }
 
       // 表題と著者を先頭行から設定
-      this.bookInfo.setMetaInfo(titleType, pubFirst, this.firstLines, this.firstLineStart, this.firstCommentLineNum);
+      bookInfo.setMetaInfo(titleType, pubFirst, this.firstLines, this.firstLineStart, this.firstCommentLineNum);
       // this.bookInfo.preTitlePageBreak = preTitlePageBreak; // タイトルがあればタイトル前の改ページ状況を設定
 
       // タイトルのChapter追加
