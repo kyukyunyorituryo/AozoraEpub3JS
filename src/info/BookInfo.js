@@ -3,7 +3,66 @@ import CharUtils from '../util/CharUtils.js';
 
 
 export default class BookInfo {
-  constructor() {
+
+  // タイトル記載種別の列挙型
+  static TitleType = {
+    TITLE_AUTHOR: 'TITLE_AUTHOR',
+    AUTHOR_TITLE: 'AUTHOR_TITLE',
+    SUBTITLE_AUTHOR: 'SUBTITLE_AUTHOR',
+    TITLE_ONLY: 'TITLE_ONLY',
+    TITLE_AUTHOR_ONLY: 'TITLE_AUTHOR_ONLY',
+    NONE: 'NONE',
+
+    titleTypeNames: ["表題 → 著者名", "著者名 → 表題", "表題 → 著者名(副題優先)", "表題のみ(1行)", "表題+著者のみ(2行)", "なし"],
+
+    indexOf(idx) {
+      return Object.values(this).slice(0, 6)[idx];  // 列挙型の名前を返すためにsliceを使用
+    },
+
+    hasTitleAuthor(type) {
+      switch (type) {
+        case this.TITLE_ONLY:
+        case this.NONE:
+          return false;
+        default:
+          return true;
+      }
+    },
+
+    hasTitle(type) {
+      return type !== this.NONE;
+    },
+
+    hasAuthor(type) {
+      switch (type) {
+        case this.TITLE_ONLY:
+        case this.NONE:
+          return false;
+        default:
+          return true;
+      }
+    },
+
+    titleFirst(type) {
+      switch (type) {
+        case this.TITLE_AUTHOR:
+        case this.SUBTITLE_AUTHOR:
+        case this.TITLE_ONLY:
+        case this.TITLE_AUTHOR_ONLY:
+          return true;
+        default:
+          return false;
+      }
+    }
+  };
+
+  // 表題ページ種別定数
+  static TITLE_NONE = -1;
+  static TITLE_NORMAL = 0;
+  static TITLE_MIDDLE = 1;
+  static TITLE_HORIZONTAL = 2;
+
+  constructor(srcFile) {
     /** タイトル種別 */
     this.titlePageType = 0;
 
@@ -64,7 +123,7 @@ export default class BookInfo {
     /** 発刊日時 */
     this.published = null;
     /** 更新日時 */
-    this.modified = null;
+    this.modified = new Date();
 
     /** 縦書きならtrue */
     this.vertical = true;
@@ -73,7 +132,7 @@ export default class BookInfo {
     this.rtl = false;
 
     /** 入力ファイル */
-    this.srcFile = null;
+    this.srcFile = srcFile;
     /** 圧縮ファイル内のテキストファイルエントリー名 */
     this.textEntryName = '';
 
@@ -275,21 +334,6 @@ export default class BookInfo {
     if (!chapterLineInfo) return false;
     return chapterLineInfo.isPattern();
   }
-}
-
-class ChapterLineInfo {
-  constructor(lineNum, level, emptyNext) {
-    this.lineNum = lineNum;
-    this.level = level;
-    this.emptyNext = emptyNext;
-  }
-
-  isPattern() {
-    // Implement the pattern matching logic here.
-    // For now, we'll just return a dummy value.
-    return true;
-  }
-
 
   getTitle() {
     return this.title;
@@ -508,7 +552,7 @@ class ChapterLineInfo {
     this.creatorAs = null;
     this.publisher = null;
 
-    if (titleType !== TitleType.NONE) {
+    if (titleType !== BookInfo.TitleType.NONE) {
       this.metaLines = metaLines;
       this.metaLineStart = metaLineStart;
 
@@ -529,11 +573,11 @@ class ChapterLineInfo {
         arrIndex++;
       }
 
-      if (linesLength > 0 && titleType === TitleType.TITLE_ONLY) {
+      if (linesLength > 0 && titleType === BookInfo.TitleType.TITLE_ONLY) {
         this.titleLine = metaLineStart;
         this.title = metaLines[0 + arrIndex];
         this.titleEndLine = metaLineStart;
-      } else if (linesLength > 0 && titleType === TitleType.TITLE_AUTHOR_ONLY) {
+      } else if (linesLength > 0 && titleType === BookInfo.TitleType.TITLE_AUTHOR_ONLY) {
         this.titleLine = metaLineStart;
         this.title = metaLines[0 + arrIndex];
         this.creator = metaLines[1 + arrIndex];
@@ -629,7 +673,7 @@ class ChapterLineInfo {
               this.titleEndLine = metaLineStart + 1;
               if (titleType.hasAuthor()) {
                 if (
-                  titleType !== TitleType.SUBTITLE_AUTHOR &&
+                  titleType !== BookInfo.TitleType.SUBTITLE_AUTHOR &&
                   !metaLines[1].startsWith("―") &&
                   (metaLines[2 + arrIndex].endsWith("訳") ||
                     metaLines[2 + arrIndex].endsWith("編纂") ||
@@ -748,67 +792,6 @@ class ChapterLineInfo {
     this.coverImage = ImageUtils.loadImage(path);
   }
 }
-
-
-
-/** タイトル記載種別 */
-BookInfo.TitleType = {
-  TITLE_AUTHOR: 'TITLE_AUTHOR',
-  AUTHOR_TITLE: 'AUTHOR_TITLE',
-  SUBTITLE_AUTHOR: 'SUBTITLE_AUTHOR',
-  TITLE_ONLY: 'TITLE_ONLY',
-  TITLE_AUTHOR_ONLY: 'TITLE_AUTHOR_ONLY',
-  NONE: 'NONE',
-  titleTypeNames: ["表題 → 著者名", "著者名 → 表題", "表題 → 著者名(副題優先)", "表題のみ(1行)", "表題+著者のみ(2行)", "なし"],
-  indexOf: function(idx) {
-    return Object.values(this)[idx];
-  },
-  hasTitleAuthor: function(type) {
-    switch (type) {
-      case this.TITLE_ONLY:
-      case this.NONE:
-        return false;
-      default:
-        return true;
-    }
-  },
-  hasTitle: function(type) {
-    return type !== this.NONE;
-  },
-  hasAuthor: function(type) {
-    switch (type) {
-      case this.TITLE_ONLY:
-      case this.NONE:
-        return false;
-      default:
-        return true;
-    }
-  },
-  titleFirst: function(type) {
-    switch (type) {
-      case this.TITLE_AUTHOR:
-      case this.SUBTITLE_AUTHOR:
-      case this.TITLE_ONLY:
-      case this.TITLE_AUTHOR_ONLY:
-        return true;
-      default:
-        return false;
-    }
-  }
-};
-
-/** 表題は出力しない  */
-BookInfo.TITLE_NONE = -1;
-/** 表題は別ページにせずそのまま出力  */
-BookInfo.TITLE_NORMAL = 0;
-/** 表題ページを左右中央 コメント行前の8行まで
- * コメント行がない場合と9行以上の場合は無効になる */
-BookInfo.TITLE_MIDDLE = 1;
-/** 表題ページ横書き */
-BookInfo.TITLE_HORIZONTAL = 2;
-
-//module.exports = BookInfo;
-
 
 //メソッドを関数化した
 /**
