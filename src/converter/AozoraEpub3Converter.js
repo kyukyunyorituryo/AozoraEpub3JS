@@ -627,7 +627,7 @@ export default class AozoraEpub3Converter {
    * //@param coverFileName 表紙ファイル名 nullなら表紙無し ""は先頭ファイル "*"は同じファイル名 */
   async getBookInfo(srcFile, src, imageInfoReader, titleType, pubFirst) {
     try {
-      const bookInfo = new BookInfo(srcFile);
+      this.bookInfo = new BookInfo(srcFile);
 
       let line;
       this.lineNum = -1;
@@ -693,7 +693,7 @@ export default class AozoraEpub3Converter {
           if (!noRubyLine.startsWith('--------------------------------------------------')) {
             LogAppender.warn(this.lineNum, 'コメント行の文字数が足りません');
           } else {
-            if (this.firstCommentLineNum === -1) this.firstCommentLineNum = this.lineNum;
+            if (firstCommentLineNum === -1) firstCommentLineNum = this.lineNum;
             // コメントブロックに入ったらタイトル著者終了
             this.firstCommentStarted = true;
             if (this.inComment) {
@@ -726,7 +726,7 @@ export default class AozoraEpub3Converter {
 
         // 2行前が改ページと画像の行かをチェックして行番号をbookInfoに保存
         if (!this.noIllust)
-          this.checkImageOnly(bookInfo, preLines, noRubyLine, this.lineNum);
+          this.checkImageOnly(this.bookInfo, preLines, noRubyLine, this.lineNum);
 
         // 見出しのChapter追加
         if (this.addChapterName) {
@@ -795,11 +795,11 @@ while (m !== null) {
       const imageFileName = this.getImageChukiFileName(chukiTag, imageStartIdx);
       if (imageFileName !== null) {
         imageInfoReader.addImageFileName(imageFileName);
-        if (bookInfo.firstImageLineNum === -1) {
+        if (this.bookInfo.firstImageLineNum === -1) {
           const imageInfo = imageInfoReader.getImageInfo(imageInfoReader.correctExt(imageFileName));
           if (imageInfo && imageInfo.width > 64 && imageInfo.height > 64) {
-            bookInfo.firstImageLineNum = this.lineNum;
-            bookInfo.firstImageIdx = imageInfoReader.countImageFileNames() - 1;
+            this.bookInfo.firstImageLineNum = this.lineNum;
+            this.bookInfo.firstImageIdx = imageInfoReader.countImageFileNames() - 1;
           }
         }
       }
@@ -809,11 +809,11 @@ while (m !== null) {
     const imageFileName = this.getTagAttr(chukiTag, 'src');
     if (imageFileName !== null) {
       imageInfoReader.addImageFileName(imageFileName); // 画像がなければそのまま追加
-      if (bookInfo.firstImageLineNum === -1) {
+      if (this.bookInfo.firstImageLineNum === -1) {
         const imageInfo = imageInfoReader.getImageInfo(imageInfoReader.correctExt(imageFileName));
         if (imageInfo && imageInfo.width > 64 && imageInfo.height > 64) {
-          bookInfo.firstImageLineNum = this.lineNum;
-          bookInfo.firstImageIdx = imageInfoReader.countImageFileNames() - 1;
+          this.bookInfo.firstImageLineNum = this.lineNum;
+          this.bookInfo.firstImageIdx = imageInfoReader.countImageFileNames() - 1;
         }
       }
     }
@@ -825,14 +825,14 @@ while (m !== null) {
 
         // 見出し行パターン抽出 パターン抽出時はレベル+10
         // TODO パターンと目次レベルは設定可能にする 空行指定の場合はpreLines利用
-        if (this.autoChapter && bookInfo.getChapterLevel(this.lineNum) === 0) {
+        if (this.autoChapter && this.bookInfo.getChapterLevel(this.lineNum) === 0) {
           // 文字列から注記と前の空白を除去
           const noChukiLine = this.removeSpace(this.removeTag(noRubyLine));
 
           // その他パターン
           if (this.chapterPattern !== null) {
             if (this.chapterPattern.test(noChukiLine)) {
-              bookInfo.addChapterLineInfo(
+              this.bookInfo.addChapterLineInfo(
                 new ChapterLineInfo(
                   this.lineNum,
                   ChapterLineInfo.TYPE_PATTERN,
@@ -898,7 +898,7 @@ while (m !== null) {
               }
             }
             if (isChapter) {
-              bookInfo.addChapterLineInfo(
+              this.bookInfo.addChapterLineInfo(
                 new ChapterLineInfo(
                   this.lineNum,
                   ChapterLineInfo.TYPE_CHAPTER_NAME,
@@ -921,7 +921,7 @@ while (m !== null) {
               (this.autoChapterNumOnly && noChukiLine.length === idx) ||
               (this.autoChapterNumTitle && noChukiLine.length > idx && this.isChapterSeparator(noChukiLine.charAt(idx)))
             ) {
-              bookInfo.addChapterLineInfo(
+              this.bookInfo.addChapterLineInfo(
                 new ChapterLineInfo(
                   this.lineNum,
                   ChapterLineInfo.TYPE_CHAPTER_NUM,
@@ -955,7 +955,7 @@ while (m !== null) {
                       noChukiLine.length > idx &&
                       this.isChapterSeparator(noChukiLine.charAt(idx)))
                   ) {
-                    bookInfo.addChapterLineInfo(
+                    this.bookInfo.addChapterLineInfo(
                       new ChapterLineInfo(
                         this.lineNum,
                         ChapterLineInfo.TYPE_CHAPTER_NUM,
@@ -988,7 +988,7 @@ while (m !== null) {
             // 記号のみの行は無視して次の行へ
             const name = this.getChapterName(noRubyLine);
             if (name.replace(/◇|◆|□|■|▽|▼|☆|★|＊|＋|×|†|　/g, '').length > 0) {
-              bookInfo.addChapterLineInfo(
+              this.bookInfo.addChapterLineInfo(
                 new ChapterLineInfo(
                   lineNum,
                   ChapterLineInfo.TYPE_PAGEBREAK,
@@ -1005,11 +1005,11 @@ while (m !== null) {
         }
 
         // 見出しの次の行＆見出しでない
-        if (this.addNextChapterName === this.lineNum && bookInfo.getChapterLineInfo(this.lineNum) === null) {
+        if (this.addNextChapterName === this.lineNum && this.bookInfo.getChapterLineInfo(this.lineNum) === null) {
           // 見出しの次の行を繋げる
           const name = this.getChapterName(noRubyLine);
           if (name.length > 0) {
-            const info = bookInfo.getChapterLineInfo(lineNum - 1);
+            const info = this.bookInfo.getChapterLineInfo(lineNum - 1);
             if (info !== null) info.joinChapterName(name);
           }
           this.addNextChapterName = -1;
@@ -1043,14 +1043,13 @@ while (m !== null) {
         preLines[0] = noRubyLine;
       }
       // 行数設定
-      bookInfo.totalLineNum = this.lineNum;
+      this.bookInfo.totalLineNum = this.lineNum;
    
       if (this.inComment) {
         LogAppender.error(this.commentLineStart, "コメントが閉じていません");
       }
-
       // 表題と著者を先頭行から設定
-      bookInfo.setMetaInfo(titleType, pubFirst, this.firstLines, this.firstLineStart, this.firstCommentLineNum);
+      this.bookInfo.setMetaInfo(titleType, pubFirst, firstLines, firstLineStart, firstCommentLineNum);
       // this.bookInfo.preTitlePageBreak = preTitlePageBreak; // タイトルがあればタイトル前の改ページ状況を設定
 
       // タイトルのChapter追加
