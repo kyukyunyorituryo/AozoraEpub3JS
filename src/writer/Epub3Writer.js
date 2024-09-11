@@ -534,10 +534,10 @@ export default class Epub3Writer {
 
         // 表紙をテンプレート＋メタ情報から生成 先に出力すると外字画像出力で表紙の順番が狂う
         if (!bookInfo.imageOnly && (bookInfo.titlePageType === BookInfo.TITLE_MIDDLE || bookInfo.titlePageType === BookInfo.TITLE_HORIZONTAL)) {
-            let vmFilePath = `${Epub3Writer.templatePath}${Epub3Writer.OPS_PATH}${Epub3Writer.XHTML_PATH}${Epub3Writer.TITLE_M_EJS}`;
+            let vmFilePath = `${this.templatePath}${Epub3Writer.OPS_PATH}${Epub3Writer.XHTML_PATH}${Epub3Writer.TITLE_M_EJS}`;
             if (bookInfo.titlePageType === BookInfo.TITLE_HORIZONTAL) {
                 converter.vertical = false;
-                vmFilePath = `${Epub3Writer.templatePath}${Epub3Writer.OPS_PATH}${Epub3Writer.XHTML_PATH}${Epub3Writer.TITLE_H_EJS}`;
+                vmFilePath = `${this.templatePath}${Epub3Writer.OPS_PATH}${Epub3Writer.XHTML_PATH}${Epub3Writer.TITLE_H_EJS}`;
             }
 
             // ルビと外字画像注記と縦中横注記(縦書きのみ)のみ変換する
@@ -687,7 +687,7 @@ export default class Epub3Writer {
                 
                 this.ejsData.coverImage=insertCoverInfo;
 
-                const bw =fs.readFileSync(path.resolve(__dirname, `${Epub3Writer.templatePath}${Epub3Writer.OPS_PATH}${Epub3Writer.XHTML_PATH}${Epub3Writer.COVER_EJS}`), 'utf-8');
+                const bw =fs.readFileSync(path.resolve(__dirname, `${this.templatePath}${Epub3Writer.OPS_PATH}${Epub3Writer.XHTML_PATH}${Epub3Writer.COVER_EJS}`), 'utf-8');
                 const zosdata=ejs.render(bw,this.ejsData)      
                 this.zos.file(`${Epub3Writer.OPS_PATH}${Epub3Writer.XHTML_PATH}${Epub3Writer.COVER_FILE}`, zosdata); 
             } else {
@@ -701,8 +701,8 @@ export default class Epub3Writer {
         this.ejsData.images=this.imageInfos;    
         this.ejsData.vecGaijiInfo=this.vecGaijiInfo;
 
-        this.zos.addFile(Buffer.from(''), `${Epub3Writer.OPS_PATH}${Epub3Writer.PACKAGE_FILE}`);
-        const bw =fs.readFileSync(path.resolve(__dirname, `${templatePath}${Epub3Writer.OPS_PATH}${PACKAGE_EJS}`), 'utf-8');
+        //this.zos.addFile(Buffer.from(''), `${Epub3Writer.OPS_PATH}${Epub3Writer.PACKAGE_FILE}`);
+        const bw =fs.readFileSync(path.resolve(__dirname, `${this.templatePath}${Epub3Writer.OPS_PATH}${Epub3Writer.PACKAGE_EJS}`), 'utf-8');
         const zosdata=ejs.render(bw,this.ejsData)      
         this.zos.file(`${Epub3Writer.OPS_PATH}${Epub3Writer.PACKAGE_FILE}`, zosdata); 
 
