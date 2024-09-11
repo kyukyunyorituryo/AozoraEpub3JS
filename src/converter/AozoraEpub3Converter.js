@@ -1400,9 +1400,7 @@ while (m !== null) {
         if (this.tagLevel === 0) lastZeroTagLevelLineNum = this.lineNum;
       } while ((line = src.readLine()) != null);
     } catch (e) {
-      e.printStackTrace();
       LogAppender.error(this.lineNum, "");
-      throw e;
     }
   }
   
