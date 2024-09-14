@@ -755,7 +755,7 @@ while (m !== null) {
   if (this.chukiFlagPageBreak.has(chukiName)) {
     // 改ページ注記ならフラグON
     this.addSectionChapter = true;
-  } else if (this.chapterChukiMap.has(chukiName)) {
+  } else if (this.chapterChukiMap != null && this.chapterChukiMap.has(chukiName)) {
     // 見出し注記
     const chapterType = this.chapterChukiMap.get(chukiName);
     if (noRubyLine.length === m.index + chukiTag.length) {
