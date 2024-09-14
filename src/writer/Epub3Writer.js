@@ -371,7 +371,6 @@ export default class Epub3Writer {
         // JSZipにファイルを追加する前に、カスタムファイルを優先的に使用するか確認
         let filePath = this.templatePath + fileName;
         const idx = fileName.lastIndexOf('/');
-        
         // カスタムファイルの存在を確認し、もしあれば優先
         if (idx > 0) {
             const customFilePath = this.templatePath + fileName.substring(0, idx) + "_custom/" + fileName.substring(idx + 1);            
@@ -428,12 +427,14 @@ export default class Epub3Writer {
             this.ejsData.title = CharUtils.escapeHtml(title);
             // タイトル読み &<>はエスケープ
             if (bookInfo.titleAs) this.ejsData.titleAs = CharUtils.escapeHtml(bookInfo.titleAs);
+            if (!bookInfo.titleAs) this.ejsData.titleAs =null
             // 著者 &<>はエスケープ
             this.ejsData.creator = CharUtils.escapeHtml(creator);
             // 著者読み &<>はエスケープ
             if (bookInfo.creatorAs) this.ejsData.creatorAs = CharUtils.escapeHtml(bookInfo.creatorAs);
             // 刊行者情報
             if (bookInfo.publisher) this.ejsData.publisher = CharUtils.bookInfo.publisher;
+            if (!bookInfo.publisher) this.ejsData.publisher = null;
             // 言語 &<>はエスケープ
             if (!bookInfo.language) bookInfo.language = 'ja';
             this.ejsData.language = CharUtils.escapeHtml(bookInfo.language);
@@ -702,7 +703,8 @@ export default class Epub3Writer {
         this.ejsData.vecGaijiInfo=this.vecGaijiInfo;
 
         //this.zos.addFile(Buffer.from(''), `${Epub3Writer.OPS_PATH}${Epub3Writer.PACKAGE_FILE}`);
-        const bw =fs.readFileSync(path.resolve(__dirname, `${this.templatePath}${Epub3Writer.OPS_PATH}${Epub3Writer.PACKAGE_EJS}`), 'utf-8');
+        let bw =fs.readFileSync(path.resolve(__dirname, `${this.templatePath}${Epub3Writer.OPS_PATH}${Epub3Writer.PACKAGE_EJS}`), 'utf-8');
+        if(!this.ejsData.title_page)this.ejsData.title_page=null;
         const zosdata=ejs.render(bw,this.ejsData)      
         this.zos.file(`${Epub3Writer.OPS_PATH}${Epub3Writer.PACKAGE_FILE}`, zosdata); 
 
@@ -749,16 +751,16 @@ export default class Epub3Writer {
         }
         // navファイル
         this.ejsData.chapters = this.chapterInfos;
-        bw =fs.readFileSync(path.resolve(__dirname,`${this.templatePath}${this.OPSPATH}${this.XHTML_PATH}${this.XHTML_NAV_EJS}`), 'utf-8');
+        bw =fs.readFileSync(path.resolve(__dirname,`${this.templatePath}${Epub3Writer.OPS_PATH}${Epub3Writer.XHTML_PATH}${Epub3Writer.XHTML_NAV_EJS}`), 'utf-8');
         zosdata=ejs.render(bw,this.ejsData)      
-        this.zos.file(`${this.OPSPATH}${this.XHTML_NAV_FILE}`, zosdata); 
+        this.zos.file(`${this.OPS_PATH}${this.XHTML_NAV_FILE}`, zosdata); 
 
         // tocファイル
         this.ejsData.chapters = this.chapterInfos;
 
-        bw =fs.readFileSync(path.resolve(__dirname,`${this.templatePath}${this.OPSPATH}${this.TOC_EJS}`), 'utf-8');
+        bw =fs.readFileSync(path.resolve(__dirname,`${this.templatePath}${this.OPS_PATH}${this.TOC_EJS}`), 'utf-8');
         zosdata=ejs.render(bw,this.ejsData)      
-        this.zos.file(`${this.OPSPATH}${this.TOC_FILE}`, zosdata); 
+        this.zos.file(`${this.OPS_PATH}${this.TOC_FILE}`, zosdata); 
 
         if (src) src.close();
 
@@ -768,10 +770,10 @@ export default class Epub3Writer {
 
         // フォントファイル格納
         if (!bookInfo.imageOnly) {
-            const fontsPath = new File(`${this.templatePath}${this.OPSPATH}${this.FONTS_PATH}`);
+            const fontsPath = new File(`${this.templatePath}${this.OPS_PATH}${this.FONTS_PATH}`);
             if (fontsPath.exists()) {
                 for (const fontFile of fontsPath.listFiles()) {
-                    const outFileName = `${this.OPSPATH}${this.FONTS_PATH}${fontFile.getName()}`;
+                    const outFileName = `${this.OPS_PATH}${this.FONTS_PATH}${fontFile.getName()}`;
                     //zos.putArchiveEntry(new ZipArchiveEntry(outFileName));
                     //const fis = fs.createReadStream(`${this.templatePath}${outFileName}`);
                     //fis.pipe(zos);
@@ -788,7 +790,7 @@ export default class Epub3Writer {
         for (const gaijiInfo of this.vecGaijiInfo) {
             const gaijiFile = gaijiInfo.getFile();
             if (gaijiFile.exists()) {
-                const outFileName = `${this.OPSPATH}${this.GAIJI_PATH}${gaijiFile.getName()}`;
+                const outFileName = `${this.OPS_PATH}${this.GAIJI_PATH}${gaijiFile.getName()}`;
                 //zos.putArchiveEntry(new ZipArchiveEntry(outFileName));
                 //const fis = fs.createReadStream(gaijiFile);
                 //fis.pipe(zos);
@@ -822,7 +824,7 @@ export default class Epub3Writer {
                 if (bookInfo.coverImage) {
                     // プレビューで編集されている場合
                     this.writeCoverImage(bookInfo.coverImage, zos, this.coverImageInfo);
-                    this.zos.file(`${this.OPSPATH}${this.IMAGES_PATH}${this.coverImageInfo.getOutFileName()}`, zosdata); 
+                    this.zos.file(`${this.OPS_PATH}${this.IMAGES_PATH}${this.coverImageInfo.getOutFileName()}`, zosdata); 
                     bookInfo.coverImage = null; // 同じ画像が使われている場合は以後はファイルから読み込ませる   
                    
 
@@ -831,7 +833,7 @@ export default class Epub3Writer {
                     const bais = new Buffer.from(this.coverImageBytes);
                     this.writeCoverImage(bais, zos, this.coverImageInfo);
 
-                    this.zos.file(`${this.OPSPATH}${this.IMAGES_PATH}${this.coverImageInfo.getOutFileName()}`, bais); 
+                    this.zos.file(`${this.OPS_PATH}${this.IMAGES_PATH}${this.coverImageInfo.getOutFileName()}`, bais); 
                 }
                 this.imageInfos.shift(); // カバー画像は出力済みなので削除
                 if (this.jProgressBar) this.jProgressBar.value += 10;
@@ -858,7 +860,7 @@ export default class Epub3Writer {
                                 await this.writeImage(fis, zos, imageInfo);
 
                                 const fis =fs.readFileSync(path.resolve(imageFile));     
-                                this.zos.file(`${this.OPSPATH}${this.IMAGES_PATH}${imageInfo.getOutFileName()}`, fis); 
+                                this.zos.file(`${this.OPS_PATH}${this.IMAGES_PATH}${imageInfo.getOutFileName()}`, fis); 
 
 
                                 this.outImageFileNames.delete(srcImageFileName);
@@ -1052,7 +1054,7 @@ export default class Epub3Writer {
     async endSection() {
         // フッタ出力
 
-        const bw =fs.readFileSync(path.resolve(__dirname, this.templatePath + this.OPS_PATH + this.XHTML_PATH + this.XHTML_FOOTER_EJS), 'utf-8');
+        const bw =fs.readFileSync(path.resolve(__dirname, this.templatePath + Epub3Writer.OPS_PATH + Epub3Writer.XHTML_PATH + Epub3Writer.XHTML_FOOTER_EJS), 'utf-8');
         const zosdata=ejs.render(bw,this.ejsData)      
         this.zos.file(this.zos, zosdata); 
     }
