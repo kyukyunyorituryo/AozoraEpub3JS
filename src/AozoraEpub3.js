@@ -354,8 +354,6 @@ options.parse(process.argv);
             // 表題ページ
             bookInfo.titlePageType = titlePage;
         }
-        console.log(bookInfo)
-
         let writer = epub3Writer;
         if (!isFile) {
             if (ext === "rar") {
@@ -426,7 +424,7 @@ options.parse(process.argv);
             }
         }
 
-        const outFile = getOutFile(srcFile, dstPath, bookInfo, autoFileName, outExt);
+        const outFile = await getOutFile(srcFile, dstPath, bookInfo, autoFileName, outExt);
         await convertFile(
             srcFile, ext, outFile,
             aozoraConverter, writer,
@@ -471,12 +469,11 @@ options.parse(process.argv);
       const textEntryName = [null];
       const is = await getTextInputStream(srcFile, ext, imageInfoReader, textEntryName, txtIdx);
       if (is === null) return null;
-
       // タイトル、画像注記、左右中央注記、目次取得
       
-      const src = fs.readFileSync(is, encType)
+      const src = fs.readFileSync(is, encType)      
+     
       const bookInfo = await aozoraConverter.getBookInfo(srcFile, src, imageInfoReader, titleType, pubFirst);
-      is.close();
       bookInfo.textEntryName = textEntryName[0];
       return bookInfo;
 
