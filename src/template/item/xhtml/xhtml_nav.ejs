@@ -44,31 +44,31 @@ nav#landmarks { display:none; }
 </head>
 
 <body>
-<%-- epub3 landmarks nav --%>
+<%# epub3 landmarks nav %>
 	<nav epub:type="landmarks" id="landmarks" hidden="">
 		<h2>Guide</h2>
 		<ol>
-<% if (bookInfo.InsertCoverPage) { %>
+<% if (bookInfo.InsertCoverPage) { -%>
 			<li><a epub:type="cover" href="xhtml/cover.xhtml">表紙</a></li>
 <% } %>
-<% if (bookInfo.InsertTocPage) { %>
+<% if (bookInfo.InsertTocPage) { -%>
 			<li><a epub:type="toc" href="nav.xhtml">目次</a></li>
 <% } %>
-<% if (title_page) { %>
+<% if (title_page) { -%>
 			<li><a epub:type="titlepage" href="xhtml/title.xhtml">扉</a></li>
 <% } %>
-<% sections.forEach(function(sectionInfo) { %>
+<% if (sectionInfo) { -%>
 			<li><a epub:type="bodymatter" href="xhtml/<%= sectionInfo.SectionId %>.xhtml">本文</a></li>
-<% break; }); %>
+<% }; -%>
 		</ol>
 	</nav>
-<%-- epub3 toc nav --%>
+<%# epub3 toc nav %>
 	<nav epub:type="toc" id="toc">
 		<h1>目　次</h1>
 		<ol>
-<% if (bookInfo.InsertCoverPage && bookInfo.InsertCoverPageToc) { %>
+<% if (bookInfo.InsertCoverPage && bookInfo.InsertCoverPageToc) { -%>
 			<li class="chapter" id="toccover"><a href="xhtml/cover.xhtml"><%= cover_name %></a></li>
-<% } %>
+<% } -%>
 <% let idx = 0; %>
 <% chapters.forEach(function(chapter) { %>
 <% if (chapter.ChapterName) { %>
