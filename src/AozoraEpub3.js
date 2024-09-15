@@ -505,7 +505,7 @@ try {
   await epubWriter.write(aozoraConverter, src, srcFile, ext, outFile, bookInfo, imageInfoReader);
 
   LogAppender.append(`変換完了[${((Date.now() - time) / 1000).toFixed(1)}s] : `);
-  LogAppender.println(outFile.getPath());
+  LogAppender.println(outFile);
 } catch (e) {
   console.error(e);
   LogAppender.println(`エラーが発生しました : ${e.message}`);
