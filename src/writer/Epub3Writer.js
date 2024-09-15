@@ -426,17 +426,15 @@ export default class Epub3Writer {
             // タイトル &<>はエスケープ
             this.ejsData.title = CharUtils.escapeHtml(title);
             // タイトル読み &<>はエスケープ
-            if (bookInfo.titleAs) this.ejsData.titleAs = CharUtils.escapeHtml(bookInfo.titleAs);
-            if (!bookInfo.titleAs) this.ejsData.titleAs =null
+            bookInfo.titleAs ? this.ejsData.titleAs = CharUtils.escapeHtml(bookInfo.titleAs) : this.ejsData.titleAs =null;
             // 著者 &<>はエスケープ
             this.ejsData.creator = CharUtils.escapeHtml(creator);
             // 著者読み &<>はエスケープ
-            if (bookInfo.creatorAs) this.ejsData.creatorAs = CharUtils.escapeHtml(bookInfo.creatorAs);
+            bookInfo.creatorAs ? this.ejsData.creatorAs = CharUtils.escapeHtml(bookInfo.creatorAs) : this.ejsData.creatorAs = null;
             // 刊行者情報
-            if (bookInfo.publisher) this.ejsData.publisher = CharUtils.bookInfo.publisher;
-            if (!bookInfo.publisher) this.ejsData.publisher = null;
+            bookInfo.publisher ? this.ejsData.publisher = CharUtils.bookInfo.publisher : this.ejsData.publisher = null;
             // 言語 &<>はエスケープ
-            if (!bookInfo.language) bookInfo.language = 'ja';
+            bookInfo.language ? this.ejsData.language = bookInfo.language : this.ejsData.language = null;
             this.ejsData.language = CharUtils.escapeHtml(bookInfo.language);
 
             // 書籍情報
@@ -449,11 +447,9 @@ export default class Epub3Writer {
             this.ejsData.navNest = this.navNest;
 
             // 端末種別
-            if (this.isKindle) this.ejsData.kindle = true;
-
+            this.isKindle ? this.ejsData.kindle = true : this.ejsData.kindle =null;
             // SVG画像出力
-            if (this.isSvgImage) this.ejsData.svgImage = true;
-
+            this.isSvgImage ?  this.ejsData.svgImage = true : this.ejsData.svgImage = null;
 
             // スタイル
             this.ejsData.pageMargin = this.pageMargin;
