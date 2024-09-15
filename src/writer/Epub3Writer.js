@@ -458,6 +458,7 @@ export default class Epub3Writer {
             this.ejsData.fontSize = this.fontSize;
             this.ejsData.boldUseGothic = this.boldUseGothic;
             this.ejsData.gothicUseBold = this.gothicUseBold;
+            this.ejsData.sectionInfo=null;
 
             // 出力先ePubのZipストリーム生成
             this.zos = new JSZip();
@@ -701,7 +702,7 @@ export default class Epub3Writer {
         //this.zos.addFile(Buffer.from(''), `${Epub3Writer.OPS_PATH}${Epub3Writer.PACKAGE_FILE}`);
         let bw =fs.readFileSync(path.resolve(__dirname, `${this.templatePath}${Epub3Writer.OPS_PATH}${Epub3Writer.PACKAGE_EJS}`), 'utf-8');
         if(!this.ejsData.title_page)this.ejsData.title_page=null;
-        const zosdata=ejs.render(bw,this.ejsData)      
+        let zosdata=ejs.render(bw,this.ejsData)      
         this.zos.file(`${Epub3Writer.OPS_PATH}${Epub3Writer.PACKAGE_FILE}`, zosdata); 
 
         // nullを除去
@@ -747,14 +748,14 @@ export default class Epub3Writer {
         }
         // navファイル
         this.ejsData.chapters = this.chapterInfos;
-        bw =fs.readFileSync(path.resolve(__dirname,`${this.templatePath}${Epub3Writer.OPS_PATH}${Epub3Writer.XHTML_PATH}${Epub3Writer.XHTML_NAV_EJS}`), 'utf-8');
+        bw =fs.readFileSync(path.resolve(__dirname,`${this.templatePath}${Epub3Writer.OPS_PATH}${Epub3Writer.XHTML_PATH}${Epub3Writer.XHTML_NAV_EJS}`), 'utf-8');        
         zosdata=ejs.render(bw,this.ejsData)      
         this.zos.file(`${this.OPS_PATH}${this.XHTML_NAV_FILE}`, zosdata); 
 
         // tocファイル
         this.ejsData.chapters = this.chapterInfos;
 
-        bw =fs.readFileSync(path.resolve(__dirname,`${this.templatePath}${this.OPS_PATH}${this.TOC_EJS}`), 'utf-8');
+        bw =fs.readFileSync(path.resolve(__dirname,`${this.templatePath}${Epub3Writer.OPS_PATH}${Epub3Writer.TOC_EJS}`), 'utf-8');
         zosdata=ejs.render(bw,this.ejsData)      
         this.zos.file(`${this.OPS_PATH}${this.TOC_FILE}`, zosdata); 
 
@@ -1030,7 +1031,7 @@ export default class Epub3Writer {
         }
         if (pageType === PageBreakType.PAGE_MIDDLE) sectionInfo.setMiddle(true);
         else if (pageType === PageBreakType.PAGE_BOTTOM) sectionInfo.setBottom(true);
-        this.sectionInfos.add(sectionInfo);
+        this.sectionInfos.push(sectionInfo);
         // セクション開始は名称がnullなので改ページ処理で文字列が設定されなければ出力されない 階層レベルは1
         // this.addChapter(null, null, 1);
 
@@ -1058,7 +1059,7 @@ export default class Epub3Writer {
     /** 章を追加 */
     addChapter(chapterId, name, chapterLevel) {
         let sectionInfo = this.sectionInfos.lastElement();
-        this.chapterInfos.add(new ChapterInfo(sectionInfo.sectionId, chapterId, name, chapterLevel));
+        this.chapterInfos.push(new ChapterInfo(sectionInfo.sectionId, chapterId, name, chapterLevel));
     }
 
     /** 外字用フォントを追加 */
@@ -1094,7 +1095,7 @@ export default class Epub3Writer {
             // 画像は未だ出力されていない
             if (imageId === null) {
                 imageId = this.decimalFormat.format(this.imageIndex);
-                this.imageInfos.add(imageInfo);
+                this.imageInfos.push(imageInfo);
                 this.outImageFileNames.add(srcImageFileName);
                 if (this.imageIndex - 1 === this.bookInfo.coverImageIndex) {
                     // imageInfo.setIsCover(true);
