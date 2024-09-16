@@ -13,6 +13,7 @@ import AozoraGaijiConverter from './AozoraGaijiConverter.js';
 import LogAppender from '../util/LogAppender.js';
 import BookInfo from '../info/BookInfo.js';
 import CharUtils from '../util/CharUtils.js';
+import RubyCharType from '../converter/RubyCharType.js';
 
 export default class AozoraEpub3Converter {
   //---------------- Properties ----------------//
@@ -1966,19 +1967,19 @@ export default class AozoraEpub3Converter {
       // 横組みチェック
       if (chukiName.endsWith('横組み')) {
         this.inYoko = true;
-        noTcyStart.add(buf.length());
+        this.noTcyStart.add(buf.length());
       } else if (this.inYoko && chukiName.endsWith('横組み終わり')) {
         this.inYoko = false;
-        noTcyEnd.add(buf.length());
+        this.noTcyEnd.add(buf.length());
       }
 
       // 縦中横チェック
       if (!this.inYoko) {
         if (chukiName.startsWith('縦中横')) {
           if (chukiName.endsWith('終わり')) {
-            noTcyEnd.add(buf.length());
+            this.noTcyEnd.add(buf.length());
           } else {
-            noTcyStart.add(buf.length());
+            this.noTcyStart.add(buf.length());
           }
         }
       }
@@ -2386,15 +2387,15 @@ export default class AozoraEpub3Converter {
           if (!patternMatched) {
             m2 = this.chukiPatternMap.get("字下げ終わり複合").exec(chukiTag);
             if (m2) {
-                if (inJisage === -1) {
-                    LogAppender.error(lineNum, "字下げ注記エラー");
-                } else {
-                    buf.push(chukiMap.get("ここで字下げ終わり")[0]);
-                }
-                inJisage = -1;
-            
-                noBr = true; // 改行なし
-                patternMatched = true;
+              if (inJisage === -1) {
+                LogAppender.error(lineNum, "字下げ注記エラー");
+              } else {
+                buf.push(chukiMap.get("ここで字下げ終わり")[0]);
+              }
+              inJisage = -1;
+
+              noBr = true; // 改行なし
+              patternMatched = true;
             }
           }
 
@@ -2570,16 +2571,15 @@ export default class AozoraEpub3Converter {
  * //@param buf 出力先バッファ
  * //@param ch ルビ変換前の行文字列 */
   convertRubyText(line) {
-    let buf = new StringBuilder();
-    let ch = Array.from(line);
-
+    let buf = [];
+    let ch = line.split('');
     let begin = 0;
     let end = ch.length;
     let noRuby = false;
 
     // ルビと文字変換
-    let rubyStart = -1; // ルビ開始位置
-    let rubyTopStart = -1; // ぶりがな開始位置
+    let rubyStart = -1;  // ルビ開始位置
+    let rubyTopStart = -1;  // ふりがな開始位置
     let inRuby = false;
     // let isAlphaRuby = false; // 英字へのルビ
     let rubyCharType = RubyCharType.NULL;
@@ -2589,16 +2589,16 @@ export default class AozoraEpub3Converter {
 
     let noTcy = false;
     let noTcyPre = noTcy;
-    for (let i = begin; i < end; i++) {
 
+    for (let i = begin; i < end; i++) {
       // 縦中横と横書きの中かチェック
-      if (!noTcy && noTcyStart.includes(i)) {
+      if (!noTcy && this.noTcyStart.includes(i)) {
         // 未処理の文字列が残っていないなら noTcy と同じ値を設定。残っているなら noTcy の値を保存。
-        noTcyPre = (rubyStart === -1) ? true : noTcy;
+        noTcyPre = rubyStart === -1;
         noTcy = true;
-      } else if (noTcy && noTcyEnd.includes(i)) {
+      } else if (noTcy && this.noTcyEnd.includes(i)) {
         // 未処理の文字列が残っていないなら noTcy と同じ値を設定。残っているなら noTcy の値を保存。
-        noTcyPre = (rubyStart === -1) ? false : noTcy;
+        noTcyPre = rubyStart !== -1;
         noTcy = false;
       }
       console.assert(rubyStart !== -1 || noTcyPre === noTcy);
@@ -2628,42 +2628,38 @@ export default class AozoraEpub3Converter {
         // ルビ終わり エスケープ文字なら処理しない
         if (ch[i] === '》' && !CharUtils.isEscapedChar(ch, i)) {
           if (rubyStart !== -1 && rubyTopStart !== -1) {
-            if (noRuby) {
-              this.convertTcyText(buf, ch, rubyStart, rubyTopStart, noTcy); // 本文
-            } else {
-              // 長すぎるルビを警告
-              if (rubyTopStart - rubyStart >= 30) {
+               // 長すぎるルビを警告
+            if (rubyTopStart - rubyStart >= 30) {
                 // タグは除去 面倒なので文字列で置換
-                if (line.substring(rubyStart, rubyTopStart).replaceAll("<[^>]+>", " ").length >= 30) {
-                  LogAppender.warn(lineNum, "ルビが長すぎます");
-                }
+              if (line.substring(rubyStart, rubyTopStart).replace(/<[^>]+>/g, ' ').length >= 30) {
+                LogAppender.warn(lineNum, "ルビが長すぎます");
               }
+            }
               // 同じ長さで同じ文字なら一文字づつルビを振る
               if (rubyTopStart - rubyStart === i - rubyTopStart - 1 && CharUtils.isSameChars(ch, rubyTopStart + 1, i)) {
-                if (buf.lastIndexOf(rubyEndChuki) !== buf.length - rubyEndChuki.length) {
-                  buf.push(rubyStartChuki);
-                } else {
-                  buf.setLength(buf.length - rubyEndChuki.length);
-                }
-                for (let j = 0; j < rubyTopStart - rubyStart; j++) {
-                  this.convertReplacedChar(buf, ch, rubyStart + j, noTcy); // 本文
-                  buf.push(this.chukiMap.get("ルビ前")[0]);
-                  this.convertReplacedChar(buf, ch, rubyTopStart + 1 + j, true); // ルビ
-                  buf.push(this.chukiMap.get("ルビ後")[0]);
-                }
-                buf.push(rubyEndChuki);
+              if (buf.join('').indexOf(rubyEndChuki, buf.length - rubyEndChuki.length) === -1) {
+                buf.push(rubyStartChuki);
               } else {
-                if (buf.lastIndexOf(rubyEndChuki) !== buf.length - rubyEndChuki.length) {
-                  buf.push(rubyStartChuki);
-                } else {
-                  buf.setLength(buf.length - rubyEndChuki.length);
-                }
-                this.convertTcyText(buf, ch, rubyStart, rubyTopStart, noTcy); // 本文
-                buf.push(this.chukiMap.get("ルビ前")[0]);
-                this.convertTcyText(buf, ch, rubyTopStart + 1, i, true); // ルビ
-                buf.push(this.chukiMap.get("ルビ後")[0]);
-                buf.push(rubyEndChuki);
+                buf.splice(buf.length - rubyEndChuki.length);
               }
+              for (let j = 0; j < rubyTopStart - rubyStart; j++) {
+                this.convertReplacedChar(buf, ch, rubyStart + j, noTcy); // 本文
+                buf.push(this.chukiMap.get("ルビ前")[0]);
+                this.convertReplacedChar(buf, ch, rubyTopStart + 1 + j, true); // ルビ
+                buf.push(this.chukiMap.get("ルビ後")[0]);
+              }
+              buf.push(rubyEndChuki);
+            } else {
+              if (buf.join('').indexOf(rubyEndChuki, buf.length - rubyEndChuki.length) === -1) {
+                buf.push(rubyStartChuki);
+              } else {
+                buf.splice(buf.length - rubyEndChuki.length);
+              }
+              this.convertTcyText(buf, ch, rubyStart, rubyTopStart, noTcy); // 本文
+              buf.push(this.chukiMap.get("ルビ前")[0]);
+              this.convertTcyText(buf, ch, rubyTopStart + 1, i, true); // ルビ
+              buf.push(this.chukiMap.get("ルビ後")[0]);
+              buf.push(rubyEndChuki);
             }
           }
           if (rubyStart === -1 && !noRuby) {
@@ -2695,7 +2691,6 @@ export default class AozoraEpub3Converter {
             case RubyCharType.KATAKANA:
               if (!CharUtils.isKatakana(ch[i])) charTypeChanged = true;
               break;
-            default:
           }
           if (charTypeChanged) {
             // rubyStartから前までを出力
@@ -2741,13 +2736,15 @@ export default class AozoraEpub3Converter {
         }
       }
     }
+
     if (rubyStart !== -1) {
       // ルビ開始チェック中で漢字以外ならキャンセルして出力
       this.convertTcyText(buf, ch, rubyStart, end, noTcy);
     }
 
-    return buf;
+    return buf.join('');
   }
+
 
   /** ルビ変換 外部呼び出し用 */
   convertTcyText(text) {
@@ -3228,7 +3225,7 @@ export default class AozoraEpub3Converter {
 
   /** 出力バッファに文字出力
    * < と > と & は &lt; &gt; &amp; に置換 */
-  #convertReplacedChar(buf, ch, idx, noTcy) {
+  convertReplacedChar(buf, ch, idx, noTcy) {
     // NULL文字なら何も出力しない
     if (ch[idx] === '\0') return;
 
@@ -3253,8 +3250,8 @@ export default class AozoraEpub3Converter {
       }
     }
 
-    if (replaceMap !== null) {
-      const replaced = replaceMap.get(ch[idx]);
+    if (this.replaceMap !== null) {
+      const replaced = this.replaceMap.get(ch[idx]);
       // 置換して終了
       if (replaced !== null) {
         buf.push(replaced);
