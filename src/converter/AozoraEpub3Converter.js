@@ -194,7 +194,7 @@ export default class AozoraEpub3Converter {
    * 注記を返す 画像のみの出力用
    */
   getChukiValue(key) {
-    return chukiMap.get(key);
+    return this.chukiMap.get(key);
   }
 
   /** 後述注記→タグ変換用
@@ -1234,7 +1234,10 @@ export default class AozoraEpub3Converter {
     }
 
     // 先頭行取得
-    line = src.readLine();
+    
+    var lines = src.toString().split('¥n');
+    line = lines[0];
+    //line = src.readLine();
     if (line == null) {
       return;
     }
@@ -1346,29 +1349,29 @@ export default class AozoraEpub3Converter {
       if (bookInfo.isIgnoreLine(this.lineNum)) continue;
 
       if (this.lineNum === bookInfo.titleLine) {
-        this.printLineBuffer(out, chukiMap.get("表題前")[0], -1, true);
+        this.printLineBuffer(out, this.chukiMap.get("表題前")[0], -1, true);
         this.convertTextLineToEpub3(out, line, this.lineNum, false, noImage);
-        this.printLineBuffer(out, chukiMap.get("表題後")[0], -1, true);
+        this.printLineBuffer(out, this.chukiMap.get("表題後")[0], -1, true);
       } else if (this.lineNum === bookInfo.orgTitleLine) {
-        this.printLineBuffer(out, chukiMap.get("原題前")[0], -1, true);
+        this.printLineBuffer(out, this.chukiMap.get("原題前")[0], -1, true);
         this.convertTextLineToEpub3(out, line, this.lineNum, false, noImage);
-        this.printLineBuffer(out, chukiMap.get("原題後")[0], -1, true);
+        this.printLineBuffer(out, this.chukiMap.get("原題後")[0], -1, true);
       } else if (this.lineNum === bookInfo.subTitleLine) {
-        this.printLineBuffer(out, chukiMap.get("副題前")[0], -1, true);
+        this.printLineBuffer(out, this.chukiMap.get("副題前")[0], -1, true);
         this.convertTextLineToEpub3(out, line, this.lineNum, false, noImage);
-        this.printLineBuffer(out, chukiMap.get("副題後")[0], -1, true);
+        this.printLineBuffer(out, this.chukiMap.get("副題後")[0], -1, true);
       } else if (this.lineNum === bookInfo.subOrgTitleLine) {
-        this.printLineBuffer(out, chukiMap.get("副原題前")[0], -1, true);
+        this.printLineBuffer(out, this.chukiMap.get("副原題前")[0], -1, true);
         this.convertTextLineToEpub3(out, line, this.lineNum, false, noImage);
-        this.printLineBuffer(out, chukiMap.get("副原題後")[0], -1, true);
+        this.printLineBuffer(out, this.chukiMap.get("副原題後")[0], -1, true);
       } else if (this.lineNum === bookInfo.creatorLine) {
-        this.printLineBuffer(out, chukiMap.get("著者前")[0], -1, true);
+        this.printLineBuffer(out, this.chukiMap.get("著者前")[0], -1, true);
         this.convertTextLineToEpub3(out, line, this.lineNum, false, noImage);
-        this.printLineBuffer(out, chukiMap.get("著者後")[0], -1, true);
+        this.printLineBuffer(out, this.chukiMap.get("著者後")[0], -1, true);
       } else if (this.lineNum === bookInfo.subCreatorLine) {
-        this.printLineBuffer(out, chukiMap.get("副著者前")[0], -1, true);
+        this.printLineBuffer(out, this.chukiMap.get("副著者前")[0], -1, true);
         this.convertTextLineToEpub3(out, line, this.lineNum, false, noImage);
-        this.printLineBuffer(out, chukiMap.get("副著者後")[0], -1, true);
+        this.printLineBuffer(out, this.chukiMap.get("副著者後")[0], -1, true);
       } else {
         this.convertTextLineToEpub3(out, line, this.lineNum, false, noImage);
       }
@@ -1730,7 +1733,7 @@ export default class AozoraEpub3Converter {
     let ch = Array.from(line);
     let charStart = 0;
 
-    let m = chukiPattern.exec(line);
+    let m = this.chukiPattern.exec(line);
     let chukiStart = 0;
 
     while (m !== null) {
@@ -1741,13 +1744,13 @@ export default class AozoraEpub3Converter {
       // fontの入れ子は可、圏点・縦横中はルビも付加
       //なぜか【＃マッチするので除外
       if (chukiTag.charAt(0) === '＃') {
-        m = chukiPattern.exec(line);
+        m = this.chukiPattern.exec(line);
         continue;
       }
       // <img </img> <a </a> 以外のタグは注記処理せず本文処理
       if (chukiTag.charAt(0) === '<' &&
         !(lowerChukiTag.startsWith('<img ') || lowerChukiTag.startsWith('</img>') || lowerChukiTag.startsWith('<a ') || lowerChukiTag.startsWith('</a>'))) {
-        m = chukiPattern.exec(line);
+        m = this.chukiPattern.exec(line);
         continue;
       }
 
@@ -1761,16 +1764,16 @@ export default class AozoraEpub3Converter {
       // 訓点・返り点と縦書き時の縦中横
       if (chukiKunten.includes(chukiName) || (this.vertical && chukiName.startsWith("縦中横"))) {
         // 注記変換
-        buf.push(chukiMap.get(chukiName)[0]);
+        buf.push(this.chukiMap.get(chukiName)[0]);
       } else {
         // 外字画像
         let imageStartIdx = chukiTag.lastIndexOf('（');
         if (imageStartIdx > -1) {
           // 訓点送り仮名チェック ＃の次が（で.を含まない
           if (imageStartIdx === 2 && chukiTag.endsWith("）］") && chukiTag.indexOf('.', 2) === -1) {
-            buf.push(chukiMap.get("行右小書き")[0]);
+            buf.push(this.chukiMap.get("行右小書き")[0]);
             buf.push(chukiTag.substring(3, chukiTag.length - 2));
-            buf.push(chukiMap.get("行右小書き終わり")[0]);
+            buf.push(this.chukiMap.get("行右小書き終わり")[0]);
           } else if (chukiTag.indexOf('.', 2) === -1) {
             // 拡張子を含まない
 
@@ -1784,13 +1787,13 @@ export default class AozoraEpub3Converter {
                 let fileName = this.writer.getImageFilePath(srcFilePath.trim(), -1);
                 switch (orient) {
                   case 0:
-                    buf.push(chukiMap.get("外字画像")[0].replace("%s", fileName));
+                    buf.push(this.chukiMap.get("外字画像")[0].replace("%s", fileName));
                     break;
                   case 1:
-                    buf.push(chukiMap.get("横長外字画像")[0].replace("%s", fileName));
+                    buf.push(this.chukiMap.get("横長外字画像")[0].replace("%s", fileName));
                     break;
                   case 2:
-                    buf.push(chukiMap.get("縦長外字画像")[0].replace("%s", fileName));
+                    buf.push(this.chukiMap.get("縦長外字画像")[0].replace("%s", fileName));
                     break;
                 }
               }
@@ -1800,7 +1803,7 @@ export default class AozoraEpub3Converter {
       }
       // 注記の後ろを文字開始位置に設定
       charStart = chukiStart + chukiTag.length;
-      m = chukiPattern.exec(line);
+      m = this.chukiPattern.exec(line);
     }
     // 注記の後ろの残りの文字
     if (charStart < ch.length) {
@@ -1824,7 +1827,7 @@ export default class AozoraEpub3Converter {
     if (this.nextLineIsCaption) {
       if (!line.startsWith("［＃キャプション］") && !line.startsWith("［＃ここからキャプション］")) {
         LogAppender.warn(lineNum, "画像の次の行にキャプションがありません");
-        buf.push(chukiMap.get("画像終わり")[0]);
+        buf.push(this.chukiMap.get("画像終わり")[0]);
         buf.push("\n");
         this.inImageTag = false;
       }
@@ -1851,7 +1854,7 @@ export default class AozoraEpub3Converter {
           if (c1 == ' ' || c1 == ' ' || c1 == '　') charStart++;
           ch[charStart] = '　';
           break;
-        default: buf.append('　');
+        default: buf.push('　');
       }
     }
     // 割り注開始文字位置
@@ -1872,19 +1875,19 @@ export default class AozoraEpub3Converter {
     // aタグが出力されたらtrue
     let linkStarted = false;
 
-    let bufSuf = new StringBuilder();
+    let bufSuf = [];
     // 注記タグ変換
-    let m = chukiPattern.matcher(line);
+    let m = this.chukiPattern.exec(line);
     let chukiStart = 0;
 
-    this.noTcyStart.clear();
-    this.noTcyEnd.clear();
+    this.noTcyStart = [];
+    this.noTcyEnd = [];
     // 横組み中なら先頭から縦中横抑止
-    if (inYoko) this.noTcyStart.add(0);
-    while (m.find()) {
-      const chukiTag = m.group();
-      const lowerChukiTag = chukiTag.toLowerCase();
-      let chukiStart = m.start();
+    if (this.inYoko) this.noTcyStart.push(0);
+    while (m) {
+      let chukiTag = m[0];
+      let lowerChukiTag = chukiTag.toLowerCase();
+      chukiStart = m.index;
 
       // fontの入れ子は可、圏点・縦横中はルビも付加
       //なぜか【＃マッチするので除外
@@ -1907,7 +1910,7 @@ export default class AozoraEpub3Converter {
 
       // 注記→タグ変換
       const chukiName = chukiTag.substring(2, chukiTag.length - 1);
-      const tags = chukiMap.get(chukiName);
+      const tags = this.chukiMap.get(chukiName);
 
       if (wrcStart > 0 && chukiName.endsWith('割り注終わり')) {
         // 〕と）を外に出すかチェック
@@ -1919,7 +1922,7 @@ export default class AozoraEpub3Converter {
         // 割り注の改行指定があったら改行を挿入
         if (charStart <= wrcBrPos && wrcBrPos <= chukiStart) {
           this.convertEscapedText(buf, ch, charStart, wrcBrPos);
-          buf.append(chukiMap.get('改行')[0]);
+          buf.push(this.chukiMap.get('改行')[0]);
           this.convertEscapedText(buf, ch, wrcBrPos, chukiStart - (wrcEndChar === 0 ? 0 : 1));
           wrcBrPos = -1;
         } else {
@@ -1927,8 +1930,8 @@ export default class AozoraEpub3Converter {
         }
 
         // 割り注終わりタグ出力
-        buf.append(tags[0]);
-        if (wrcEndChar !== 0) buf.append(wrcEndChar);
+        buf.push(tags[0]);
+        if (wrcEndChar !== 0) buf.push(wrcEndChar);
 
         // 長さ警告
         if (wrcStart !== -1 && chukiStart - wrcStart > 60) {
@@ -1951,7 +1954,7 @@ export default class AozoraEpub3Converter {
         // 割り注の改行指定があったら改行を挿入
         if (charStart <= wrcBrPos && wrcBrPos <= chukiStart) {
           this.convertEscapedText(buf, ch, charStart, wrcBrPos);
-          buf.append(chukiMap.get('改行')[0]);
+          buf.push(this.chukiMap.get('改行')[0]);
           this.convertEscapedText(buf, ch, wrcBrPos, chukiStart);
           wrcBrPos = -1;
         } else {
@@ -1962,15 +1965,15 @@ export default class AozoraEpub3Converter {
       // 縦中横抑止
       // 横組みチェック
       if (chukiName.endsWith('横組み')) {
-        inYoko = true;
+        this.inYoko = true;
         noTcyStart.add(buf.length());
-      } else if (inYoko && chukiName.endsWith('横組み終わり')) {
-        inYoko = false;
+      } else if (this.inYoko && chukiName.endsWith('横組み終わり')) {
+        this.inYoko = false;
         noTcyEnd.add(buf.length());
       }
 
       // 縦中横チェック
-      if (!inYoko) {
+      if (!this.inYoko) {
         if (chukiName.startsWith('縦中横')) {
           if (chukiName.endsWith('終わり')) {
             noTcyEnd.add(buf.length());
@@ -1990,7 +1993,7 @@ export default class AozoraEpub3Converter {
           // 字下げ状態エラー出力
           if (inJisage >= 0) {
             LogAppender.warn(inJisage, '字下げ注記省略');
-            buf.append(chukiMap.get('字下げ省略')[0]);
+            buf.push(this.chukiMap.get('字下げ省略')[0]);
             inJisage = -1;
           }
 
@@ -2037,7 +2040,7 @@ export default class AozoraEpub3Converter {
         else if (chukiName.endsWith('字下げ')) {
           if (inJisage >= 0) {
             LogAppender.warn(inJisage, '字下げ注記省略');
-            buf.append(chukiMap.get('字下げ省略')[0]);
+            buf.push(this.chukiMap.get('字下げ省略')[0]);
             inJisage = -1;
           }
           // タグが閉じていればインラインなのでフラグは立てない
@@ -2103,7 +2106,7 @@ export default class AozoraEpub3Converter {
               ) {
                 wrcStartChar = ch[wrcStart];
                 // １文字出力して注記の位置を1文字後ろにずらす
-                buf.append(ch[wrcStart]);
+                buf.push(ch[wrcStart]);
                 chukiStart++;
               }
             }
@@ -2167,15 +2170,15 @@ export default class AozoraEpub3Converter {
           }
         } else if (chukiName.endsWith("キャプション終わり")) {
           if (this.inImageTag) {
-            buf.append(chukiMap.get("画像終わり")[0]);
-            buf.append("\n");
+            buf.push(this.chukiMap.get("画像終わり")[0]);
+            buf.push("\n");
             this.inImageTag = false;
             noBr = true;
           }
         }
         //タグ出力
         if (!noTagAppend) {
-          buf.append(tags[0]);
+          buf.push(tags[0]);
           //行末で閉じる指定のタグをバッファに追加
           if (tags.length > 1) {
             bufSuf.insert(0, tags[1]);
@@ -2192,9 +2195,9 @@ export default class AozoraEpub3Converter {
         if (imageStartIdx > -1) {
           // 訓点送り仮名チェック ＃の次が（で.を含まない
           if (imageStartIdx === 2 && chukiTag.endsWith("）］") && chukiTag.indexOf('.', 2) === -1) {
-            buf.append(chukiMap.get("行右小書き")[0]);
-            buf.append(chukiTag.substring(3, chukiTag.length - 2));
-            buf.append(chukiMap.get("行右小書き終わり")[0]);
+            buf.push(this.chukiMap.get("行右小書き")[0]);
+            buf.push(chukiTag.substring(3, chukiTag.length - 2));
+            buf.push(this.chukiMap.get("行右小書き終わり")[0]);
           } else if (chukiTag.indexOf('.', 2) === -1) {
             // 拡張子を含まない
             LogAppender.info(lineNum, "注記未変換", chukiTag);
@@ -2218,7 +2221,7 @@ export default class AozoraEpub3Converter {
                   }
                   if (!hasRubyStart) {
                     if (!chukiTag.endsWith("#GAIJI#］")) LogAppender.info(lineNum, "画像にルビ", srcFilePath);
-                    buf.append('｜');
+                    buf.push('｜');
                   }
                 }
                 // 外字の場合 (注記末尾がフラグ文字列になっている)
@@ -2228,13 +2231,13 @@ export default class AozoraEpub3Converter {
                   if (imgFileName != null) {
                     switch (orient) {
                       case 0:
-                        buf.append(String.format(chukiMap.get("外字画像")[0], imgFileName));
+                        buf.push(String.format(this.chukiMap.get("外字画像")[0], imgFileName));
                         break;
                       case 1:
-                        buf.append(String.format(chukiMap.get("横長外字画像")[0], imgFileName));
+                        buf.push(String.format(this.chukiMap.get("横長外字画像")[0], imgFileName));
                         break;
                       case 2:
-                        buf.append(String.format(chukiMap.get("縦長外字画像")[0], imgFileName));
+                        buf.push(String.format(this.chukiMap.get("縦長外字画像")[0], imgFileName));
                         break;
                     }
                     // ログ出力
@@ -2278,19 +2281,19 @@ export default class AozoraEpub3Converter {
           }
         } else if (lowerChukiTag.startsWith("<a")) {
           if (linkStarted) {
-            buf.append("</a>");
+            buf.push("</a>");
           }
 
           const href = this.getTagAttr(chukiTag, "href");
           if (href != null && (href.startsWith("http") || href.startsWith("#"))) {
-            buf.append(chukiTag.replaceAll("&", "&amp;"));
+            buf.push(chukiTag.replaceAll("&", "&amp;"));
             linkStarted = true;
           } else {
             linkStarted = false;
           }
         } else if (lowerChukiTag === "</a>") {
           if (linkStarted) {
-            buf.append(chukiTag);
+            buf.push(chukiTag);
           }
         } else {
           // インデント字下げ
@@ -2300,15 +2303,15 @@ export default class AozoraEpub3Converter {
             // 字下げフラグ処理
             if (inJisage >= 0) {
               LogAppender.warn(inJisage, "字下げ注記省略");
-              buf.append(chukiMap.get("字下げ省略")[0]);
+              buf.push(this.chukiMap.get("字下げ省略")[0]);
             }
             inJisage = lineNum;
 
             const arg0 = parseInt(CharUtils.fullToHalf(m2.group(1)));
             const arg1 = parseInt(CharUtils.fullToHalf(m2.group(2)));
-            buf.append(chukiMap.get("折り返し1")[0] + arg1);
-            buf.append(chukiMap.get("折り返し2")[0] + (arg0 - arg1));
-            buf.append(chukiMap.get("折り返し3")[0]);
+            buf.push(this.chukiMap.get("折り返し1")[0] + arg1);
+            buf.push(this.chukiMap.get("折り返し2")[0] + (arg0 - arg1));
+            buf.push(this.chukiMap.get("折り返し3")[0]);
 
             noBr = true; // ブロック字下げなので改行なし
             patternMatched = true;
@@ -2320,15 +2323,15 @@ export default class AozoraEpub3Converter {
               // 字下げフラグ処理
               if (inJisage >= 0) {
                 LogAppender.warn(inJisage, "字下げ注記省略");
-                buf.append(chukiMap.get("字下げ省略")[0]);
+                buf.push(this.chukiMap.get("字下げ省略")[0]);
               }
               inJisage = lineNum;
 
               const arg0 = parseInt(CharUtils.fullToHalf(m2.group(1)));
               const arg1 = parseInt(CharUtils.fullToHalf(m2.group(2)));
-              buf.append(chukiMap.get("字下げ字詰め1")[0] + arg0);
-              buf.append(chukiMap.get("字下げ字詰め2")[0] + arg1);
-              buf.append(chukiMap.get("字下げ字詰め3")[0]);
+              buf.push(this.chukiMap.get("字下げ字詰め1")[0] + arg0);
+              buf.push(this.chukiMap.get("字下げ字詰め2")[0] + arg1);
+              buf.push(this.chukiMap.get("字下げ字詰め3")[0]);
 
               noBr = true; // ブロック字下げなので改行なし
               patternMatched = true;
@@ -2341,21 +2344,21 @@ export default class AozoraEpub3Converter {
               //字下げフラグ処理
               if (inJisage >= 0) {
                 LogAppender.warn(inJisage, "字下げ注記省略");
-                buf.append(chukiMap.get("字下げ省略")[0]);
+                buf.push(this.chukiMap.get("字下げ省略")[0]);
               }
               inJisage = lineNum;
 
               let arg0 = parseInt(CharUtils.fullToHalf(m2.group(1)));
-              buf.append(chukiMap.get("字下げ複合1")[0] + arg0);
+              buf.push(this.chukiMap.get("字下げ複合1")[0] + arg0);
               //複合注記クラス追加
-              if (chukiTag.indexOf("破線罫囲み") > 0) buf.append(" ").append(chukiMap.get("字下げ破線罫囲み")[0]);
-              else if (chukiTag.indexOf("罫囲み") > 0) buf.append(" ").append(chukiMap.get("字下げ罫囲み")[0]);
-              if (chukiTag.indexOf("破線枠囲み") > 0) buf.append(" ").append(chukiMap.get("字下げ破線枠囲み")[0]);
-              else if (chukiTag.indexOf("枠囲み") > 0) buf.append(" ").append(chukiMap.get("字下げ枠囲み")[0]);
-              if (chukiTag.indexOf("中央揃え") > 0) buf.append(" ").append(chukiMap.get("字下げ中央揃え")[0]);
-              if (chukiTag.indexOf("横書き") > 0) buf.append(" ").append(chukiMap.get("字下げ横書き")[0]);
+              if (chukiTag.indexOf("破線罫囲み") > 0) buf.push(" ").push(this.chukiMap.get("字下げ破線罫囲み")[0]);
+              else if (chukiTag.indexOf("罫囲み") > 0) buf.push(" ").push(this.chukiMap.get("字下げ罫囲み")[0]);
+              if (chukiTag.indexOf("破線枠囲み") > 0) buf.push(" ").push(this.chukiMap.get("字下げ破線枠囲み")[0]);
+              else if (chukiTag.indexOf("枠囲み") > 0) buf.push(" ").push(this.chukiMap.get("字下げ枠囲み")[0]);
+              if (chukiTag.indexOf("中央揃え") > 0) buf.push(" ").push(this.chukiMap.get("字下げ中央揃え")[0]);
+              if (chukiTag.indexOf("横書き") > 0) buf.push(" ").push(this.chukiMap.get("字下げ横書き")[0]);
               //複合字下げclass閉じる
-              buf.append(chukiMap.get("字下げ複合2")[0]);
+              buf.push(this.chukiMap.get("字下げ複合2")[0]);
 
               noBr = true;//ブロック字下げなので改行なし
               patternMatched = true;
@@ -2366,7 +2369,7 @@ export default class AozoraEpub3Converter {
             m2 = chukiPatternMap.get("字下げ終わり複合").matcher(chukiTag);
             if (m2.find()) {
               if (inJisage == -1) LogAppender.error(lineNum, "字下げ注記エラー");
-              else buf.append(chukiMap.get("ここで字下げ終わり")[0]);
+              else buf.push(this.chukiMap.get("ここで字下げ終わり")[0]);
               inJisage = -1;
 
               noBr = true;
@@ -2388,7 +2391,7 @@ export default class AozoraEpub3Converter {
         this.convertEscapedText(buf, ch, charStart, ch.length);
       }
       //行末タグを追加
-      if (bufSuf.length() > 0) buf.append(bufSuf.toString());
+      if (bufSuf.length() > 0) buf.push(bufSuf.toString());
 
       //底本：で前が改ページでなければ改ページ追加
       if (separateColophon) {
@@ -2423,40 +2426,40 @@ export default class AozoraEpub3Converter {
     const ratio = this.writer.getImageWidthRatio(srcFileName, hasCaption);
 
     if (imagePageType === PageBreakType.IMAGE_INLINE_W) {
-      if (ratio <= 0) buf.append(`${chukiMap.get("画像横")[0]}${dstFileName}`);
-      else buf.append(`${chukiMap.get("画像幅")[0]}${ratio}${dstFileName}`);
+      if (ratio <= 0) buf.push(`${this.chukiMap.get("画像横")[0]}${dstFileName}`);
+      else buf.push(`${this.chukiMap.get("画像幅")[0]}${ratio}${dstFileName}`);
     } else if (imagePageType === PageBreakType.IMAGE_INLINE_H) {
-      if (ratio <= 0) buf.append(`${chukiMap.get("画像縦")[0]}${dstFileName}`);
-      else buf.append(`${chukiMap.get("画像幅")[0]}${ratio}${dstFileName}`);
+      if (ratio <= 0) buf.push(`${this.chukiMap.get("画像縦")[0]}${dstFileName}`);
+      else buf.push(`${this.chukiMap.get("画像幅")[0]}${ratio}${dstFileName}`);
     } else if (imagePageType === PageBreakType.IMAGE_INLINE_TOP_W) {
-      if (ratio <= 0) buf.append(`${chukiMap.get("画像上横")[0]}${dstFileName}`);
-      else buf.append(`${chukiMap.get("画像幅上")[0]}${ratio}${dstFileName}`);
+      if (ratio <= 0) buf.push(`${this.chukiMap.get("画像上横")[0]}${dstFileName}`);
+      else buf.push(`${this.chukiMap.get("画像幅上")[0]}${ratio}${dstFileName}`);
     } else if (imagePageType === PageBreakType.IMAGE_INLINE_BOTTOM_W) {
-      if (ratio <= 0) buf.append(`${chukiMap.get("画像下横")[0]}${dstFileName}`);
-      else buf.append(`${chukiMap.get("画像幅下")[0]}${ratio}${dstFileName}`);
+      if (ratio <= 0) buf.push(`${this.chukiMap.get("画像下横")[0]}${dstFileName}`);
+      else buf.push(`${this.chukiMap.get("画像幅下")[0]}${ratio}${dstFileName}`);
     } else if (imagePageType === PageBreakType.IMAGE_INLINE_TOP) {
-      if (ratio <= 0) buf.append(`${chukiMap.get("画像上")[0]}${dstFileName}`);
-      else buf.append(`${chukiMap.get("画像幅上")[0]}${ratio}${dstFileName}`);
+      if (ratio <= 0) buf.push(`${this.chukiMap.get("画像上")[0]}${dstFileName}`);
+      else buf.push(`${this.chukiMap.get("画像幅上")[0]}${ratio}${dstFileName}`);
     } else if (imagePageType === PageBreakType.IMAGE_INLINE_BOTTOM) {
-      if (ratio <= 0) buf.append(`${chukiMap.get("画像下")[0]}${dstFileName}`);
-      else buf.append(`${chukiMap.get("画像幅下")[0]}${ratio}${dstFileName}`);
+      if (ratio <= 0) buf.push(`${this.chukiMap.get("画像下")[0]}${dstFileName}`);
+      else buf.push(`${this.chukiMap.get("画像幅下")[0]}${ratio}${dstFileName}`);
     } else if (imagePageType !== PageBreakType.IMAGE_PAGE_NONE) {
       if (ratio !== -1 && this.imageFloatPage) {
         //単ページfloat表示
         if (imagePageType === PageBreakType.IMAGE_PAGE_W) {
-          buf.append(`${chukiMap.get("画像単横浮")[0]}${dstFileName}`);
+          buf.push(`${this.chukiMap.get("画像単横浮")[0]}${dstFileName}`);
         } else if (imagePageType === PageBreakType.IMAGE_PAGE_H) {
-          buf.append(`${chukiMap.get("画像単縦浮")[0]}${dstFileName}`);
+          buf.push(`${this.chukiMap.get("画像単縦浮")[0]}${dstFileName}`);
         } else {
-          if (ratio <= 0) buf.append(`${chukiMap.get("画像単浮")[0]}${dstFileName}`);
-          else buf.append(`${chukiMap.get("画像単幅浮")[0]}${ratio}${dstFileName}`);
+          if (ratio <= 0) buf.push(`${this.chukiMap.get("画像単浮")[0]}${dstFileName}`);
+          else buf.push(`${this.chukiMap.get("画像単幅浮")[0]}${ratio}${dstFileName}`);
         }
       } else {
         //単ページ出力 タグの外のみ
         //改ページの前に文字があれば前のページに出力
         if (buf.length > 0) await this.printLineBuffer(out, buf, lineNum, true);
-        buf.append(`${chukiMap.get("画像")[0]}${dstFileName}`);
-        buf.append(chukiMap.get("画像終わり")[0]);
+        buf.push(`${this.chukiMap.get("画像")[0]}${dstFileName}`);
+        buf.push(this.chukiMap.get("画像終わり")[0]);
         //単ページ出力
         await this.printImagePage(out, buf, lineNum, srcFileName, dstFileName, imagePageType);
         return true;
@@ -2464,12 +2467,12 @@ export default class AozoraEpub3Converter {
     } else {
       if (ratio !== -1 && imageFloatBlock) {
         //画像float表示
-        if (ratio <= 0) buf.append(`${chukiMap.get("画像浮")[0]}${dstFileName}`);
-        else buf.append(`${chukiMap.get("画像幅浮")[0]}${ratio}${dstFileName}`);
+        if (ratio <= 0) buf.push(`${this.chukiMap.get("画像浮")[0]}${dstFileName}`);
+        else buf.push(`${this.chukiMap.get("画像幅浮")[0]}${ratio}${dstFileName}`);
       } else {
         //画像通常表示
-        if (ratio <= 0) buf.append(`${chukiMap.get("画像")[0]}${dstFileName}`);
-        else buf.append(`${chukiMap.get("画像幅")[0]}${ratio}${dstFileName}`);
+        if (ratio <= 0) buf.push(`${this.chukiMap.get("画像")[0]}${dstFileName}`);
+        else buf.push(`${this.chukiMap.get("画像幅")[0]}${ratio}${dstFileName}`);
       }
     }
     //キャプショがある場合はタグを閉じない
@@ -2477,7 +2480,7 @@ export default class AozoraEpub3Converter {
       this.inImageTag = true;
       this.nextLineIsCaption = true;
     } else {
-      buf.append(chukiMap.get("画像終わり")[0]);
+      buf.push(this.chukiMap.get("画像終わり")[0]);
     }
     return false;
   }
@@ -2531,11 +2534,11 @@ export default class AozoraEpub3Converter {
       switch (ch[idx]) {
         case '\0':
           break;
-        case '&': buf.append("&amp;"); break;
-        case '<': buf.append("&lt;"); break;
-        case '>': buf.append("&gt;"); break;
+        case '&': buf.push("&amp;"); break;
+        case '<': buf.push("&lt;"); break;
+        case '>': buf.push("&gt;"); break;
         default:
-          buf.append(ch[idx]);
+          buf.push(ch[idx]);
       }
     }
   }
@@ -2560,8 +2563,8 @@ export default class AozoraEpub3Converter {
     // let isAlphaRuby = false; // 英字へのルビ
     let rubyCharType = RubyCharType.NULL;
 
-    let rubyStartChuki = chukiMap.get("ルビ開始")[0];
-    let rubyEndChuki = chukiMap.get("ルビ終了")[0];
+    let rubyStartChuki = this.chukiMap.get("ルビ開始")[0];
+    let rubyEndChuki = this.chukiMap.get("ルビ終了")[0];
 
     let noTcy = false;
     let noTcyPre = noTcy;
@@ -2617,28 +2620,28 @@ export default class AozoraEpub3Converter {
               // 同じ長さで同じ文字なら一文字づつルビを振る
               if (rubyTopStart - rubyStart === i - rubyTopStart - 1 && CharUtils.isSameChars(ch, rubyTopStart + 1, i)) {
                 if (buf.lastIndexOf(rubyEndChuki) !== buf.length - rubyEndChuki.length) {
-                  buf.append(rubyStartChuki);
+                  buf.push(rubyStartChuki);
                 } else {
                   buf.setLength(buf.length - rubyEndChuki.length);
                 }
                 for (let j = 0; j < rubyTopStart - rubyStart; j++) {
                   this.convertReplacedChar(buf, ch, rubyStart + j, noTcy); // 本文
-                  buf.append(chukiMap.get("ルビ前")[0]);
+                  buf.push(this.chukiMap.get("ルビ前")[0]);
                   this.convertReplacedChar(buf, ch, rubyTopStart + 1 + j, true); // ルビ
-                  buf.append(chukiMap.get("ルビ後")[0]);
+                  buf.push(this.chukiMap.get("ルビ後")[0]);
                 }
-                buf.append(rubyEndChuki);
+                buf.push(rubyEndChuki);
               } else {
                 if (buf.lastIndexOf(rubyEndChuki) !== buf.length - rubyEndChuki.length) {
-                  buf.append(rubyStartChuki);
+                  buf.push(rubyStartChuki);
                 } else {
                   buf.setLength(buf.length - rubyEndChuki.length);
                 }
                 this.convertTcyText(buf, ch, rubyStart, rubyTopStart, noTcy); // 本文
-                buf.append(chukiMap.get("ルビ前")[0]);
+                buf.push(this.chukiMap.get("ルビ前")[0]);
                 this.convertTcyText(buf, ch, rubyTopStart + 1, i, true); // ルビ
-                buf.append(chukiMap.get("ルビ後")[0]);
-                buf.append(rubyEndChuki);
+                buf.push(this.chukiMap.get("ルビ後")[0]);
+                buf.push(rubyEndChuki);
               }
             }
           }
@@ -2790,16 +2793,16 @@ export default class AozoraEpub3Converter {
             continue;
           }*/
           if (this.printIvsSSP) {
-            if (this.vertical) buf.append(this.chukiMap.get("正立")[0]);
-            buf.append(ch[i]);
-            buf.append(ch[i + 1]);
-            buf.append(ch[i + 2]);
-            buf.append(ch[i + 3]);
-            if (this.vertical) buf.append(this.chukiMap.get("正立終わり")[0]);
+            if (this.vertical) buf.push(this.chukiMap.get("正立")[0]);
+            buf.push(ch[i]);
+            buf.push(ch[i + 1]);
+            buf.push(ch[i + 2]);
+            buf.push(ch[i + 3]);
+            if (this.vertical) buf.push(this.chukiMap.get("正立終わり")[0]);
             this.logInfo("拡張漢字＋IVSを出力します", `${ch[i]}${ch[i + 1]}${ch[i + 2]}${ch[i + 3]}(u+${code.toString(16)}+${ivsCode})`);
           } else {
-            buf.append(ch[i]);
-            buf.append(ch[i + 1]);
+            buf.push(ch[i]);
+            buf.push(ch[i + 1]);
             this.logInfo("拡張漢字出力(IVS除外)", `${ch[i]}${ch[i + 1]}(u+${code.toString(16)}) -${ivsCode}`);
           }
           i += 3; // IVSの次へ
@@ -2828,15 +2831,15 @@ export default class AozoraEpub3Converter {
   continue;
 }*/
           if (this.printIvsBMP) {
-            if (this.vertical) buf.append(this.chukiMap.get("正立")[0]);
-            buf.append(ch[i]);
-            buf.append(ch[i + 1]);
-            buf.append(ch[i + 2]);
-            if (this.vertical) buf.append(this.chukiMap.get("正立終わり")[0]);
+            if (this.vertical) buf.push(this.chukiMap.get("正立")[0]);
+            buf.push(ch[i]);
+            buf.push(ch[i + 1]);
+            buf.push(ch[i + 2]);
+            if (this.vertical) buf.push(this.chukiMap.get("正立終わり")[0]);
             this.logInfo("拡張漢字＋IVSを出力します", `${ch[i]}${ch[i + 1]}${ch[i + 2]}(u+${code.toString(16)}+${ch[i + 2].toString(16)})`);
           } else {
-            buf.append(ch[i]);
-            buf.append(ch[i + 1]);
+            buf.push(ch[i]);
+            buf.push(ch[i + 1]);
             this.logInfo("拡張漢字出力(IVS除外)", `${ch[i]}${ch[i + 1]}(u+${code.toString(16)}) -${ch[i + 2].toString(16)}`);
           }
           i += 2; // IVSの次へ
@@ -2858,8 +2861,8 @@ export default class AozoraEpub3Converter {
           //4バイト文字を出力しない
           buf.append("〓");
         } else {*/
-        buf.append(ch[i]);
-        buf.append(ch[i + 1]);
+        buf.push(ch[i]);
+        buf.push(ch[i + 1]);
         this.logInfo("拡張漢字出力", `${ch[i]}${ch[i + 1]}(u+${code.toString(16)})`);
         i++; // 次の文字へ
         continue;
@@ -2894,14 +2897,14 @@ export default class AozoraEpub3Converter {
         }
         // 2バイト文字とIVSを出力
         if (this.printIvsSSP) {
-          if (this.vertical) buf.append(this.chukiMap.get("正立")[0]);
-          buf.append(ch[i]);
-          buf.append(ch[i + 1]);
-          buf.append(ch[i + 2]);
-          if (this.vertical) buf.append(this.chukiMap.get("正立終わり")[0]);
+          if (this.vertical) buf.push(this.chukiMap.get("正立")[0]);
+          buf.push(ch[i]);
+          buf.push(ch[i + 1]);
+          buf.push(ch[i + 2]);
+          if (this.vertical) buf.push(this.chukiMap.get("正立終わり")[0]);
           this.logInfo("IVSを出力します", `${ch[i]}${ch[i + 1]}${ch[i + 2]}(u+${ch[i].toString(16)}+${ivsCode})`);
         } else {
-          buf.append(ch[i]);
+          buf.push(ch[i]);
           this.logInfo("IVS除外", `${ch[i]}(u+${ch[i].toString(16)}) -${ivsCode}`);
         }
         i += 2; // IVSの次へ
@@ -2935,11 +2938,11 @@ export default class AozoraEpub3Converter {
 
         // 2バイト文字とIVSを出力
         if (this.printIvsBMP) {
-          buf.append(ch[i]);
-          buf.append(ch[i + 1]);
+          buf.push(ch[i]);
+          buf.push(ch[i + 1]);
           LogAppender.info(this.lineNum, "IVSを出力します", "" + ch[i] + ch[i + 1] + "(u+" + ch[i].toString(16) + "+" + ch[i + 1].toString(16) + ")");
         } else {
-          buf.append(ch[i]);
+          buf.push(ch[i]);
           LogAppender.info(this.lineNum, "IVS除外", ch[i] + "(u+" + ch[i].toString(16) + ") -" + ch[i + 1].toString(16));
         }
         i++; // IVSの次へ
@@ -2980,11 +2983,11 @@ export default class AozoraEpub3Converter {
                 // 前後が半角かチェック
                 if (!this.checkTcyPrev(ch, i - 1)) break;
                 if (!this.checkTcyNext(ch, i + 3)) break;
-                buf.append(this.chukiMap.get("縦中横")[0]);
-                buf.append(ch[i]);
-                buf.append(ch[i + 1]);
-                buf.append(ch[i + 2]);
-                buf.append(this.chukiMap.get("縦中横終わり")[0]);
+                buf.push(this.chukiMap.get("縦中横")[0]);
+                buf.push(ch[i]);
+                buf.push(ch[i + 1]);
+                buf.push(ch[i + 2]);
+                buf.push(this.chukiMap.get("縦中横終わり")[0]);
                 i += 2;
                 continue;
               } else if (i + 1 < ch.length && CharUtils.isNum(ch[i + 1])) {
@@ -2992,10 +2995,10 @@ export default class AozoraEpub3Converter {
                 // 前後が半角かチェック
                 if (!this.checkTcyPrev(ch, i - 1)) break;
                 if (!this.checkTcyNext(ch, i + 2)) break;
-                buf.append(this.chukiMap.get("縦中横")[0]);
-                buf.append(ch[i]);
-                buf.append(ch[i + 1]);
-                buf.append(this.chukiMap.get("縦中横終わり")[0]);
+                buf.push(this.chukiMap.get("縦中横")[0]);
+                buf.push(ch[i]);
+                buf.push(ch[i + 1]);
+                buf.push(this.chukiMap.get("縦中横終わり")[0]);
                 i++;
                 continue;
               } else if (
@@ -3007,9 +3010,9 @@ export default class AozoraEpub3Converter {
                 // 前後が半角かチェック
                 if (!this.checkTcyPrev(ch, i - 1)) break;
                 if (!this.checkTcyNext(ch, i + 1)) break;
-                buf.append(this.chukiMap.get("縦中横")[0]);
-                buf.append(ch[i]);
-                buf.append(this.chukiMap.get("縦中横終わり")[0]);
+                buf.push(this.chukiMap.get("縦中横")[0]);
+                buf.push(ch[i]);
+                buf.push(this.chukiMap.get("縦中横終わり")[0]);
                 continue;
               }
               // begin～end外もチェックする
@@ -3022,9 +3025,9 @@ export default class AozoraEpub3Converter {
                 (ch[i + 3] === "日" || (i + 4 < ch.length && ch[i + 3] >= "0" && ch[i + 3] <= "9" && ch[i + 4] === "日"))
               ) {
                 // 1月2日 1月10日 の1を縦中横
-                buf.append(this.chukiMap.get("縦中横")[0]);
-                buf.append(ch[i]);
-                buf.append(this.chukiMap.get("縦中横終わり")[0]);
+                buf.push(this.chukiMap.get("縦中横")[0]);
+                buf.push(ch[i]);
+                buf.push(this.chukiMap.get("縦中横終わり")[0]);
                 continue;
               }
               if (
@@ -3035,9 +3038,9 @@ export default class AozoraEpub3Converter {
                   (ch[i - 1] === "第" && (ch[i + 1] === "刷" || ch[i + 1] === "版" || ch[i + 1] === "巻")))
               ) {
                 // 年3月 + 月4日 + 第5刷 + 第6版 + 第7巻 の数字１文字縦中横
-                buf.append(this.chukiMap.get("縦中横")[0]);
-                buf.append(ch[i]);
-                buf.append(this.chukiMap.get("縦中横終わり")[0]);
+                buf.push(this.chukiMap.get("縦中横")[0]);
+                buf.push(ch[i]);
+                buf.push(this.chukiMap.get("縦中横終わり")[0]);
                 continue;
               }
               if (
@@ -3048,9 +3051,9 @@ export default class AozoraEpub3Converter {
                   (ch[i - 2] === "平" && ch[i - 1] === "成"))
               ) {
                 // 月5日 の5を縦中横
-                buf.append(this.chukiMap.get("縦中横")[0]);
-                buf.append(ch[i]);
-                buf.append(this.chukiMap.get("縦中横終わり")[0]);
+                buf.push(this.chukiMap.get("縦中横")[0]);
+                buf.push(ch[i]);
+                buf.push(this.chukiMap.get("縦中横終わり")[0]);
                 continue;
               }
             }
@@ -3068,11 +3071,11 @@ export default class AozoraEpub3Converter {
                 // 前後が半角かチェック
                 if (!this.checkTcyPrev(ch, i - 1)) break;
                 if (!this.checkTcyNext(ch, i + 3)) break;
-                buf.append(this.chukiMap.get("縦中横")[0]);
-                buf.append(ch[i]);
-                buf.append(ch[i + 1]);
-                buf.append(ch[i + 2]);
-                buf.append(this.chukiMap.get("縦中横終わり")[0]);
+                buf.push(this.chukiMap.get("縦中横")[0]);
+                buf.push(ch[i]);
+                buf.push(ch[i + 1]);
+                buf.push(ch[i + 2]);
+                buf.push(this.chukiMap.get("縦中横終わり")[0]);
                 i += 2;
                 continue;
               } else if (
@@ -3084,10 +3087,10 @@ export default class AozoraEpub3Converter {
                 // 前後が半角かチェック
                 if (!this.checkTcyPrev(ch, i - 1)) break;
                 if (!this.checkTcyNext(ch, i + 2)) break;
-                buf.append(this.chukiMap.get("縦中横")[0]);
-                buf.append(ch[i]);
-                buf.append(ch[i + 1]);
-                buf.append(this.chukiMap.get("縦中横終わり")[0]);
+                buf.push(this.chukiMap.get("縦中横")[0]);
+                buf.push(ch[i]);
+                buf.push(ch[i + 1]);
+                buf.push(this.chukiMap.get("縦中横終わり")[0]);
                 i++;
                 continue;
               } else if (this.autoYokoEQ1 && (i === 0 || ch[i - 1] !== "!" || ch[i - 1] !== "?")) {
@@ -3095,9 +3098,9 @@ export default class AozoraEpub3Converter {
                 // 前後が半角かチェック
                 if (!this.checkTcyPrev(ch, i - 1)) break;
                 if (!this.checkTcyNext(ch, i + 1)) break;
-                buf.append(this.chukiMap.get("縦中横")[0]);
-                buf.append(ch[i]);
-                buf.append(this.chukiMap.get("縦中横終わり")[0]);
+                buf.push(this.chukiMap.get("縦中横")[0]);
+                buf.push(ch[i]);
+                buf.push(this.chukiMap.get("縦中横終わり")[0]);
                 continue;
               }
             }
@@ -3113,7 +3116,7 @@ export default class AozoraEpub3Converter {
               let pos = "うかきくけこさしすせそたちつてとはひふへほゝウカキクケコサシスセソタチツテトハヒフヘホワヰヱヲヽ".indexOf(ch[i]);
               if (pos >= 0) {
                 let ch2 = "ゔがぎぐげござじずぜぞだぢづでどばびぶべぼゞヴガギグゲゴザジズゼゾダヂヅデドバビブベボヷヸヹヺヾ".charAt(pos);
-                buf.append(ch2);
+                buf.push(ch2);
                 i++;
                 continue;
               }
@@ -3121,19 +3124,19 @@ export default class AozoraEpub3Converter {
               let pos = "はひふへほハヒフヘホ".indexOf(ch[i]);
               if (pos >= 0) {
                 let ch2 = "ぱぴぷぺぽパピプペポ".charAt(pos);
-                buf.append(ch2);
+                buf.push(ch2);
                 i++;
                 continue;
               }
             }
-            if (this.dakutenType === 1 && !(inYoko || noTcy)) {
+            if (this.dakutenType === 1 && !(this.inYoko || noTcy)) {
               // 濁点をspanで重ねて表示 ルビ内無効
-              buf.append('<span class="dakuten">');
-              buf.append(ch[i]);
-              buf.append('<span>');
-              if (ch[i + 1] === '゛') buf.append('゛');
-              else buf.append('゜');
-              buf.append('</span></span>');
+              buf.push('<span class="dakuten">');
+              buf.push(ch[i]);
+              buf.push('<span>');
+              if (ch[i + 1] === '゛') buf.push('゛');
+              else buf.push('゜');
+              buf.push('</span></span>');
               i++;
               continue;
             } else if (this.dakutenType === 2) {
@@ -3233,7 +3236,7 @@ export default class AozoraEpub3Converter {
       const replaced = replaceMap.get(ch[idx]);
       // 置換して終了
       if (replaced !== null) {
-        buf.append(replaced);
+        buf.push(replaced);
         return;
       }
     }
@@ -3245,7 +3248,7 @@ export default class AozoraEpub3Converter {
         // 置換して終了
         if (replaced !== null) {
           buf.setLength(length - 1); // 1文字削除
-          buf.append(replaced);
+          buf.push(replaced);
           return;
         }
       }
@@ -3253,23 +3256,23 @@ export default class AozoraEpub3Converter {
 
     // エスケープ文字を出力
     if (escaped) {
-      buf.append(ch[idx]);
+      buf.push(ch[idx]);
       ch[idx] = '　'; // ※※の場合の対策
       return;
     }
 
     // 文字の間の全角スペースを禁則調整
-    if (!(inYoko || noTcy)) {
+    if (!(this.inYoko || noTcy)) {
       switch (this.spaceHyphenation) {
         case 1:
           if (idx > 20 && ch[idx] === '　' && buf.length > 0 && buf.charAt(buf.length - 1) !== '　' && (idx - 1 === ch.length || (idx + 1 < ch.length && ch[idx + 1] !== '　'))) {
-            buf.append('<span class="fullsp"> </span>');
+            buf.push('<span class="fullsp"> </span>');
             return;
           }
           break;
         case 2:
           if (idx > 20 && ch[idx] === '　' && buf.length > 0 && buf.charAt(buf.length - 1) !== '　' && (idx - 1 === ch.length || (idx + 1 < ch.length && ch[idx + 1] !== '　'))) {
-            buf.append(String.fromCharCode(0x2000)).append(String.fromCharCode(0x2000));
+            buf.push(String.fromCharCode(0x2000)).push(String.fromCharCode(0x2000));
             return;
           }
           // if (idx + 1 < ch.length && ch[idx] !== '　' && +ch[idx + 1] === '　') {
@@ -3284,24 +3287,24 @@ export default class AozoraEpub3Converter {
     }
 
     // 横組み内は処理しない
-    if (this.vertical && !inYoko) {
+    if (this.vertical && !this.inYoko) {
       switch (ch[idx]) {
         case '≪':
-          buf.append('《');
+          buf.push('《');
           break;
         case '≫':
-          buf.append('》');
+          buf.push('》');
           break;
         case '“':
-          buf.append('〝');
+          buf.push('〝');
           break;
         case '”':
-          buf.append('〟');
+          buf.push('〟');
           break;
         // case '〝': ch[i] = '“'; break;
         // case '〟': ch[i] = '”'; break;
         case '―':
-          buf.append('─');
+          buf.push('─');
           break; // コード違いのダッシュ
         // ローマ数字等 Readerは修正されたけど一応残す
         // 正立しない文字: ¶⇔⇒≡√∇∂∃∠⊥⌒∽∝∫∬∮∑∟⊿≠≦≧∈∋⊆⊇⊂⊃∧∨↑↓→←∀
@@ -3454,29 +3457,29 @@ export default class AozoraEpub3Converter {
         case '℧':
           // 縦中横の中でなければタグで括る
           if (!noTcy) {
-            buf.append(chukiMap.get('正立')[0]);
-            buf.append(ch[idx]);
-            buf.append(chukiMap.get('正立終わり')[0]);
+            buf.push(this.chukiMap.get('正立')[0]);
+            buf.push(ch[idx]);
+            buf.push(this.chukiMap.get('正立終わり')[0]);
           } else {
-            buf.append(ch[idx]);
+            buf.push(ch[idx]);
           }
           break;
         default:
-          buf.append(ch[idx]);
+          buf.push(ch[idx]);
       }
     } else {
       switch (ch[idx]) {
         case '≪':
-          buf.append('《');
+          buf.push('《');
           break;
         case '≫':
-          buf.append('》');
+          buf.push('》');
           break;
         case '―':
-          buf.append('─');
+          buf.push('─');
           break;
         default:
-          buf.append(ch[idx]);
+          buf.push(ch[idx]);
       }
     }
   }
