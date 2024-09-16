@@ -498,7 +498,8 @@ try {
   let src = null;
   if (!bookInfo.imageOnly) {
     //src = fs.createReadStream(srcFile, { encoding: encType });
-    src = fs.createReadStream(srcFile);
+    //src = fs.createReadStream(srcFile);
+    src = fs.readFileSync(srcFile, encType);
   }
 
   // ePub書き出し srcは中でクローズされる
