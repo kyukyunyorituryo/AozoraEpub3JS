@@ -1234,7 +1234,7 @@ export default class AozoraEpub3Converter {
     }
 
     // 先頭行取得
-    
+
     var lines = src.toString().split('¥n');
     line = lines[0];
     //line = src.readLine();
@@ -2298,40 +2298,43 @@ export default class AozoraEpub3Converter {
         } else {
           // インデント字下げ
           let patternMatched = false;
-          let m2 = chukiPatternMap.get("折り返し").matcher(chukiTag);
-          if (m2.find()) {
+          let m2 = this.chukiPatternMap.get("折り返し").exec(chukiTag);
+
+          if (m2) {
             // 字下げフラグ処理
             if (inJisage >= 0) {
               LogAppender.warn(inJisage, "字下げ注記省略");
-              buf.push(this.chukiMap.get("字下げ省略")[0]);
+              buf.push(chukiMap.get("字下げ省略")[0]);
             }
             inJisage = lineNum;
 
-            const arg0 = parseInt(CharUtils.fullToHalf(m2.group(1)));
-            const arg1 = parseInt(CharUtils.fullToHalf(m2.group(2)));
-            buf.push(this.chukiMap.get("折り返し1")[0] + arg1);
-            buf.push(this.chukiMap.get("折り返し2")[0] + (arg0 - arg1));
-            buf.push(this.chukiMap.get("折り返し3")[0]);
+            let arg0 = parseInt(fullToHalf(m2[1]), 10);  // 全角→半角変換
+            let arg1 = parseInt(fullToHalf(m2[2]), 10);
+
+            buf.push(chukiMap.get("折り返し1")[0]).push(arg1);
+            buf.push(chukiMap.get("折り返し2")[0]).push(arg0 - arg1);
+            buf.push(chukiMap.get("折り返し3")[0]);
 
             noBr = true; // ブロック字下げなので改行なし
             patternMatched = true;
           }
           // インデント字下げ
           if (!patternMatched) {
-            m2 = chukiPatternMap.get("字下げ字詰め").matcher(chukiTag);
-            if (m2.find()) {
+            m2 = this.chukiPatternMap.get("字下げ字詰め").exec(chukiTag);
+            if (m2) {
               // 字下げフラグ処理
               if (inJisage >= 0) {
                 LogAppender.warn(inJisage, "字下げ注記省略");
-                buf.push(this.chukiMap.get("字下げ省略")[0]);
+                buf.push(chukiMap.get("字下げ省略")[0]);
               }
               inJisage = lineNum;
 
-              const arg0 = parseInt(CharUtils.fullToHalf(m2.group(1)));
-              const arg1 = parseInt(CharUtils.fullToHalf(m2.group(2)));
-              buf.push(this.chukiMap.get("字下げ字詰め1")[0] + arg0);
-              buf.push(this.chukiMap.get("字下げ字詰め2")[0] + arg1);
-              buf.push(this.chukiMap.get("字下げ字詰め3")[0]);
+              let arg0 = parseInt(fullToHalf(m2[1]), 10);  // 全角→半角変換
+              let arg1 = parseInt(fullToHalf(m2[2]), 10);
+
+              buf.push(chukiMap.get("字下げ字詰め1")[0]).push(arg0);
+              buf.push(chukiMap.get("字下げ字詰め2")[0]).push(arg1);
+              buf.push(chukiMap.get("字下げ字詰め3")[0]);
 
               noBr = true; // ブロック字下げなので改行なし
               patternMatched = true;
@@ -2339,41 +2342,59 @@ export default class AozoraEpub3Converter {
           }
           //字下げ複合は字下げの後の複合注記をclassに追加
           if (!patternMatched) {
-            m2 = chukiPatternMap.get("字下げ複合").matcher(chukiTag);
-            if (m2.find()) {
-              //字下げフラグ処理
+            m2 = this.chukiPatternMap.get("字下げ複合").exec(chukiTag);
+            if (m2) {
+              // 字下げフラグ処理
               if (inJisage >= 0) {
                 LogAppender.warn(inJisage, "字下げ注記省略");
-                buf.push(this.chukiMap.get("字下げ省略")[0]);
+                buf.push(chukiMap.get("字下げ省略")[0]);
               }
               inJisage = lineNum;
 
-              let arg0 = parseInt(CharUtils.fullToHalf(m2.group(1)));
-              buf.push(this.chukiMap.get("字下げ複合1")[0] + arg0);
-              //複合注記クラス追加
-              if (chukiTag.indexOf("破線罫囲み") > 0) buf.push(" ").push(this.chukiMap.get("字下げ破線罫囲み")[0]);
-              else if (chukiTag.indexOf("罫囲み") > 0) buf.push(" ").push(this.chukiMap.get("字下げ罫囲み")[0]);
-              if (chukiTag.indexOf("破線枠囲み") > 0) buf.push(" ").push(this.chukiMap.get("字下げ破線枠囲み")[0]);
-              else if (chukiTag.indexOf("枠囲み") > 0) buf.push(" ").push(this.chukiMap.get("字下げ枠囲み")[0]);
-              if (chukiTag.indexOf("中央揃え") > 0) buf.push(" ").push(this.chukiMap.get("字下げ中央揃え")[0]);
-              if (chukiTag.indexOf("横書き") > 0) buf.push(" ").push(this.chukiMap.get("字下げ横書き")[0]);
-              //複合字下げclass閉じる
-              buf.push(this.chukiMap.get("字下げ複合2")[0]);
+              let arg0 = parseInt(fullToHalf(m2[1]), 10);  // 全角→半角変換
+              buf.push(chukiMap.get("字下げ複合1")[0]).push(arg0);
 
-              noBr = true;//ブロック字下げなので改行なし
+              // 複合注記クラス追加
+              if (chukiTag.indexOf("破線罫囲み") > 0) {
+                buf.push(" ").push(chukiMap.get("字下げ破線罫囲み")[0]);
+              } else if (chukiTag.indexOf("罫囲み") > 0) {
+                buf.push(" ").push(chukiMap.get("字下げ罫囲み")[0]);
+              }
+
+              if (chukiTag.indexOf("破線枠囲み") > 0) {
+                buf.push(" ").push(chukiMap.get("字下げ破線枠囲み")[0]);
+              } else if (chukiTag.indexOf("枠囲み") > 0) {
+                buf.push(" ").push(chukiMap.get("字下げ枠囲み")[0]);
+              }
+
+              if (chukiTag.indexOf("中央揃え") > 0) {
+                buf.push(" ").push(chukiMap.get("字下げ中央揃え")[0]);
+              }
+
+              if (chukiTag.indexOf("横書き") > 0) {
+                buf.push(" ").push(chukiMap.get("字下げ横書き")[0]);
+              }
+
+              // 複合字下げclass閉じる
+              buf.push(chukiMap.get("字下げ複合2")[0]);
+
+              noBr = true; // ブロック字下げなので改行なし
               patternMatched = true;
             }
           }
           //字下げ終わり複合注記
           if (!patternMatched) {
-            m2 = chukiPatternMap.get("字下げ終わり複合").matcher(chukiTag);
-            if (m2.find()) {
-              if (inJisage == -1) LogAppender.error(lineNum, "字下げ注記エラー");
-              else buf.push(this.chukiMap.get("ここで字下げ終わり")[0]);
-              inJisage = -1;
-
-              noBr = true;
-              patternMatched = true;
+            m2 = this.chukiPatternMap.get("字下げ終わり複合").exec(chukiTag);
+            if (m2) {
+                if (inJisage === -1) {
+                    LogAppender.error(lineNum, "字下げ注記エラー");
+                } else {
+                    buf.push(chukiMap.get("ここで字下げ終わり")[0]);
+                }
+                inJisage = -1;
+            
+                noBr = true; // 改行なし
+                patternMatched = true;
             }
           }
 
@@ -2385,16 +2406,16 @@ export default class AozoraEpub3Converter {
         }
       }
       //注記の後ろを文字開始位置に設定
-      charStart = chukiStart + chukiTag.length();
+      charStart = chukiStart + chukiTag.length;
       //注記の後ろの残りの文字
       if (charStart < ch.length) {
         this.convertEscapedText(buf, ch, charStart, ch.length);
       }
       //行末タグを追加
-      if (bufSuf.length() > 0) buf.push(bufSuf.toString());
+      if (bufSuf.length > 0) buf.push(bufSuf.toString());
 
       //底本：で前が改ページでなければ改ページ追加
-      if (separateColophon) {
+      if (this.separateColophon) {
         if (this.sectionCharLength > 0 && buf.length() > 2 && buf.charAt(0) === '底' && buf.charAt(1) === '本' && buf.charAt(2) === '：') {
           //字下げ状態エラー出力
           if (inJisage >= 0) {
