@@ -1,20 +1,22 @@
 export default class LogAppender {
   static textArea = null;
-
+/*
   static setTextArea(textArea) {
     this.textArea = textArea;
   }
-
+*/
   static println(log) {
     if(log)this.append(log);
     this.append("\n");
   }
 
   static append(log) {
+    /*
     if (this.textArea) {
       this.textArea.value += log;
       this.textArea.scrollTop = this.textArea.scrollHeight;
     }
+      */
     console.log(log);
   }
 
@@ -35,39 +37,31 @@ export default class LogAppender {
     this.append("\n");
   }
 
-  static error(msg) {
-    this.append("[ERROR] ");
-    this.append(msg);
-    this.append("\n");
+
+
+  static error(...args) {
+    if(args.length==1){
+      this.append("[ERROR] ");
+      this.append(args[0]);
+      this.append("\n");
+    }
+    if(args.length==2){
+      this.append("[ERROR] ");
+      this.msg(args[0], args[1], null);
+    }
+    if(args.length==3){
+      this.append("[ERROR] ");
+      this.msg(args[0], args[1], args[2])
+    }
   }
 
-  static error(lineNum, msg, desc) {
-    this.append("[ERROR] ");
+  static warn(lineNum, msg, desc = null) {
+    this.append('[WARN] ');
     this.msg(lineNum, msg, desc);
-  }
+}
 
-  static error(lineNum, msg) {
-    this.append("[ERROR] ");
-    this.msg(lineNum, msg, null);
-  }
-
-  static warn(lineNum, msg, desc) {
-    this.append("[WARN] ");
+static info(lineNum, msg, desc = null) {
+    this.append('[INFO] ');
     this.msg(lineNum, msg, desc);
-  }
-
-  static warn(lineNum, msg) {
-    this.append("[WARN] ");
-    this.msg(lineNum, msg, null);
-  }
-
-  static info(lineNum, msg, desc) {
-    this.append("[INFO] ");
-    this.msg(lineNum, msg, desc);
-  }
-
-  static info(lineNum, msg) {
-    this.append("[INFO] ");
-    this.msg(lineNum, msg, null);
-  }
+}
 }
