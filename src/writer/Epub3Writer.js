@@ -733,7 +733,7 @@ export default class Epub3Writer {
                 buf.length = 0;
                 let converted = CharUtils.escapeHtml(chapterInfo.getChapterName());
                 if (bookInfo.tocVertical) {
-                    converted = converter.convertTcyText(converted);
+                    converted = converter.convertTcyTextMono(converted);
                 }
                 chapterInfo.setChapterName(converted);
             }

@@ -2750,9 +2750,9 @@ export default class AozoraEpub3Converter {
 
 
   /** ルビ変換 外部呼び出し用 */
-  convertTcyText(text) {
+  convertTcyTextMono(text) {
     const buf = [];
-    this.convertTcyTextHelper(buf, text.split(''), 0, text.length, false);
+    this.convertTcyText(buf, text.split(''), 0, text.length, false);
     return buf.join("")[0];
   }
 
