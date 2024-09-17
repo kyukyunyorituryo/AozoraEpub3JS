@@ -754,7 +754,6 @@ export default class Epub3Writer {
         zosdata = ejs.render(bw, this.ejsData)
         this.zos.file(`${Epub3Writer.OPS_PATH}${Epub3Writer.TOC_FILE}`, zosdata);
 
-        if (src) src.close();
 
         if (this.canceled) return;
         // プログレスバーにテキスト進捗分を追加
@@ -970,7 +969,6 @@ export default class Epub3Writer {
     async nextSection(bw, lineNum, pageType, imagePageType, srcImageFilePath) {
         //タイトル置き換え時は出力しない
         if (this.sectionIndex > 0) {
-            await bw.flush();
             await this.endSection();
         }
         await this.startSection(lineNum, pageType, imagePageType, srcImageFilePath);
@@ -1046,10 +1044,10 @@ export default class Epub3Writer {
      * 変更前と変更後のファイル名はimageFileNamesに格納される (images/0001.jpg)
      * @return 画像タグを出力しない場合はnullを返す
      * @throws IOException */
-    getImageFilePath(srcImageFileName, lineNum) {
+    async getImageFilePath(srcImageFileName, lineNum) {
         let isCover = false;
 
-        let imageInfo = this.imageInfoReader.getImageInfo(srcImageFileName);
+        let imageInfo = await this.imageInfoReader.getImageInfo(srcImageFileName);
         // 拡張子修正
         if (imageInfo === null) {
             // 画像があるかチェック
@@ -1098,8 +1096,8 @@ export default class Epub3Writer {
     /** 画像が単一ページ画像にできるかチェック
      * @param srcFilePath テキスト内の画像相対パス文字列
      * @throws IOException */
-    getImagePageType(srcFilePath, tagLevel, lineNum, hasCaption) {
-        let imageInfo = this.imageInfoReader.getImageInfo(srcFilePath);
+    async getImagePageType(srcFilePath, tagLevel, lineNum, hasCaption) {
+        let imageInfo = await this.imageInfoReader.getImageInfo(srcFilePath);
         // 拡張子修正
         if (imageInfo === null) imageInfo = this.imageInfoReader.getImageInfo(this.imageInfoReader.correctExt(srcFilePath));
 
@@ -1179,12 +1177,12 @@ export default class Epub3Writer {
 
     /** 画像の画面内の比率を取得 表示倍率指定反映後
      * @return 画面幅にタイする表示比率% 倍率1の場合は0 小さい画像は-1を返す */
-    getImageWidthRatio(srcFilePath, hasCaption) {
+    async getImageWidthRatio(srcFilePath, hasCaption) {
         // 0なら無効
         if (this.imageScale === 0) return 0;
 
         let ratio = 0;
-        let imageInfo = this.imageInfoReader.getImageInfo(srcFilePath);
+        let imageInfo = await this.imageInfoReader.getImageInfo(srcFilePath);
         if (imageInfo !== null) {
             // 外字や数式は除外 行方向に64px以下
             if (this.bookInfo.vertical) {
@@ -1217,9 +1215,9 @@ export default class Epub3Writer {
     }
 
     // 外字画像の縦と横の長さを比較して、同じなら0、横長なら1、縦長なら2を返す。
-    getImageOrientation(srcFilePath) {
+    async getImageOrientation(srcFilePath) {
         let wide = 0;
-        let imageInfo = this.imageInfoReader.getImageInfo(srcFilePath);
+        let imageInfo = await this.imageInfoReader.getImageInfo(srcFilePath);
         if (imageInfo !== null) {
             // 外字や数式は除外 行方向に64px以下
             if (this.bookInfo.vertical) {
