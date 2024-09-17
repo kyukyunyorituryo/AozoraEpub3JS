@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import JSZip from "jszip";
 import unrar from "node-unrar-js";
-//import { getImageInfo } from './ImageUtils.js';
+import ImageUtils from '../image/ImageUtils.js';
 import FileNameComparator from '../util/FileNameComparator.js';
 import LogAppender from '../util/LogAppender.js';
 import ImageInfo from '../info/ImageInfo.js';
@@ -310,7 +310,7 @@ export default class ImageInfoReader {
 
             const bis = createReadStream(file, { bufferSize: 8192 });
             try {
-                return await readImage(path.extname(srcImageFileName).toLowerCase(), bis);
+                return await ImageUtils.readImage(path.extname(srcImageFileName).toLowerCase(), bis);
             } finally {
                 bis.close();
             }
