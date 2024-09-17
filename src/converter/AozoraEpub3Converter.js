@@ -1104,7 +1104,7 @@ export default class AozoraEpub3Converter {
   isPageBreakLine(line) {
     const m = this.chukiLeftPattern.exec(line);
     while (m) {
-      return this.chukiFlagPageBreak.includes(m[1]);
+      return this.chukiFlagPageBreak.has(m[1]);
     }
     return false;
   }
@@ -1115,10 +1115,10 @@ export default class AozoraEpub3Converter {
     if (preLines[0] == null) return;
     if (line.indexOf('］') <= 3) return;
     const curChuki = line.substring(2, line.indexOf('］')); // 現在行の行頭注記
-    if (this.chukiFlagPageBreak.includes(curChuki)) {
+    if (this.chukiFlagPageBreak.has(curChuki)) {
       // 2行前の行末が改ページまたは現在行が先頭から2行目
       if (!preLines[1] ||
-        (preLines[1].indexOf('］') > 3 && this.chukiFlagPageBreak.includes(preLines[1].substring(preLines[1].lastIndexOf('＃') + 1, preLines[1].length - 1)))
+        (preLines[1].indexOf('］') > 3 && this.chukiFlagPageBreak.has(preLines[1].substring(preLines[1].lastIndexOf('＃') + 1, preLines[1].length - 1)))
       ) {
         // 1行前が画像
         if (
@@ -1339,7 +1339,7 @@ export default class AozoraEpub3Converter {
                   buf.push(ch[idx]);
               }
             }
-            this.printLineBuffer(out, buf.join("")[0], this.lineNum, false);
+            this.printLineBuffer(out, buf.join(""), this.lineNum, false);
             continue;
           }
         } else {
@@ -1533,7 +1533,7 @@ export default class AozoraEpub3Converter {
     }
 
     // 残りの文字をつなげて返却
-    return buf.join("")[0] + line.slice(begin);
+    return buf.join("") + line.slice(begin);
   }
 
   /** 注記内かチェック
@@ -1587,7 +1587,7 @@ export default class AozoraEpub3Converter {
     }
     //後ろを出力
     buf.push(line.slice(mTagEnd));
-    line = buf.join("")[0];
+    line = buf.join("");
 
     // "［＃「([^］]+)」([^」|^］]+)］"
     let m = this.chukiSufPattern.exec(line);
@@ -1993,7 +1993,7 @@ export default class AozoraEpub3Converter {
         ////////////////////////////////////////////////////////////////////
         // 改ページ注記
         ////////////////////////////////////////////////////////////////////
-        if (this.chukiFlagPageBreak.includes(chukiName) && !this.bookInfo.isNoPageBreakLine(lineNum)) {
+        if (this.chukiFlagPageBreak.has(chukiName) && !this.bookInfo.isNoPageBreakLine(lineNum)) {
           // 字下げ状態エラー出力
           if (this.inJisage >= 0) {
             LogAppender.warn(this.inJisage, '字下げ注記省略');
@@ -2003,7 +2003,7 @@ export default class AozoraEpub3Converter {
 
           // 改ページの前に文字があれば出力
           if (buf.length > 0) {
-            printLineBuffer(out, this.convertRubyText(buf.join("")[0]), lineNum, true);
+            printLineBuffer(out, this.convertRubyText(buf.join("")), lineNum, true);
             // bufはクリア
             buf.length=0;
           }
@@ -2013,10 +2013,10 @@ export default class AozoraEpub3Converter {
           if (ch.length > charStart + chukiTag.length) noBr = false;
 
           // 改ページフラグ設定
-          if (this.chukiFlagMiddle.includes(chukiName)) {
+          if (this.chukiFlagMiddle.has(chukiName)) {
             // 左右中央
             this.setPageBreakTrigger(this.pageBreakMiddle);
-          } else if (this.chukiFlagBottom.includes(chukiName)) {
+          } else if (this.chukiFlagBottom.has(chukiName)) {
             // ページ左
             this.setPageBreakTrigger(this.pageBreakBottom);
           } else if (this.bookInfo.isImageSectionLine(lineNum + 1)) {
@@ -2035,7 +2035,7 @@ export default class AozoraEpub3Converter {
               );
             }
           } else {
-            this.setPageBreakTrigger(pageBreakNormal);
+            this.setPageBreakTrigger(this.pageBreakNormal);
           }
         }
         ////////////////////////////////////////////////////////////////////
@@ -2185,11 +2185,11 @@ export default class AozoraEpub3Converter {
           buf.push(tags[0]);
           //行末で閉じる指定のタグをバッファに追加
           if (tags.length > 1) {
-            bufSuf.insert(0, tags[1]);
+            bufSuf = tags[1] + bufSuf;  // bufSufの先頭にタグを挿入
           }
         }
         //ブロック注記の改行無しチェック
-        if (this.chukiFlagNoBr.contains(chukiName)) noBr = true;
+        if (this.chukiFlagNoBr.has(chukiName)) noBr = true;
       }
       else {
         // 画像 (訓点 ［＃（ス）］ は . があるかで判断)
@@ -2248,7 +2248,7 @@ export default class AozoraEpub3Converter {
                     LogAppender.info(lineNum, "外字画像利用", srcFilePath);
                   }
                 } else {
-                  if (noIllust && !this.writer.isCoverImage()) {
+                  if (this.noIllust && !this.writer.isCoverImage()) {
                     LogAppender.info(lineNum, "挿絵除外", chukiTag);
                   } else {
                     const dstFileName = this.writer.getImageFilePath(srcFilePath, lineNum);
@@ -2431,7 +2431,7 @@ export default class AozoraEpub3Converter {
       }
 
       //ルビ変換＋自動縦中横してからバッファを出力
-      this.printLineBuffer(out, this.convertRubyText(buf.join("")[0]), lineNum, noBr || this.inImageTag);
+      this.printLineBuffer(out, this.convertRubyText(buf.join("")), lineNum, noBr || this.inImageTag);
 
       //クリア Kobo 調整中
       /*if (clearRight && clearLeft) out.append(chukiMap.get("クリア")[0]);
@@ -2758,9 +2758,11 @@ export default class AozoraEpub3Converter {
 
   /** １文字フォント用タグを出力 */
   printGlyphFontTag(buf, gaijiFileName, className, baseChar) {
-    const gaijiFilePath = `${this.writer.getGaijiFontPath()}${gaijiFileName}`;
-    const gaijiFileExists = this.checkIfFileExists(gaijiFilePath);
-    if (!gaijiFileExists) return false;
+    const gaijiFilePath = path.join(this.writer.getGaijiFontPath(), gaijiFileName);
+    // ファイルの存在を確認
+    if (!fs.existsSync(gaijiFilePath)) {
+      return false; // ファイルが存在しない場合
+  }
 
     this.writer.addGaijiFont(className, gaijiFilePath);
     buf.push(`<span class="glyph ${className}">${baseChar}</span>`);
