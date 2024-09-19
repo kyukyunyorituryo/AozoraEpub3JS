@@ -489,7 +489,7 @@ export default class Epub3Writer {
         }
 
         // zip出力用Writer
-        let bw;
+        let bw='';
 
         // 本文を出力
         await this.writeSections(converter, src, bw, srcFile, srcExt, this.zos);
@@ -771,10 +771,10 @@ export default class Epub3Writer {
         // 外字ファイル格納
         for (const gaijiInfo of this.vecGaijiInfo) {
             const gaijiFile = gaijiInfo.getFile();
-            if (gaijiFile.exists()) {
-                const outFileName = `${Epub3Writer.OPS_PATH}${Epub3Writer.GAIJI_PATH}${gaijiFile.getName()}`;
+            if (fs.existsSync(gaijiFile)) {
+                const outFileName = `${Epub3Writer.OPS_PATH}${Epub3Writer.GAIJI_PATH}${path.basename(gaijiFile)}`;
 
-                this.zos.file(gaijiFile, fs.readFileSync(path.resolve(__dirname, outFileName)));
+                this.zos.file(outFileName, fs.readFileSync(gaijiFile));
             }
         }
 
@@ -953,7 +953,6 @@ export default class Epub3Writer {
     /** 本文を出力する */
     async writeSections(converter, src, bw, srcFile, srcExt, zos) {
         // this.startSection(0, bookInfo.startMiddle);
-
         // ePub3変換して出力
         // 改ページ時にnextSection() を、画像出力時にgetImageFilePath() 呼び出し
         converter.vertical = this.bookInfo.vertical;
@@ -1033,9 +1032,9 @@ export default class Epub3Writer {
 
     /** 外字用フォントを追加 */
     addGaijiFont(className, gaijiFile) {
-        if (this.gaijiNameSet.contains(className)) return;
+        if (this.gaijiNameSet.has(className)) return;
         this.vecGaijiInfo.push(new GaijiInfo(className, gaijiFile));
-        this.gaijiNameSet.push(className);
+        this.gaijiNameSet.add(className);
     }
 
     /** 連番に変更した画像ファイル名を返却.
