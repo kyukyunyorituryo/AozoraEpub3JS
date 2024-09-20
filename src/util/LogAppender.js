@@ -17,7 +17,7 @@ export default class LogAppender {
       this.textArea.scrollTop = this.textArea.scrollHeight;
     }
       */
-    console.log(log);
+    process.stdout.write(log);
   }
 
   static printStackTrace(e) {
