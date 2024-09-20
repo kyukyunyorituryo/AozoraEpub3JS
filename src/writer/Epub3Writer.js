@@ -458,16 +458,6 @@ export default class Epub3Writer {
         // 出力先ePubのZipストリーム生成
         this.zos = new JSZip();
 
-        /*　一番最後にZip生成
-        zos
-            .generateNodeStream({ type: 'nodebuffer', streamFiles: true })
-            .pipe(fs.createWriteStream(epubFile))
-            .on('finish', function () {
-                // JSZip generates a readable stream with a "end" event,
-                // but is piped here in a writable stream which emits a "finish" event.
-                console.log(epubFile + "に出力されました。");
-            });
-        */
         // mimetypeは非圧縮
         this.zos.file("mimetype", "application/epub+zip");
 
@@ -517,7 +507,7 @@ export default class Epub3Writer {
         if (!bookInfo.imageOnly) {
             const textCssEntry = `${Epub3Writer.OPS_PATH}${Epub3Writer.CSS_PATH}${Epub3Writer.TEXT_CSS}`;
 
-            let bw = fs.readFileSync(path.resolve(__dirname, `${this.templatePath}${Epub3Writer.OPS_PATH}${Epub3Writer.CSS_PATH}${Epub3Writer.TEXT_CSS_EJS}`), 'utf-8');
+            bw = fs.readFileSync(path.resolve(__dirname, `${this.templatePath}${Epub3Writer.OPS_PATH}${Epub3Writer.CSS_PATH}${Epub3Writer.TEXT_CSS_EJS}`), 'utf-8');
             const text_css = ejs.render(bw, this.ejsData)
             this.zos.file(textCssEntry, text_css);
         }
