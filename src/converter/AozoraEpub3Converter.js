@@ -2420,7 +2420,7 @@ export default class AozoraEpub3Converter {
 
       //底本：で前が改ページでなければ改ページ追加
       if (this.separateColophon) {
-        if (this.sectionCharLength > 0 && buf.length() > 2 && buf.charAt(0) === '底' && buf.charAt(1) === '本' && buf.charAt(2) === '：') {
+        if (this.sectionCharLength > 0 && buf.length > 2 && buf[0] === '底' && buf[1] === '本' && buf[2] === '：') {
           //字下げ状態エラー出力
           if (this.inJisage >= 0) {
             LogAppender.error(this.inJisage, "字下げ注記エラー");
@@ -3575,7 +3575,8 @@ export default class AozoraEpub3Converter {
     let idIdx = 1;
     let chapterId = null;
 
-    let chapterLineInfo = null;
+    let chapterLineInfo =new ChapterLineInfo();
+    chapterLineInfo = null;
     //空白除去の時はスペースのみの行は空行扱い
     if (this.removeEmptyLine > 0 && length > 0 && CharUtils.isSpace(line)) {
       line = "";
@@ -3650,7 +3651,7 @@ export default class AozoraEpub3Converter {
         //ページ情報初期化
         this.pageByteSize = 0;
         this.sectionCharLength = 0;
-        if (this.tagLevel > 0) console.error(lineNum, "タグが閉じていません");
+        if (this.tagLevel > 0) LogAppender.error(lineNum, "タグが閉じていません");
         this.tagLevel = 0;
         this.lineIdNum = 0;
 
@@ -3711,7 +3712,7 @@ export default class AozoraEpub3Converter {
       }
 
       //見出しのChapterをWriterに追加 同じ行で数回呼ばれるので初回のみ
-      if (chapterLineInfo !== null && this.lastChapterLine !== lineNum) {
+      if (chapterLineInfo !== null && chapterLineInfo !== undefined && this.lastChapterLine !== lineNum) {
         const name = chapterLineInfo.getChapterName();
         if (name !== null && name.length > 0) {
           //自動抽出で+10されているのは1桁のレベルに戻す
@@ -3731,7 +3732,7 @@ export default class AozoraEpub3Converter {
     this.tagLevel += tagStart - tagEnd;
 
     //バッファクリア
-    buf.setLength(0);
+    buf=[];
   }
 //サロゲートペアの高サロゲート文字かどうかを判定するためのメソッド
   isHighSurrogate(char) {
