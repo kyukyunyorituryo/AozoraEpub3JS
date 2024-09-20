@@ -227,12 +227,6 @@ export default class Epub3Writer {
 
     // Properties
     zos;
-    /** ファイル名桁揃え用 */
-    static decimalFormat = new Intl.NumberFormat('ja', {
-        minimumIntegerDigits: 4,
-        useGrouping: false
-    });
-
 
     /** セクション番号自動追加用インデックス */
     sectionIndex = 0;
@@ -977,7 +971,12 @@ export default class Epub3Writer {
      * @throws IOException */
     async startSection(lineNum, pageType, imagePageType, srcImageFilePath) {
         this.sectionIndex++;
-        let sectionId = this.decimalFormat.format(this.sectionIndex);
+            /** ファイル名桁揃え用 */
+        const decimalFormat = new Intl.NumberFormat('ja', {
+            minimumIntegerDigits: 4,
+            useGrouping: false
+        });
+        let sectionId = decimalFormat.format(this.sectionIndex);
         // package.opf用にファイル名
         let sectionInfo = new SectionInfo(sectionId);
         // 次の行が単一画像なら画像専用指定
@@ -1010,7 +1009,7 @@ export default class Epub3Writer {
 
         const bw = fs.readFileSync(path.resolve(__dirname, this.templatePath + Epub3Writer.OPS_PATH + Epub3Writer.XHTML_PATH + Epub3Writer.XHTML_HEADER_EJS), 'utf-8');
         const zosdata = ejs.render(bw, this.ejsData)
-        console.log(sectionId)
+        console.log(sectionId,zosdata)
         this.zos.file(Epub3Writer.OPS_PATH + Epub3Writer.XHTML_PATH + sectionId + ".xhtml", zosdata);
     }
 
@@ -1050,8 +1049,8 @@ export default class Epub3Writer {
         // 拡張子修正
         if (imageInfo === null) {
             // 画像があるかチェック
-            let altImageFileName = this.imageInfoReader.correctExt(srcImageFileName);
-            imageInfo = this.imageInfoReader.getImageInfo(altImageFileName);
+            let altImageFileName = await this.imageInfoReader.correctExt(srcImageFileName);
+            imageInfo = await this.imageInfoReader.getImageInfo(altImageFileName);
             if (imageInfo !== null) {
                 LogAppender.warn(lineNum, "画像拡張子変更", srcImageFileName);
                 srcImageFileName = altImageFileName;
@@ -1065,17 +1064,17 @@ export default class Epub3Writer {
                 imageId = this.decimalFormat.format(this.imageIndex);
                 this.imageInfos.push(imageInfo);
                 this.outImageFileNames.add(srcImageFileName);
-                if (this.imageIndex - 1 === this.bookInfo.coverImageIndex) {
+                if (this.imageIndex - 1 === this.bookInfo?.coverImageIndex) {
                     // imageInfo.setIsCover(true);
                     isCover = true;
                 }
             }
-            let outImageFileName = imageId + "." + imageInfo.getExt().replaceFirst("jpeg", "jpg");
+            let outImageFileName = imageId + "." + imageInfo.getExt().replace("jpeg", "jpg");
             imageInfo.setId(imageId);
             imageInfo.setOutFileName(outImageFileName);
 
             // 先頭に表紙ページ移動の場合でカバーページならnullを返して本文中から削除
-            if (this.bookInfo.insertCoverPage && isCover) return null;
+            if (this.bookInfo?.insertCoverPage && isCover) return null;
             return "../" + this.IMAGES_PATH + outImageFileName;
         } else {
             LogAppender.warn(lineNum, "画像ファイルなし", srcImageFileName);
@@ -1184,7 +1183,7 @@ export default class Epub3Writer {
         let imageInfo = await this.imageInfoReader.getImageInfo(srcFilePath);
         if (imageInfo !== null) {
             // 外字や数式は除外 行方向に64px以下
-            if (this.bookInfo.vertical) {
+            if (this.bookInfo?.vertical) {
                 if (imageInfo.getWidth() <= 64) return -1;
             } else if (imageInfo.getHeight() <= 64) return -1;
 
@@ -1219,7 +1218,7 @@ export default class Epub3Writer {
         let imageInfo = await this.imageInfoReader.getImageInfo(srcFilePath);
         if (imageInfo !== null) {
             // 外字や数式は除外 行方向に64px以下
-            if (this.bookInfo.vertical) {
+            if (this.bookInfo?.vertical) {
                 if (imageInfo.getWidth() <= 64) return -1;
             } else if (imageInfo.getHeight() <= 64) return -1;
 
