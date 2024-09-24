@@ -872,7 +872,7 @@ export default class Epub3Writer {
             .on('finish', function () {
                 // JSZip generates a readable stream with a "end" event,
                 // but is piped here in a writable stream which emits a "finish" event.
-                console.log(epubFile + "に出力されました。");
+                LogAppender.println(epubFile + "に出力されました。");
             });
 
 
@@ -999,7 +999,7 @@ export default class Epub3Writer {
 
         const bw = fs.readFileSync(path.resolve(__dirname, this.templatePath + Epub3Writer.OPS_PATH + Epub3Writer.XHTML_PATH + Epub3Writer.XHTML_HEADER_EJS), 'utf-8');
         const zosdata = ejs.render(bw, this.ejsData)
-        console.log(sectionId,zosdata)
+        //console.log(sectionId,zosdata)
         this.zos.file(Epub3Writer.OPS_PATH + Epub3Writer.XHTML_PATH + sectionId + ".xhtml", zosdata);
     }
 
