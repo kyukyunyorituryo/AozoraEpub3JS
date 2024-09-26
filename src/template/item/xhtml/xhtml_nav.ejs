@@ -50,14 +50,15 @@ nav#landmarks { display:none; }
 		<ol>
 <% if (bookInfo.InsertCoverPage) { -%>
 			<li><a epub:type="cover" href="xhtml/cover.xhtml">表紙</a></li>
-<% } %>
+<% } -%>
 <% if (bookInfo.InsertTocPage) { -%>
 			<li><a epub:type="toc" href="nav.xhtml">目次</a></li>
-<% } %>
+<% } -%>
 <% if (title_page) { -%>
 			<li><a epub:type="titlepage" href="xhtml/title.xhtml">扉</a></li>
-<% } %>
-<% if (sectionInfo) { -%>
+<% } -%>
+
+<% for (sections in sectionInfo) { -%>
 			<li><a epub:type="bodymatter" href="xhtml/<%= sectionInfo.SectionId %>.xhtml">本文</a></li>
 <% }; -%>
 		</ol>
@@ -69,30 +70,28 @@ nav#landmarks { display:none; }
 <% if (bookInfo.InsertCoverPage && bookInfo.InsertCoverPageToc) { -%>
 			<li class="chapter" id="toccover"><a href="xhtml/cover.xhtml"><%= cover_name %></a></li>
 <% } -%>
-<% let idx = 0; %>
-<% chapters.forEach(function(chapter) { %>
-<% if (chapter.ChapterName) { %>
-<% idx += 1; %>
-<% if ((!chapter.LevelStart && idx > 1) || (!navNest && idx != 1)) { %>
+<% for(var i = 0; i < chapters.length; i++) { -%>
+<% if (chapters[i].ChapterName) { -%>
+<% if ((!chapters[i].LevelStart && i > 1) || (!navNest && i != 1)) { -%>
 </li>
-<% } %>
-<% if (navNest) { %>
-<% chapter.LevelStart.forEach(function() { %>
+<% } -%>
+<% if (navNest) { -%>
+<% for (start in chapters[i].LevelStart) { -%>
 		<ol>
-<% }); %>
-<% } %>
-<% if (chapter.ChapterId) { %>
-			<li><a href="xhtml/<%= chapter.SectionId %>.xhtml#<%= chapter.ChapterId %>"><%= chapter.ChapterName %></a>
-<% } else { %>
-			<li><a href="xhtml/<%= chapter.SectionId %>.xhtml"><%= chapter.ChapterName %></a>
-<% } %>
-<% if (navNest) { %>
-<% chapter.LevelEnd.forEach(function() { %>
+<% }; -%>
+<% } -%>
+<% if (chapters[i].ChapterId) { -%>
+			<li><a href="xhtml/<%= chapters[i].SectionId -%>.xhtml#<%= chapters[i].ChapterId -%>"><%= chapters[i].ChapterName -%></a>
+<% } else { -%>
+			<li><a href="xhtml/<%= chapters[i].SectionId %>.xhtml"><%= chapters[i].ChapterName -%></a>
+<% } -%>
+<% if (navNest) { -%>
+	<% for (end in chapters[i].LevelEnd) { -%>
 		</li></ol>
-<% }); %>
-<% } %>
-<% } %>
-<% }); %>
+<% }; -%>
+<% } -%>
+<% } -%>
+<% }; -%>
 		</li></ol>
 	</nav>
 </body>
