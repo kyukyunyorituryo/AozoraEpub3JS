@@ -23,9 +23,12 @@ var bookInfo={
     InsertCoverPage:true,
     InsertTocPage:true,
     ImageOnly:false,
+    Vertical:true,
 }
 var sectionInfo={
     SectionId:"0001",
+    ImagePage:false,
+    Middle:false,
 }
 var chapters=[{
     ChapterName:"目次1",
@@ -129,6 +132,20 @@ var title_middle = ejs.render(title_m, {
     PUBLISHER:""
 })
 //console.log(title_middle)
+
+var head = ejs.render(header, {
+    sectionInfo:sectionInfo,
+    kindle:true,
+    bookInfo: bookInfo,
+    title: title,
+})
+var foot = ejs.render(footer, {
+    sectionInfo:sectionInfo,
+    kindle:true,
+    bookInfo: bookInfo,
+    title: title,
+})
+console.log(head+foot)
 /*
 var pages = [];
 for(let i in data.files) {

@@ -4,29 +4,29 @@
  xmlns="http://www.w3.org/1999/xhtml"
  xmlns:epub="http://www.idpf.org/2007/ops"
  xml:lang="ja"
-<% if (sectionInfo.ImagePage || sectionInfo.Middle) { %>
+<% if (sectionInfo.ImagePage || sectionInfo.Middle) { -%>
  class="hltr"
-<% } else if (bookInfo.Vertical) { %>
+<% } else if (bookInfo.Vertical) { -%>
  class="vrtl"
-<% } else { %>
+<% } else { -%>
  class="hltr"
-<% } %>
+<% } -%>
 >
 <head>
 <meta charset="UTF-8"/>
-<title><%= title %></title>
+<title><%= title -%></title>
 <link rel="stylesheet" type="text/css" href="../style/book-style.css"/>
 
-<% if (sectionInfo.ImageHeight > 0) { %>
+<% if (sectionInfo.ImageHeight > 0) { -%>
 <style type="text/css">
 body .img img {
-height: <%= sectionInfo.ImageHeightPercent %>%;
-min-height: <%= sectionInfo.ImageHeightPercent %>%;
+height: <%= sectionInfo.ImageHeightPercent -%>%;
+min-height: <%= sectionInfo.ImageHeightPercent -%>%;
 }
 </style>
-<% } %>
+<% } -%>
 </head>
-<% 
+<%
 let body_class = "";
 let sep = "";
 if (sectionInfo.ImageFitW || sectionInfo.ImageFitH) {
@@ -43,14 +43,14 @@ if (kindle) {
 if (body_class !== "") {
   body_class = ` class="${body_class}"`;
 }
-%>
-<body<%= body_class %>>
-<% if (sectionInfo.Middle) { %>
+-%>
+<body<%- body_class -%>>
+<% if (sectionInfo.Middle) { -%>
 <div class="main vrtl block-align-center">
 <div class="start-2em">
-<% } else if (sectionInfo.Bottom) { %>
+<% } else if (sectionInfo.Bottom) { -%>
 <div class="main vrtl block-align-end">
 <div class="start-2em">
-<% } else { %>
+<% } else { -%>
 <div class="main">
-<% } %>
+<% } -%>
