@@ -662,11 +662,10 @@ export default class AozoraEpub3Converter {
     // ブロック見出し注記、次の行を繋げる場合に設定
     let preChapterLineInfo = null;
     // 最後まで回す 
-    var lines = src.toString().split('¥n');
+    var lines = src.split(/\n/);
     for (let i = 0; i < lines.length; i++) {
       let line = lines[i];
 
-      // while ((line = await src.readLine()) !== null) {
       this.lineNum++;
       // 見出し等の取得のため前方参照注記は変換 外字文字は置換
       line = CharUtils.removeSpace(
