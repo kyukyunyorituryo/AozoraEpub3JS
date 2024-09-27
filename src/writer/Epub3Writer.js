@@ -428,9 +428,9 @@ export default class Epub3Writer {
         // 刊行者情報
         bookInfo.publisher ? this.ejsData.publisher = CharUtils.bookInfo.publisher : this.ejsData.publisher = null;
         // 言語 &<>はエスケープ
-        bookInfo.language ? this.ejsData.language = bookInfo.language : this.ejsData.language = null;
+        if (!bookInfo.language) bookInfo.language = "ja";
         this.ejsData.language = CharUtils.escapeHtml(bookInfo.language);
-
+        
         // 書籍情報
         this.ejsData.bookInfo = bookInfo;
 
