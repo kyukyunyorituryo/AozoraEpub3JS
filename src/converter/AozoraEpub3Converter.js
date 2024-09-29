@@ -1764,7 +1764,7 @@ export default class AozoraEpub3Converter {
       }
 
       // 訓点・返り点と縦書き時の縦中横
-      if (this.chukiKunten.includes(chukiName) || (this.vertical && chukiName.startsWith("縦中横"))) {
+      if (this.chukiKunten.has(chukiName) || (this.vertical && chukiName.startsWith("縦中横"))) {
         // 注記変換
         buf.push(this.chukiMap.get(chukiName)[0]);
       } else {
@@ -1883,10 +1883,10 @@ export default class AozoraEpub3Converter {
     let m ;
     let chukiStart = 0;
 
-    this.noTcyStart = [];
-    this.noTcyEnd = [];
+    this.noTcyStart = new Set();
+    this.noTcyEnd = new Set();
     // 横組み中なら先頭から縦中横抑止
-    if (this.inYoko) this.noTcyStart.push(0);
+    if (this.inYoko) this.noTcyStart.add(0);
     while ((m = this.chukiPattern.exec(line)) !== null) {
       let chukiTag = m[0];
       let lowerChukiTag = chukiTag.toLowerCase();
@@ -2594,11 +2594,11 @@ export default class AozoraEpub3Converter {
 
     for (let i = begin; i < end; i++) {
       // 縦中横と横書きの中かチェック
-      if (!noTcy && this.noTcyStart.includes(i)) {
+      if (!noTcy && this.noTcyStart.has(i)) {
         // 未処理の文字列が残っていないなら noTcy と同じ値を設定。残っているなら noTcy の値を保存。
         noTcyPre = rubyStart === -1;
         noTcy = true;
-      } else if (noTcy && this.noTcyEnd.includes(i)) {
+      } else if (noTcy && this.noTcyEnd.has(i)) {
         // 未処理の文字列が残っていないなら noTcy と同じ値を設定。残っているなら noTcy の値を保存。
         noTcyPre = rubyStart !== -1;
         noTcy = false;
