@@ -1653,7 +1653,7 @@ export default class AozoraEpub3Converter {
 
       // 前方参照注記ではない
       if (!tags) {
-        if (chuki.endsWith("のルビ") || (chukiRuby && chuki.endsWith("の注記"))) {
+        if (chuki.endsWith("のルビ") || (this.chukiRuby && chuki.endsWith("の注記"))) {
           // ルビに変換 ママは除外
           if (chuki.startsWith("に「") && !chuki.startsWith("に「ママ")) {
             // ［＃「青空文庫」に「あおぞらぶんこ」のルビ］
@@ -1664,7 +1664,7 @@ export default class AozoraEpub3Converter {
             buf[0] = buf[0].slice(0, targetStart) + '｜' + buf[0].slice(targetStart);
             chOffset += chuki.slice(chuki.indexOf('「') + 1, chuki.indexOf('」')).length + 3 - (chukiTagEnd - chukiTagStart);
           }
-        } else if (chukiKogaki && chuki.endsWith("の注記")) {
+        } else if (this.chukiKogaki && chuki.endsWith("の注記")) {
           // 後ろに小書き表示 ママは除外
           if (chuki.startsWith("に「") && !chuki.startsWith("に「ママ")) {
             // ［＃「青空文庫」に「あおぞらぶんこ」の注記］
