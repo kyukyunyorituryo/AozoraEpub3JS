@@ -39,7 +39,7 @@ node.jsで同じファイル構造にすると、設定ファイルの変更が�
 * template　velocityからejsに書き換えた
 
 まだ
-* AozoraEpub3.java
+* AozoraEpub3.java Epub3ImageWriterを除外
 * AozoraEpub3Applet.java
 
 書き換え中
@@ -96,7 +96,7 @@ utilフォルダー
 * LogAppender.java
 
 writerフォルダー
-* Epub3ImageWriter.java まだ
+* Epub3ImageWriter.java 要確認
 * Epub3Writer.java　ejsとjszipで圧縮しようかと
 
 AozoraEpub3JSの説明
