@@ -11,20 +11,27 @@ export default class LatinConverter {
 
     // 分解表記文字列→CIDコードの対応テーブル
     latinCidMap = new Map();
-    constructor(file) {
-        // String srcFileName = "chuki_latin.txt";
-        const src = fs.readFileSync(path.resolve(__dirname, file), "UTF-8");
-        let line = src.split("\r\n");
-        for (let i = 0; i < line.length; i++) {
-                if ((line[i].length > 0) &&( line[i].charAt(0) !== '#')) {
-                        const values = line[i].split("\t");
-                        const ch = values[1].charAt(0);
-                        if (values[0].length > 0) this.latinMap.set(values[0], ch);
-                        if (values.length > 3) this.latinCidMap.set(ch, [values[2], values[3]]);
-                }
-            }
+constructor(filePath) {
 
+    if (!fs.existsSync(filePath)) {
+        throw new Error(`LatinConverter: File not found: ${filePath}`);
     }
+
+    const src = fs.readFileSync(filePath, "utf-8");
+    const lines = src.split(/\r?\n/);
+
+    for (const line of lines) {
+        if (line.length > 0 && line.charAt(0) !== '#') {
+            const values = line.split("\t");
+            const ch = values[1]?.charAt(0);
+            if (values[0] && ch)
+                this.latinMap.set(values[0], ch);
+            if (values.length > 3)
+                this.latinCidMap.set(ch, [values[2], values[3]]);
+        }
+    }
+}
+
 
     // 分解表記の文字単体をUTF-8文字に変換
     toLatinCharacter(separated) {
