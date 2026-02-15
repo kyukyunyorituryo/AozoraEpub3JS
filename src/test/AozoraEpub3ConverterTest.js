@@ -52,22 +52,30 @@ async function runTests() {
     console.log(output);
 }
 async function runTextLineTest(converter, line) {
-    return new Promise((resolve) => {
-        let sw = "";
-        const writable = new Writable({
-            write(chunk, encoding, callback) {
-                sw += chunk.toString();
-                callback();
-            }
-        });
+    let sw = "";
 
-        const convertedLine = converter.convertGaijiChuki(line, true, true);
-        converter.convertTextLineToEpub3(writable, convertedLine, 0, false, false);
-        writable.end(() => {
-            resolve(sw);
-        });
+    const writable = new Writable({
+        write(chunk, encoding, callback) {
+            sw += chunk.toString();
+            callback();
+        }
     });
+
+    const convertedLine = converter.convertGaijiChuki(line, true, true);
+
+    await converter.convertTextLineToEpub3(
+        writable,
+        convertedLine,
+        0,
+        false,
+        false
+    );
+
+    await new Promise(resolve => writable.end(resolve));
+
+    return sw;
 }
+
 // テストを実行
 runTests()
 
@@ -82,7 +90,8 @@ function testConvertRubyText() {
 
     buf = converter.convertRubyText("｜※｜縦線《たてせん》※｜");
     console.log(buf);
-    assert.equal(buf, "<ruby>｜縦線<rt>たてせん</rt></ruby>｜");
+    assert.equal(buf, "<ruby>｜縦線<rt>たてせん</rt></ruby>｜",
+  `actual: ${buf}`);
     buf = converter.convertRubyText("※｜縦線《たてせん》※｜");
     console.log(buf);
     assert.equal(buf, "｜<ruby>縦線<rt>たてせん</rt></ruby>｜");
