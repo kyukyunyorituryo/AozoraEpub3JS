@@ -169,14 +169,14 @@ options.parse(process.argv);
      autoMarginNombre = parseInt(props.get("AutoMarginNombre")); 
      autoMarginPadding = parseFloat(props.get("AutoMarginNombreSize")); 
   }
-  await epub3Writer.setImageParam(dispW, dispH, coverW, coverH, resizeW, resizeH, singlePageSizeW, singlePageSizeH, singlePageWidth, imageSizeType, fitImage, svgImage, rotateImage,
+  epub3Writer.setImageParam(dispW, dispH, coverW, coverH, resizeW, resizeH, singlePageSizeW, singlePageSizeH, singlePageWidth, imageSizeType, fitImage, svgImage, rotateImage,
     imageScale, imageFloatType, imageFloatW, imageFloatH, jpegQualty, gamma, autoMarginLimitH, autoMarginLimitV, autoMarginWhiteLevel, autoMarginPadding, autoMarginNombre, nobreSize);
   /*epub3ImageWriter.setImageParam(dispW, dispH, coverW, coverH, resizeW, resizeH, singlePageSizeW, singlePageSizeH, singlePageWidth, imageSizeType, fitImage, svgImage, rotateImage,
       imageScale, imageFloatType, imageFloatW, imageFloatH, jpegQualty, gamma, autoMarginLimitH, autoMarginLimitV, autoMarginWhiteLevel, autoMarginPadding, autoMarginNombre, nobreSize);
       */
  
   // 目次階層化設定
-  await epub3Writer.setTocParam("1" == (props.get("NavNest")), "1" == (props.get("NcxNest")));
+  epub3Writer.setTocParam("1" == (props.get("NavNest")), "1" == (props.get("NcxNest")));
 
   // スタイル設定
   let pageMargin = [];
@@ -471,8 +471,7 @@ options.parse(process.argv);
       if (is === null) return null;
       // タイトル、画像注記、左右中央注記、目次取得
       
-      const src = fs.readFileSync(is, encType)      
-     
+      const src = fs.readFileSync(is, encType) 
       const bookInfo = await aozoraConverter.getBookInfo(srcFile, src, imageInfoReader, titleType, pubFirst);
       bookInfo.textEntryName = textEntryName[0];
       return bookInfo;
@@ -501,7 +500,6 @@ try {
     //src = fs.createReadStream(srcFile);
     src = fs.readFileSync(srcFile, encType);
   }
-
   // ePub書き出し srcは中でクローズされる
   await epubWriter.write(aozoraConverter, src, srcFile, ext, outFile, bookInfo, imageInfoReader);
 
