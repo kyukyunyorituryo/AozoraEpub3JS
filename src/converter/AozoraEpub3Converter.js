@@ -290,8 +290,8 @@ export default class AozoraEpub3Converter {
     this.gaijiConverter = new AozoraGaijiConverter(jarPath);
 
     // 注記タグ変換
-    const chukiTagFile = jarPath + "chuki_tag.txt";
-    const src = fs.readFileSync(path.resolve(__dirname, chukiTagFile), 'utf8');
+    const chukiTagPath = path.join(jarPath, "chuki_tag.txt");
+    const src = fs.readFileSync(chukiTagPath, "utf8");
     //  const chukiMap = new Map();
     // const chukiFlagNoBr = new Set();
     // const chukiFlagNoRubyStart = new Set();
@@ -334,8 +334,7 @@ export default class AozoraEpub3Converter {
     this.chukiPatternMap.set("字下げ終わり複合", /^［＃ここで字下げ.*終わり/);
 
     // 前方参照注記
-    const chukiSufFilePath = jarPath + 'chuki_tag_suf.txt';
-    const chukiSufFileContent = fs.readFileSync(path.resolve(__dirname, chukiSufFilePath), 'utf-8');
+    const chukiSufFilePath = path.join(jarPath, "chuki_tag_suf.txt");const chukiSufFileContent = fs.readFileSync(chukiSufFilePath, "utf-8");
     const chukiSufFileLines = chukiSufFileContent.split('\n');
     const sufChukiMap = new Map();
 
@@ -360,12 +359,12 @@ export default class AozoraEpub3Converter {
       }
     }
     // 単純文字置換
-    const replaceFilePath = jarPath + 'replace.txt';
-    if (fs.existsSync(path.resolve(__dirname, replaceFilePath))) {
+    const replaceFilePath = path.join(jarPath, "replace.txt");
+    if (fs.existsSync(replaceFilePath)) {
       const replaceMap = new Map();
       const replace2Map = new Map();
 
-      const replaceFileContent = fs.readFileSync(path.resolve(__dirname, replaceFilePath), 'utf-8');
+      const replaceFileContent = fs.readFileSync(replaceFilePath, "utf-8");
       const replaceFileLines = replaceFileContent.split('\n');
 
       let lineNum = 0;
