@@ -1559,127 +1559,198 @@ export default class AozoraEpub3Converter {
     //前方参照注記がなければそのまま返却
     if (line.indexOf("［＃「") === -1) return line;
 
-    //注記内注記があれば除外
-    let buf = [];
-    //最初の注記以後は文字判別で入れ子をチェック
-    let mTag = /((［＃)|］)/g;
-    let mTagEnd = 0;
-    let innerTagLevel = 0;
-    let innerTagStart = 0;
-    let match;
+  //注記内注記があれば除外
+  let buf = [];
+  //最初の注記以後は文字判別で入れ子をチェック
+  let mTag = /((［＃)|］)/g;
+  let mTagEnd = 0;
+  let innerTagLevel = 0;
+  let innerTagStart = 0;
+  let match;
 
-    while ((match = mTag.exec(line)) !== null) {
-      //注記前まで出力
-      if (innerTagLevel <= 1) buf.push(line.slice(mTagEnd, match.index));
-      mTagEnd = match.index + match[0].length;
-      let tag = match[0];
-      if (tag === '］') {
-        //注記タグを出力
-        if (innerTagLevel <= 1) buf.push(tag);
-        else if (innerTagLevel === 2) LogAppender.warn(this.lineNum, "注記内に注記があります", line.slice(innerTagStart, mTagEnd));
-        innerTagLevel--;
-      } else {
-        innerTagLevel++;
-        //注記タグを出力
-        if (innerTagLevel <= 1) buf.push(tag);
-        else if (innerTagLevel === 2) innerTagStart = match.index;
-      }
+  while ((match = mTag.exec(line)) !== null) {
+    //注記前まで出力
+    if (innerTagLevel <= 1) buf.push(line.slice(mTagEnd, match.index));
+    mTagEnd = match.index + match[0].length;
+    let tag = match[0];
+
+    if (tag === '］') {
+      //注記タグを出力
+      if (innerTagLevel <= 1) buf.push(tag);
+      else if (innerTagLevel === 2)
+        LogAppender.warn(this.lineNum, "注記内に注記があります", line.slice(innerTagStart, mTagEnd));
+      innerTagLevel--;
+    } else {
+      innerTagLevel++;
+      if (innerTagLevel <= 1) buf.push(tag);
+      else if (innerTagLevel === 2)
+        innerTagStart = match.index;
     }
-    //後ろを出力
-    buf.push(line.slice(mTagEnd));
-    line = buf.join("");
+  }
+  //後ろを出力
+  buf.push(line.slice(mTagEnd));
+  line = buf.join("");
 
-    // "［＃「([^］]+)」([^」|^］]+)］"
-    let m = this.chukiSufPattern.exec(line);
-    if (!m) return line;
+  buf = [line];
+  let chOffset = 0;
 
-    let chOffset = 0;
-    buf = [line];
-    do {
-      let target = m[1];
-      let chuki = m[2];
-      let tags = this.sufChukiMap.get(chuki);
-      let chukiTagStart = m.index;
-      let chukiTagEnd = m.index + m[0].length;
+  // =========================
+  // 第1パターン処理
+  // =========================
+  this.chukiSufPattern.lastIndex = 0;
+  let m = this.chukiSufPattern.exec(buf[0]);
+
+  while (m) {
+    let target = m[1];
+    let chuki = m[2];
+    let tags = this.sufChukiMap.get(chuki);
+
+    let chukiTagStart = m.index;
+    let chukiTagEnd = m.index + m[0].length;
 
       // 後ろにルビがあったら前に移動して位置を調整
-      if (chukiTagEnd < line.length && buf[0].charAt(chukiTagEnd + chOffset) === '《') {
-        let rubyEnd = buf[0].indexOf("》", chukiTagEnd + chOffset + 2);
-        let ruby = buf[0].slice(chukiTagEnd + chOffset, rubyEnd + 1);
-        buf[0] = buf[0].slice(0, chukiTagEnd + chOffset) + buf[0].slice(rubyEnd + 1);
-        buf[0] = buf[0].slice(0, chukiTagStart + chOffset) + ruby + buf[0].slice(chukiTagStart + chOffset);
-        chukiTagStart += ruby.length;
-        chukiTagEnd += ruby.length;
-        LogAppender.warn(this.lineNum, "ルビが注記の後ろにあります", ruby);
-      }
+    if (chukiTagEnd < buf[0].length && buf[0].charAt(chukiTagEnd) === '《') {
+      let rubyEnd = buf[0].indexOf("》", chukiTagEnd + 2);
+      let ruby = buf[0].slice(chukiTagEnd, rubyEnd + 1);
 
-      if (chuki.endsWith("の注記付き終わり")) {
-        //［＃注記付き］○○［＃「××」の注記付き終わり］の例外処理
-        buf[0] = buf[0].slice(0, chukiTagStart + chOffset) + "《" + target + "》" + buf[0].slice(chukiTagEnd + chOffset);
+      buf[0] =
+        buf[0].slice(0, chukiTagEnd) +
+        buf[0].slice(rubyEnd + 1);
+
+      buf[0] =
+        buf[0].slice(0, chukiTagStart) +
+        ruby +
+        buf[0].slice(chukiTagStart);
+
+      chukiTagStart += ruby.length;
+      chukiTagEnd += ruby.length;
+
+      LogAppender.warn(this.lineNum, "ルビが注記の後ろにあります", ruby);
+    }
+
+    if (chuki.endsWith("の注記付き終わり")) {
+    	//［＃注記付き］○○［＃「××」の注記付き終わり］の例外処理
+      buf[0] =
+        buf[0].slice(0, chukiTagStart) +
+        "《" + target + "》" +
+        buf[0].slice(chukiTagEnd);
+
         // 前にある［＃注記付き］を｜に置換
-        let start = buf[0].lastIndexOf("［＃注記付き］", chukiTagStart + chOffset);
-        if (start !== -1) {
-          buf[0] = buf[0].slice(0, start + 1) + buf[0].slice(start + 7);
-          buf[0] = buf[0].slice(0, start) + '｜' + buf[0].slice(start + 1);
-          chOffset -= 6;
-        }
-        chOffset += target.length + 2 - (chukiTagEnd - chukiTagStart);
-      } else if (tags) {
-        // 置換済みの文字列で注記追加位置を探す
-        let targetStart = this.getTargetStart(buf[0], chukiTagStart, chOffset, CharUtils.removeRuby(target).length);
-
-        // 後ろタグ置換
-        buf[0] = buf[0].slice(0, chukiTagStart + chOffset) + "［＃" + tags[1] + "］" + buf[0].slice(chukiTagEnd + chOffset);
-        // 前タグinsert
-        buf[0] = buf[0].slice(0, targetStart) + "［＃" + tags[0] + "］" + buf[0].slice(targetStart);
-
-        chOffset += tags[0].length + tags[1].length + 6 - (chukiTagEnd - chukiTagStart);
+      let start = buf[0].lastIndexOf("［＃注記付き］", chukiTagStart);
+      if (start !== -1) {
+        buf[0] =
+          buf[0].slice(0, start + 1) +
+          buf[0].slice(start + 7);
+        buf[0] =
+          buf[0].slice(0, start) +
+          '｜' +
+          buf[0].slice(start + 1);
       }
-    } while ((m = this.chukiSufPattern.exec(line)) !== null);
+    } else if (tags) {
+      // 置換済みの文字列で注記追加位置を探す
+      let targetStart = this.getTargetStart(
+        buf[0],
+        chukiTagStart,
+        0,
+        CharUtils.removeRuby(target).length
+      );
 
-    // 注記タグ等を再度変換
-    line = buf[0];
-    // 「」が2つある注記 「○○」に「××」の注記
-    m = this.chukiSufPattern2.exec(line);
-    // マッチしなければそのまま返却
-    if (!m) return line;
-    chOffset = 0;
-    do {
-      let target = m[1];
-      let chuki = m[2];
-      let tags = this.sufChukiMap.get(chuki);
-      let targetLength = target.length;
-      let chukiTagStart = m.index;
-      let chukiTagEnd = m.index + m[0].length;
+      // 後ろタグ置換
+      buf[0] =
+        buf[0].slice(0, chukiTagStart) +
+        "［＃" + tags[1] + "］" +
+        buf[0].slice(chukiTagEnd);
 
-      // 前方参照注記ではない
-      if (!tags) {
-        if (chuki.endsWith("のルビ") || (this.chukiRuby && chuki.endsWith("の注記"))) {
-          // ルビに変換 ママは除外
-          if (chuki.startsWith("に「") && !chuki.startsWith("に「ママ")) {
-            // ［＃「青空文庫」に「あおぞらぶんこ」のルビ］
-            let targetStart = this.getTargetStart(buf[0], chukiTagStart, chOffset, targetLength);
-            // 後ろタグ置換
-            buf[0] = buf[0].slice(0, chukiTagStart + chOffset) + "《" + chuki.slice(chuki.indexOf('「') + 1, chuki.indexOf('」')) + "》" + buf[0].slice(chukiTagEnd + chOffset);
-            // 前に ｜ insert
-            buf[0] = buf[0].slice(0, targetStart) + '｜' + buf[0].slice(targetStart);
-            chOffset += chuki.slice(chuki.indexOf('「') + 1, chuki.indexOf('」')).length + 3 - (chukiTagEnd - chukiTagStart);
-          }
-        } else if (this.chukiKogaki && chuki.endsWith("の注記")) {
-          // 後ろに小書き表示 ママは除外
-          if (chuki.startsWith("に「") && !chuki.startsWith("に「ママ")) {
-            // ［＃「青空文庫」に「あおぞらぶんこ」の注記］
-            let kogaki = "［＃小書き］" + chuki.slice(chuki.indexOf('「') + 1, chuki.indexOf('」')) + "［＃小書き終わり］";
-            buf[0] = buf[0].slice(0, chukiTagStart + chOffset) + kogaki + buf[0].slice(chukiTagEnd + chOffset);
-            chOffset += kogaki.length - (chukiTagEnd - chukiTagStart);
-          }
-        }
-      }
-    } while ((m = this.chukiSufPattern2.exec(line)) !== null);
+      // 前タグinsert
+      buf[0] =
+        buf[0].slice(0, targetStart) +
+        "［＃" + tags[0] + "］" +
+        buf[0].slice(targetStart);
+    }
 
-    // 置換後文字列を返却
-    return buf[0];
+    // 🔥 再マッチのためリセット
+    this.chukiSufPattern.lastIndex = 0;
+    m = this.chukiSufPattern.exec(buf[0]);
   }
+
+  // =========================
+  // 第2パターン処理
+  // =========================
+  this.chukiSufPattern2.lastIndex = 0;
+  // 「」が2つある注記 「○○」に「××」の注記
+  m = this.chukiSufPattern2.exec(buf[0]);
+// マッチしなければそのまま返却
+  while (m) {
+    let target = m[1];
+    let chuki = m[2];
+    let tags = this.sufChukiMap.get(chuki);
+
+    let chukiTagStart = m.index;
+    let chukiTagEnd = m.index + m[0].length;
+    
+    // 前方参照注記ではない
+    if (!tags) {
+      if (chuki.endsWith("のルビ") ||
+          (this.chukiRuby && chuki.endsWith("の注記"))) {
+            
+            // ルビに変換 ママは除外
+        if (chuki.startsWith("に「") && !chuki.startsWith("に「ママ")) {
+
+          let rubyText = chuki.slice(
+            chuki.indexOf('「') + 1,
+            chuki.indexOf('」')
+          );
+          // ［＃「青空文庫」に「あおぞらぶんこ」のルビ］
+          let targetStart = this.getTargetStart(
+            buf[0],
+            chukiTagStart,
+            0,
+            target.length
+          );
+
+          // 後ろタグ置換
+          buf[0] =
+            buf[0].slice(0, chukiTagStart) +
+            "《" + rubyText + "》" +
+            buf[0].slice(chukiTagEnd);
+
+          // 前に ｜ insert
+          buf[0] =
+            buf[0].slice(0, targetStart) +
+            '｜' +
+            buf[0].slice(targetStart);
+        }
+
+      } else if (this.chukiKogaki && chuki.endsWith("の注記")) {
+
+        // 後ろに小書き表示 ママは除外
+        if (chuki.startsWith("に「") && !chuki.startsWith("に「ママ")) {
+
+          // ［＃「青空文庫」に「あおぞらぶんこ」の注記］
+          let kogaki =
+            "［＃小書き］" +
+            chuki.slice(
+              chuki.indexOf('「') + 1,
+              chuki.indexOf('」')
+            ) +
+            "［＃小書き終わり］";
+
+          buf[0] =
+            buf[0].slice(0, chukiTagStart) +
+            kogaki +
+            buf[0].slice(chukiTagEnd);
+        }
+      }
+    }
+
+    this.chukiSufPattern2.lastIndex = 0;
+    m = this.chukiSufPattern2.exec(buf[0]);
+  }
+
+  // 置換後文字列を返却
+  return buf[0];
+}
+
   /** 前方参照注記の前タグ挿入位置を取得 */
   getTargetStart(buf, chukiTagStart, chOffset, targetLength) {
     // 置換済みの文字列で注記追加位置を探す

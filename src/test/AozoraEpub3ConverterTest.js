@@ -98,7 +98,7 @@ function testConvertRubyText() {
 
 }
 
-//testConvertRubyText()
+testConvertRubyText()
 
 function testConvertGaijiChuki() {
 
@@ -125,7 +125,7 @@ function testConvertGaijiChuki() {
 
 
 }
-//testConvertGaijiChuki()
+testConvertGaijiChuki()
 
 
 function testReplaceChukiSufTag() {
@@ -201,7 +201,7 @@ function testReplaceChukiSufTag() {
     assert.equal(str, "［＃５字下げ］［＃大見出し］第一回　入蔵決心の次第［＃小書き］〔チベット入国の決意〕［＃小書き終わり］［＃大見出し終わり］");
 
 }
-//testReplaceChukiSufTag()
+testReplaceChukiSufTag()
 
 function testCheckTcyPrev() {
     let prev, cur, next;
