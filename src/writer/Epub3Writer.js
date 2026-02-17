@@ -1205,6 +1205,7 @@ export default class Epub3Writer {
     // 外字画像の縦と横の長さを比較して、同じなら0、横長なら1、縦長なら2を返す。
     async getImageOrientation(srcFilePath) {
         let wide = 0;
+        if (!this.imageManager) return null;
         let imageInfo = await this.imageInfoReader.getImageInfo(srcFilePath);
         if (imageInfo !== null) {
             // 外字や数式は除外 行方向に64px以下

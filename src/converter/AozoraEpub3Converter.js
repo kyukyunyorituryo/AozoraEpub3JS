@@ -1555,13 +1555,14 @@ export default class AozoraEpub3Converter {
  * 重複等の法則が変則すぎるのでバッファを利用
  * 注記文字変換は2回目に行う
  * 前にルビがあって｜で始まる場合は｜の前に追加 */
-  replaceChukiSufTag(line) {
-    //前方参照注記がなければそのまま返却
-    if (line.indexOf("［＃「") === -1) return line;
+replaceChukiSufTag(line) {
 
-  //注記内注記があれば除外
+  if (line.indexOf("［＃「") === -1) return line;
+
+  // =========================
+  // 注記内注記除去
+  // =========================
   let buf = [];
-  //最初の注記以後は文字判別で入れ子をチェック
   let mTag = /((［＃)|］)/g;
   let mTagEnd = 0;
   let innerTagLevel = 0;
@@ -1569,38 +1570,42 @@ export default class AozoraEpub3Converter {
   let match;
 
   while ((match = mTag.exec(line)) !== null) {
-    //注記前まで出力
-    if (innerTagLevel <= 1) buf.push(line.slice(mTagEnd, match.index));
+    if (innerTagLevel <= 1)
+      buf.push(line.slice(mTagEnd, match.index));
+
     mTagEnd = match.index + match[0].length;
     let tag = match[0];
 
     if (tag === '］') {
-      //注記タグを出力
-      if (innerTagLevel <= 1) buf.push(tag);
+      if (innerTagLevel <= 1)
+        buf.push(tag);
       else if (innerTagLevel === 2)
-        LogAppender.warn(this.lineNum, "注記内に注記があります", line.slice(innerTagStart, mTagEnd));
+        LogAppender.warn(this.lineNum, "注記内に注記があります",
+          line.slice(innerTagStart, mTagEnd));
       innerTagLevel--;
     } else {
       innerTagLevel++;
-      if (innerTagLevel <= 1) buf.push(tag);
+      if (innerTagLevel <= 1)
+        buf.push(tag);
       else if (innerTagLevel === 2)
         innerTagStart = match.index;
     }
   }
-  //後ろを出力
+
   buf.push(line.slice(mTagEnd));
   line = buf.join("");
-
   buf = [line];
-  let chOffset = 0;
 
   // =========================
   // 第1パターン処理
   // =========================
   this.chukiSufPattern.lastIndex = 0;
-  let m = this.chukiSufPattern.exec(buf[0]);
+  let m;
 
-  while (m) {
+  while ((m = this.chukiSufPattern.exec(buf[0])) !== null) {
+
+    let replaced = false;
+
     let target = m[1];
     let chuki = m[2];
     let tags = this.sufChukiMap.get(chuki);
@@ -1608,46 +1613,51 @@ export default class AozoraEpub3Converter {
     let chukiTagStart = m.index;
     let chukiTagEnd = m.index + m[0].length;
 
-      // 後ろにルビがあったら前に移動して位置を調整
-    if (chukiTagEnd < buf[0].length && buf[0].charAt(chukiTagEnd) === '《') {
+    // ルビ移動
+    if (chukiTagEnd < buf[0].length &&
+        buf[0].charAt(chukiTagEnd) === '《') {
+
       let rubyEnd = buf[0].indexOf("》", chukiTagEnd + 2);
-      let ruby = buf[0].slice(chukiTagEnd, rubyEnd + 1);
+      if (rubyEnd !== -1) {
+        let ruby = buf[0].slice(chukiTagEnd, rubyEnd + 1);
 
-      buf[0] =
-        buf[0].slice(0, chukiTagEnd) +
-        buf[0].slice(rubyEnd + 1);
+        buf[0] =
+          buf[0].slice(0, chukiTagEnd) +
+          buf[0].slice(rubyEnd + 1);
 
-      buf[0] =
-        buf[0].slice(0, chukiTagStart) +
-        ruby +
-        buf[0].slice(chukiTagStart);
+        buf[0] =
+          buf[0].slice(0, chukiTagStart) +
+          ruby +
+          buf[0].slice(chukiTagStart);
 
-      chukiTagStart += ruby.length;
-      chukiTagEnd += ruby.length;
+        chukiTagStart += ruby.length;
+        chukiTagEnd += ruby.length;
 
-      LogAppender.warn(this.lineNum, "ルビが注記の後ろにあります", ruby);
+        replaced = true;
+      }
     }
 
     if (chuki.endsWith("の注記付き終わり")) {
-    	//［＃注記付き］○○［＃「××」の注記付き終わり］の例外処理
+
       buf[0] =
         buf[0].slice(0, chukiTagStart) +
         "《" + target + "》" +
         buf[0].slice(chukiTagEnd);
 
-        // 前にある［＃注記付き］を｜に置換
-      let start = buf[0].lastIndexOf("［＃注記付き］", chukiTagStart);
+      let start =
+        buf[0].lastIndexOf("［＃注記付き］", chukiTagStart);
+
       if (start !== -1) {
-        buf[0] =
-          buf[0].slice(0, start + 1) +
-          buf[0].slice(start + 7);
         buf[0] =
           buf[0].slice(0, start) +
           '｜' +
-          buf[0].slice(start + 1);
+          buf[0].slice(start + 7);
       }
+
+      replaced = true;
+
     } else if (tags) {
-      // 置換済みの文字列で注記追加位置を探す
+
       let targetStart = this.getTargetStart(
         buf[0],
         chukiTagStart,
@@ -1655,52 +1665,53 @@ export default class AozoraEpub3Converter {
         CharUtils.removeRuby(target).length
       );
 
-      // 後ろタグ置換
       buf[0] =
         buf[0].slice(0, chukiTagStart) +
         "［＃" + tags[1] + "］" +
         buf[0].slice(chukiTagEnd);
 
-      // 前タグinsert
       buf[0] =
         buf[0].slice(0, targetStart) +
         "［＃" + tags[0] + "］" +
         buf[0].slice(targetStart);
+
+      replaced = true;
     }
 
-    // 🔥 再マッチのためリセット
-    this.chukiSufPattern.lastIndex = 0;
-    m = this.chukiSufPattern.exec(buf[0]);
+    if (replaced) {
+      this.chukiSufPattern.lastIndex = 0;
+    }
   }
 
   // =========================
   // 第2パターン処理
   // =========================
   this.chukiSufPattern2.lastIndex = 0;
-  // 「」が2つある注記 「○○」に「××」の注記
-  m = this.chukiSufPattern2.exec(buf[0]);
-// マッチしなければそのまま返却
-  while (m) {
+
+  while ((m = this.chukiSufPattern2.exec(buf[0])) !== null) {
+
+    let replaced = false;
+
     let target = m[1];
     let chuki = m[2];
     let tags = this.sufChukiMap.get(chuki);
 
     let chukiTagStart = m.index;
     let chukiTagEnd = m.index + m[0].length;
-    
-    // 前方参照注記ではない
+
     if (!tags) {
+
       if (chuki.endsWith("のルビ") ||
           (this.chukiRuby && chuki.endsWith("の注記"))) {
-            
-            // ルビに変換 ママは除外
-        if (chuki.startsWith("に「") && !chuki.startsWith("に「ママ")) {
+
+        if (chuki.startsWith("に「") &&
+            !chuki.startsWith("に「ママ")) {
 
           let rubyText = chuki.slice(
             chuki.indexOf('「') + 1,
             chuki.indexOf('」')
           );
-          // ［＃「青空文庫」に「あおぞらぶんこ」のルビ］
+
           let targetStart = this.getTargetStart(
             buf[0],
             chukiTagStart,
@@ -1708,25 +1719,25 @@ export default class AozoraEpub3Converter {
             target.length
           );
 
-          // 後ろタグ置換
           buf[0] =
             buf[0].slice(0, chukiTagStart) +
             "《" + rubyText + "》" +
             buf[0].slice(chukiTagEnd);
 
-          // 前に ｜ insert
           buf[0] =
             buf[0].slice(0, targetStart) +
             '｜' +
             buf[0].slice(targetStart);
+
+          replaced = true;
         }
 
-      } else if (this.chukiKogaki && chuki.endsWith("の注記")) {
+      } else if (this.chukiKogaki &&
+                 chuki.endsWith("の注記")) {
 
-        // 後ろに小書き表示 ママは除外
-        if (chuki.startsWith("に「") && !chuki.startsWith("に「ママ")) {
+        if (chuki.startsWith("に「") &&
+            !chuki.startsWith("に「ママ")) {
 
-          // ［＃「青空文庫」に「あおぞらぶんこ」の注記］
           let kogaki =
             "［＃小書き］" +
             chuki.slice(
@@ -1739,17 +1750,21 @@ export default class AozoraEpub3Converter {
             buf[0].slice(0, chukiTagStart) +
             kogaki +
             buf[0].slice(chukiTagEnd);
+
+          replaced = true;
         }
       }
     }
 
-    this.chukiSufPattern2.lastIndex = 0;
-    m = this.chukiSufPattern2.exec(buf[0]);
+    if (replaced) {
+      this.chukiSufPattern2.lastIndex = 0;
+    }
   }
 
-  // 置換後文字列を返却
   return buf[0];
 }
+
+
 
   /** 前方参照注記の前タグ挿入位置を取得 */
   getTargetStart(buf, chukiTagStart, chOffset, targetLength) {
