@@ -2573,212 +2573,180 @@ export default class AozoraEpub3Converter {
  * ・</ruby><ruby> と連続する場合はタグを除去
  * //@param buf 出力先バッファ
  * //@param ch ルビ変換前の行文字列 */
-convertRubyText(line) {
-  const buf = [];
-  const ch = Array.from(line); // Java char[] 相当
-  const begin = 0;
-  const end = ch.length;
+  convertRubyText(line) {
+    let buf = [];
+    let ch = Array.from(line);
+    let begin = 0;
+    let end = ch.length;
+    let noRuby = false;
 
-  let noRuby = false;
+    // ルビと文字変換
+    let rubyStart = -1;  // ルビ開始位置
+    let rubyTopStart = -1;  // ふりがな開始位置
+    let inRuby = false;
+    // let isAlphaRuby = false; // 英字へのルビ
+    let rubyCharType = RubyCharType.NULL;
 
-  let rubyStart = -1;
-  let rubyTopStart = -1;
-  let inRuby = false;
-  let rubyCharType = RubyCharType.NULL;
+    let rubyStartChuki = this.chukiMap.get("ルビ開始")[0];
+    let rubyEndChuki = this.chukiMap.get("ルビ終了")[0];
 
-  const rubyStartChuki = this.chukiMap.get("ルビ開始")[0];
-  const rubyEndChuki = this.chukiMap.get("ルビ終了")[0];
+    let noTcy = false;
+    let noTcyPre = noTcy;
 
-  let noTcy = false;
-  let noTcyPre = noTcy;
+    for (let i = begin; i < end; i++) {
+      // 縦中横と横書きの中かチェック
+      if (!noTcy && this.noTcyStart.has(i)) {
+        // 未処理の文字列が残っていないなら noTcy と同じ値を設定。残っているなら noTcy の値を保存。
+        noTcyPre = rubyStart === -1;
+        noTcy = true;
+      } else if (noTcy && this.noTcyEnd.has(i)) {
+        // 未処理の文字列が残っていないなら noTcy と同じ値を設定。残っているなら noTcy の値を保存。
+        noTcyPre = rubyStart !== -1;
+        noTcy = false;
+      }
+      console.assert(rubyStart !== -1 || noTcyPre === noTcy);
 
-  for (let i = begin; i < end; i++) {
-
-    // 縦中横チェック
-    if (!noTcy && this.noTcyStart.has(i)) {
-      noTcyPre = rubyStart === -1;
-      noTcy = true;
-    } else if (noTcy && this.noTcyEnd.has(i)) {
-      noTcyPre = rubyStart !== -1;
-      noTcy = false;
-    }
-
-    // ------------------------
-    // 記号処理
-    // ------------------------
-    switch (ch[i]) {
-      case '｜':
-        if (!CharUtils.isEscapedChar(ch, i)) {
-          if (rubyStart !== -1) {
-            this.convertTcyText(buf, ch, rubyStart, i, noTcy);
+      switch (ch[i]) {
+        case '｜':
+          // エスケープ文字なら処理しない
+          if (!CharUtils.isEscapedChar(ch, i)) {
+            // 前まで出力
+            if (rubyStart !== -1) this.convertTcyText(buf, ch, rubyStart, i, noTcy);
+            rubyStart = i + 1;
+            noTcyPre = noTcy;
+            inRuby = true;
           }
-          rubyStart = i + 1;
-          noTcyPre = noTcy;
-          inRuby = true; // Javaと同じ
-        }
-        break;
+          break;
+        case '《':
+          // エスケープ文字なら処理しない
+          if (!CharUtils.isEscapedChar(ch, i)) {
+            inRuby = true;
+            rubyTopStart = i;
+          }
+          break;
+      }
 
-      case '《':
-        if (!CharUtils.isEscapedChar(ch, i)) {
-          inRuby = true;
-          rubyTopStart = i;
-        }
-        break;
-    }
-
-    // ------------------------
-    // ルビ終了処理
-    // ------------------------
-    if (inRuby) {
-      if (ch[i] === '》' && !CharUtils.isEscapedChar(ch, i)) {
-
-        if (rubyStart !== -1 && rubyTopStart !== -1) {
-
-          // 長すぎるルビ警告
-          if (rubyTopStart - rubyStart >= 30) {
-            const base = line
-              .substring(rubyStart, rubyTopStart)
-              .replace(/<[^>]+>/g, ' ');
-            if (base.length >= 30) {
-              LogAppender.warn(this.lineNum, "ルビが長すぎます");
+      // ルビ内ならルビの最後でrubyタグ出力
+      if (inRuby) {
+        // ルビ終わり エスケープ文字なら処理しない
+        if (ch[i] === '》' && !CharUtils.isEscapedChar(ch, i)) {
+          if (rubyStart !== -1 && rubyTopStart !== -1) {
+               // 長すぎるルビを警告
+            if (rubyTopStart - rubyStart >= 30) {
+                // タグは除去 面倒なので文字列で置換
+              if (line.substring(rubyStart, rubyTopStart).replace(/<[^>]+>/g, ' ').length >= 30) {
+                LogAppender.warn(this.lineNum, "ルビが長すぎます");
+              }
             }
-          }
-
-          // Java版 indexOf 再現
-          const bufStr = buf.join('');
-          const fromIndex = bufStr.length - rubyEndChuki.length;
-          const hasEnd =
-            fromIndex >= 0 &&
-            bufStr.indexOf(rubyEndChuki, fromIndex) !== -1;
-
-          if (rubyTopStart - rubyStart === i - rubyTopStart - 1 &&
-              CharUtils.isSameChars(ch, rubyTopStart + 1, i)) {
-
-            if (!hasEnd) {
-              buf.push(rubyStartChuki);
+              // 同じ長さで同じ文字なら一文字づつルビを振る
+              if (rubyTopStart - rubyStart === i - rubyTopStart - 1 && CharUtils.isSameChars(ch, rubyTopStart + 1, i)) {
+              if (buf.join('').indexOf(rubyEndChuki, buf.length - rubyEndChuki.length) === -1) {
+                buf.push(rubyStartChuki);
+              } else {
+                buf.splice(buf.length - rubyEndChuki.length);
+              }
+              for (let j = 0; j < rubyTopStart - rubyStart; j++) {
+                this.convertReplacedChar(buf, ch, rubyStart + j, noTcy); // 本文
+                buf.push(this.chukiMap.get("ルビ前")[0]);
+                this.convertReplacedChar(buf, ch, rubyTopStart + 1 + j, true); // ルビ
+                buf.push(this.chukiMap.get("ルビ後")[0]);
+              }
+              buf.push(rubyEndChuki);
             } else {
-              buf.splice(buf.length - rubyEndChuki.length, rubyEndChuki.length);
-            }
-
-            for (let j = 0; j < rubyTopStart - rubyStart; j++) {
-              this.convertReplacedChar(buf, ch, rubyStart + j, noTcy);
+              if (buf.join('').indexOf(rubyEndChuki, buf.length - rubyEndChuki.length) === -1) {
+                buf.push(rubyStartChuki);
+              } else {
+                buf.splice(buf.length - rubyEndChuki.length);
+              }
+              this.convertTcyText(buf, ch, rubyStart, rubyTopStart, noTcy); // 本文
               buf.push(this.chukiMap.get("ルビ前")[0]);
-              this.convertReplacedChar(buf, ch, rubyTopStart + 1 + j, true);
+              this.convertTcyText(buf, ch, rubyTopStart + 1, i, true); // ルビ
               buf.push(this.chukiMap.get("ルビ後")[0]);
+              buf.push(rubyEndChuki);
             }
-
-            buf.push(rubyEndChuki);
-
-          } else {
-
-            if (!hasEnd) {
-              buf.push(rubyStartChuki);
-            } else {
-              buf.splice(buf.length - rubyEndChuki.length, rubyEndChuki.length);
-            }
-
-            this.convertTcyText(buf, ch, rubyStart, rubyTopStart, noTcy);
-            buf.push(this.chukiMap.get("ルビ前")[0]);
-            this.convertTcyText(buf, ch, rubyTopStart + 1, i, true);
-            buf.push(this.chukiMap.get("ルビ後")[0]);
-            buf.push(rubyEndChuki);
+          }
+          if (rubyStart === -1 && !noRuby) {
+            LogAppender.warn(this.lineNum, "ルビ開始文字無し");
+          }
+          inRuby = false;
+          rubyStart = -1;
+          noTcyPre = noTcy;
+          rubyTopStart = -1;
+        }
+      } else {
+        // ルビ開始位置チェック
+        if (rubyStart !== -1) {
+          // ルビ開始チェック中で漢字以外または英字以外ならキャンセルして出力
+          let charTypeChanged = false;
+          switch (rubyCharType) {
+            case RubyCharType.ALPHA:
+              if (!CharUtils.isHalfSpace(ch[i]) || ch[i] === '>') charTypeChanged = true;
+              break;
+            case RubyCharType.FULLALPHA:
+              if (!(CharUtils.isFullAlpha(ch[i]) || CharUtils.isFullNum(ch[i]))) charTypeChanged = true;
+              break;
+            case RubyCharType.KANJI:
+              if (!CharUtils.isKanji(ch, i)) charTypeChanged = true;
+              break;
+            case RubyCharType.HIRAGANA:
+              if (!CharUtils.isHiragana(ch[i])) charTypeChanged = true;
+              break;
+            case RubyCharType.KATAKANA:
+              if (!CharUtils.isKatakana(ch[i])) charTypeChanged = true;
+              break;
+          }
+          if (charTypeChanged) {
+            // rubyStartから前までを出力
+            this.convertTcyText(buf, ch, rubyStart, i, noTcyPre);
+            rubyStart = -1;
+            noTcyPre = noTcy;
+            rubyCharType = RubyCharType.NULL;
           }
         }
-
-        if (rubyStart === -1 && !noRuby) {
-          LogAppender.warn(this.lineNum, "ルビ開始文字無し");
-        }
-
-        inRuby = false;
-        rubyStart = -1;
-        rubyTopStart = -1;
-        rubyCharType = RubyCharType.NULL;
-        noTcyPre = noTcy;
-      }
-    }
-
-    // ------------------------
-    // ルビ未確定処理
-    // ------------------------
-    else {
-
-      if (rubyStart !== -1) {
-
-        let charTypeChanged = false;
-
-        switch (rubyCharType) {
-          case RubyCharType.ALPHA:
-            if (!CharUtils.isHalfSpace(ch[i]) || ch[i] === '>') charTypeChanged = true;
-            break;
-
-          case RubyCharType.FULLALPHA:
-            if (!(CharUtils.isFullAlpha(ch[i]) || CharUtils.isFullNum(ch[i])))
-              charTypeChanged = true;
-            break;
-
-          case RubyCharType.KANJI:
-            if (!CharUtils.isKanji(ch, i)) charTypeChanged = true;
-            break;
-
-          case RubyCharType.HIRAGANA:
-            if (!CharUtils.isHiragana(ch[i])) charTypeChanged = true;
-            break;
-
-          case RubyCharType.KATAKANA:
-            if (!CharUtils.isKatakana(ch[i])) charTypeChanged = true;
-            break;
-        }
-
-        if (charTypeChanged) {
-          this.convertTcyText(buf, ch, rubyStart, i, noTcyPre);
-          rubyStart = -1;
-          rubyCharType = RubyCharType.NULL;
-          noTcyPre = noTcy;
-        }
-      }
-
-      if (rubyStart === -1) {
-
-        if (CharUtils.isKanji(ch, i)) {
-          rubyStart = i;
-          noTcyPre = noTcy;
-          rubyCharType = RubyCharType.KANJI;
-
-        } else if (CharUtils.isHiragana(ch[i])) {
-          rubyStart = i;
-          noTcyPre = noTcy;
-          rubyCharType = RubyCharType.HIRAGANA;
-
-        } else if (CharUtils.isKatakana(ch[i])) {
-          rubyStart = i;
-          noTcyPre = noTcy;
-          rubyCharType = RubyCharType.KATAKANA;
-
-        } else if (CharUtils.isHalfSpace(ch[i]) && ch[i] !== '>') {
-          rubyStart = i;
-          noTcyPre = noTcy;
-          rubyCharType = RubyCharType.ALPHA;
-
-        } else if (CharUtils.isFullAlpha(ch[i]) || CharUtils.isFullNum(ch[i])) {
-          rubyStart = i;
-          noTcyPre = noTcy;
-          rubyCharType = RubyCharType.FULLALPHA;
-
-        } else {
-          this.convertReplacedChar(buf, ch, i, noTcy);
-          rubyCharType = RubyCharType.NULL;
+        // ルビが終了したか開始されていない
+        if (rubyStart === -1) {
+          // ルビ中でなく漢字
+          if (CharUtils.isKanji(ch, i)) {
+            rubyStart = i;
+            noTcyPre = noTcy;
+            rubyCharType = RubyCharType.KANJI;
+          } else if (CharUtils.isHiragana(ch[i])) {
+            // ひらがな
+            rubyStart = i;
+            noTcyPre = noTcy;
+            rubyCharType = RubyCharType.HIRAGANA;
+          } else if (CharUtils.isKatakana(ch[i])) {
+            // カタカナ
+            rubyStart = i;
+            noTcyPre = noTcy;
+            rubyCharType = RubyCharType.KATAKANA;
+          } else if (CharUtils.isHalfSpace(ch[i]) && ch[i] !== '>') {
+            // 英数字または空白
+            rubyStart = i;
+            noTcyPre = noTcy;
+            rubyCharType = RubyCharType.ALPHA;
+          } else if (CharUtils.isFullAlpha(ch[i]) || CharUtils.isFullNum(ch[i])) {
+            // 全角英数字
+            rubyStart = i;
+            noTcyPre = noTcy;
+            rubyCharType = RubyCharType.FULLALPHA;
+          }
+          // ルビ中でなく漢字、半角以外は出力 数字と!?は英字扱いになっている
+          else {
+            this.convertReplacedChar(buf, ch, i, noTcy);
+            rubyCharType = RubyCharType.NULL;
+          }
         }
       }
     }
-  }
 
-  // 末尾処理
-  if (rubyStart !== -1) {
-    this.convertTcyText(buf, ch, rubyStart, end, noTcy);
-  }
+    if (rubyStart !== -1) {
+      // ルビ開始チェック中で漢字以外ならキャンセルして出力
+      this.convertTcyText(buf, ch, rubyStart, end, noTcy);
+    }
 
-  return buf.join('');
-}
+    return buf.join('');
+  }
 
 
 
@@ -2804,7 +2772,7 @@ convertRubyText(line) {
 
   /** 縦中横変換してbufに出力
    * 1文字フォントがある場合もここで出力 */
-  async convertTcyText(buf, ch, begin, end, noTcy) {
+  convertTcyText(buf, ch, begin, end, noTcy) {
     for (let i = begin; i < end; i++) {
 
       let gaijiFileName = null;
@@ -3289,11 +3257,10 @@ convertRubyText(line) {
     }
 
     if (this.replaceMap !== null) {
-      const replaced = this.replaceMap.get(ch[idx]);
-      // 置換して終了
-      if (replaced !== null) {
-        buf.push(replaced);
-        return;
+        const replaced = this.replaceMap.get(ch[idx]);
+          if (replaced != null) {   // ← ここ
+          buf.push(replaced);
+          return;
       }
     }
 
@@ -3302,7 +3269,7 @@ convertRubyText(line) {
       if (this.replace2Map !== null) {
         const replaced = this.replace2Map.get(`${ch[idx - (escaped ? 2 : 1)]}${ch[idx]}`);
         // 置換して終了
-        if (replaced !== null) {
+        if (replaced != null) {
           buf.length=(length - 1);// 1文字削除
           buf.push(replaced);
           return;
