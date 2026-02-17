@@ -65,34 +65,63 @@ export default class AozoraGaijiConverter {
         return this.chukiAltMap.get(chuki);
     }
 
-    codeToCharString(code) {
-        try {
-            if (code.startsWith("U+") || code.startsWith("u+")) {
-                let idx = code.indexOf("-");
-                if (idx === -1) {
-                    return this.codeToCharStringHex(parseInt(code.substring(2), 16));
-                } else {
-                    let ivs = code.substring(idx + 1);
-                    if (ivs.startsWith("U+") || ivs.startsWith("u+")) ivs = ivs.substring(2);
-                    return this.codeToCharStringHex(parseInt(code.substring(2, idx), 16)) +
-                        this.codeToCharStringHex(parseInt(ivs, 16));
-                }
-            } else if (code.startsWith("UCS-")) {
-                return this.codeToCharStringHex(parseInt(code.substring(4), 16));
-            } else if (code.startsWith("unicode")) {
-                return this.codeToCharStringHex(parseInt(code.substring(7), 16));
-            } else {
-                const codes = code.startsWith("第3水準") || code.startsWith("第4水準")
-                    ? code.substring(4).split("-")
-                    : code.split("-");
-                return JisConverter.getConverter().toCharString(parseInt(codes[0]), parseInt(codes[1]), parseInt(codes[2]));
-                //return this.jisToCharString(parseInt(codes[0]), parseInt(codes[1]), parseInt(codes[2]));
+codeToCharString(code) {
+    try {
+        if (!code) return null;
+
+        code = code.trim();
+
+        // U+ 系
+        if (/^u\+/i.test(code)) {
+
+            // 例:
+            // U+845B
+            // U+845B-E0100
+            // U+845B-U+E0100
+            // u+845b-u+e0100
+
+            const parts = code.split("-");
+
+            let result = "";
+
+            for (let part of parts) {
+                part = part.replace(/^u\+/i, '');
+
+                const num = parseInt(part, 16);
+                if (isNaN(num)) return null;
+
+                result += String.fromCodePoint(num);
             }
-        } catch (error) {
-            console.error(error);
+
+            return result;
         }
-        return null;
+
+        else if (code.startsWith("UCS-")) {
+            return String.fromCodePoint(parseInt(code.substring(4), 16));
+        }
+
+        else if (code.startsWith("unicode")) {
+            return String.fromCodePoint(parseInt(code.substring(7), 16));
+        }
+
+        else {
+            const codes = code.startsWith("第3水準") || code.startsWith("第4水準")
+                ? code.substring(4).split("-")
+                : code.split("-");
+
+            return JisConverter.getConverter().toCharString(
+                parseInt(codes[0]),
+                parseInt(codes[1]),
+                parseInt(codes[2])
+            );
+        }
+
+    } catch (error) {
+        console.error(error);
     }
+
+    return null;
+}
 
     codeToCharStringHex(unicode) {
         if (unicode === 0) return null;
