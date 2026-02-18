@@ -8,7 +8,19 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 import assert from 'node:assert';
+class OutputBuffer {
+    constructor() {
+        this.buffer = [];
+    }
 
+    write(str) {
+        this.buffer.push(str);
+    }
+
+    toString() {
+        return this.buffer.join("");
+    }
+}
 // テスト用のEpub3Writerクラス
 class TestEpub3Writer extends Epub3Writer {
     constructor(templatePath) {
@@ -18,6 +30,8 @@ class TestEpub3Writer extends Epub3Writer {
     getImageFilePath(srcImageFileName, lineNum) {
         return "test.png";
     }
+
+    //getImageOrientation(srcFilePath){return 0}
 }
 
 
@@ -25,9 +39,11 @@ class TestEpub3Writer extends Epub3Writer {
 const jarPath = path.join(__dirname, '../');
 const converter = new AozoraEpub3Converter(new Epub3Writer(jarPath), jarPath);
 converter.writer = new TestEpub3Writer("");
-converter.bookInfo = { title: 'Dummy Book Info' };
+converter.bookInfo = { title: 'Dummy Book Info',
+    getChapterLineInfo: () => null };
+
 // テストケース
-async function runTests() {
+function runTests() {
 
     // Test case 1: Converting title line
     let str = converter.convertTitleLineToEpub3(
@@ -36,49 +52,79 @@ async function runTests() {
     console.log(str);
 
     // Simulating BufferedWriter and StringWriter with Writable stream
-    let output = await runTextLineTest(converter, "外字の後のルビ※［＃（外字.tif）］《がいじ》");
+    let output = runTextLineTest(converter, "外字の後のルビ※［＃（外字.tif）］《がいじ》");
     console.log(output);
 
-    output = await runTextLineTest(converter, "外字の後の｜ルビ※［＃（外字.tif）］《がいじ》");
+    output = runTextLineTest(converter, "外字の後の｜ルビ※［＃（外字.tif）］《がいじ》");
     console.log(output);
 
-    output = await runTextLineTest(converter, "※［＃（外字.tif）］《がいじ》");
+    output = runTextLineTest(converter, "※［＃（外字.tif）］《がいじ》");
     console.log(output);
 
-    output = await runTextLineTest(converter, "外字の後の｜ルビ《るび》※［＃（外字.tif）］《るび》");
+    output = runTextLineTest(converter, "外字の後の｜ルビ《るび》※［＃（外字.tif）］《るび》");
     console.log(output);
 
-    output = await runTextLineTest(converter, "その上方に※［＃逆三角形と三角形が向き合っている形（fig1317_26.png、横26×縦59）入る］《デアボロ》");
+    output = runTextLineTest(converter, "その上方に※［＃逆三角形と三角形が向き合っている形（fig1317_26.png、横26×縦59）入る］《デアボロ》");
     console.log(output);
 }
-async function runTextLineTest(converter, line) {
-    let sw = "";
+function runTextLineTest(converter, line) {
 
-    const writable = new Writable({
-        write(chunk, encoding, callback) {
-            sw += chunk.toString();
-            callback();
-        }
-    });
+    let out = [];
 
     const convertedLine = converter.convertGaijiChuki(line, true, true);
+    console.log(convertedLine)
 
-    await converter.convertTextLineToEpub3(
-        writable,
+    converter.convertTextLineToEpub3(
+        out,              // ← 配列を渡す
         convertedLine,
         0,
         false,
         false
     );
 
-    await new Promise(resolve => writable.end(resolve));
-
-    return sw;
+    return out.join("");
 }
 
 // テストを実行
 runTests()
+async function runTest() {
 
+    // Test case 1: Converting title line
+    let str = converter.convertTitleLineToEpub3(
+        converter.convertGaijiChuki("｜ルビ※［＃米印］《るび》※［＃米印］※［＃始め二重山括弧］※［＃終わり二重山括弧］", true, true)
+    );
+    console.log(str);
+
+    let out = [];
+    let line=converter.convertGaijiChuki("外字の後のルビ※［＃（外字.tif）］《がいじ》", true, true);
+    console.log(line)
+    let output = converter.convertTextLineToEpub3(out,line,0,false,false);
+    console.log(out.join(""));
+
+    line=converter.convertGaijiChuki("外字の後の｜ルビ※［＃（外字.tif）］《がいじ》", true, true);
+    console.log(line)
+    output = converter.convertTextLineToEpub3(out,line,0,false,false);
+    console.log(out.join(""));
+
+    line=converter.convertGaijiChuki("※［＃（外字.tif）］《がいじ》", true, true);
+    console.log(line)
+    output = converter.convertTextLineToEpub3(out,line,0,false,false);
+    console.log(out.join(""));
+
+    line=converter.convertGaijiChuki("外字の後の｜ルビ《るび》※［＃（外字.tif）］《るび》", true, true);
+    console.log(line)
+    output = converter.convertTextLineToEpub3(out,line,0,false,false);
+    console.log(out.join(""));
+
+    line=converter.convertGaijiChuki("その上方に※［＃逆三角形と三角形が向き合っている形（fig1317_26.png、横26×縦59）入る］《デアボロ》", true, true);
+    console.log(line)
+    output = converter.convertTextLineToEpub3(out,line,0,false,false);
+    console.log(out.join(""));
+
+}
+
+// テストを実行
+//runTest()
 function testConvertRubyText() {
 
     converter.vertical = true;
@@ -98,7 +144,7 @@ function testConvertRubyText() {
 
 }
 
-testConvertRubyText()
+//testConvertRubyText()
 
 function testConvertGaijiChuki() {
 
@@ -125,7 +171,7 @@ function testConvertGaijiChuki() {
 
 
 }
-testConvertGaijiChuki()
+//testConvertGaijiChuki()
 
 
 function testReplaceChukiSufTag() {
@@ -201,7 +247,7 @@ function testReplaceChukiSufTag() {
     assert.equal(str, "［＃５字下げ］［＃大見出し］第一回　入蔵決心の次第［＃小書き］〔チベット入国の決意〕［＃小書き終わり］［＃大見出し終わり］");
 
 }
-testReplaceChukiSufTag()
+//testReplaceChukiSufTag()
 
 function testCheckTcyPrev() {
     let prev, cur, next;
