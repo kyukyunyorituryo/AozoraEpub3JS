@@ -1032,15 +1032,15 @@ export default class Epub3Writer {
      * 変更前と変更後のファイル名はimageFileNamesに格納される (images/0001.jpg)
      * @return 画像タグを出力しない場合はnullを返す
      * @throws IOException */
-    async getImageFilePath(srcImageFileName, lineNum) {
+    getImageFilePath(srcImageFileName, lineNum) {
         let isCover = false;
 
-        let imageInfo = await this.imageInfoReader.getImageInfo(srcImageFileName);
+        let imageInfo = this.imageInfoReader.getImageInfo(srcImageFileName);
         // 拡張子修正
         if (imageInfo === null) {
             // 画像があるかチェック
-            let altImageFileName = await this.imageInfoReader.correctExt(srcImageFileName);
-            imageInfo = await this.imageInfoReader.getImageInfo(altImageFileName);
+            let altImageFileName = this.imageInfoReader.correctExt(srcImageFileName);
+            imageInfo = this.imageInfoReader.getImageInfo(altImageFileName);
             if (imageInfo !== null) {
                 LogAppender.warn(lineNum, "画像拡張子変更", srcImageFileName);
                 srcImageFileName = altImageFileName;
@@ -1203,34 +1203,46 @@ export default class Epub3Writer {
     }
 
     // 外字画像の縦と横の長さを比較して、同じなら0、横長なら1、縦長なら2を返す。
-    async getImageOrientation(srcFilePath) {
-        let wide = 0;
-        if (!this.imageManager) return null;
-        let imageInfo = await this.imageInfoReader.getImageInfo(srcFilePath);
-        if (imageInfo !== null) {
-            // 外字や数式は除外 行方向に64px以下
-            if (this.bookInfo?.vertical) {
-                if (imageInfo.getWidth() <= 64) return -1;
-            } else if (imageInfo.getHeight() <= 64) return -1;
+getImageOrientation(srcFilePath) {
+  let wide = 0;
 
-            // 回転時は縦横入れ替え
-            let imgW = imageInfo.getWidth();
-            let imgH = imageInfo.getHeight();
-            if (imageInfo.rotateAngle === 90 || imageInfo.rotateAngle === 270) {
-                imgW = imageInfo.getHeight();
-                imgH = imageInfo.getWidth();
-            }
-            if (imgW === imgH) {
-                wide = 0;
-            } else if (imgW > imgH) {
-                wide = 1;
-            } else {
-                wide = 2;
-            }
-        }
-        //console.error(e);
-        return wide;
+  try {
+    const imageInfo = this.imageInfoReader.getImageInfo(srcFilePath);
+
+    if (imageInfo != null) {
+
+      // 外字や数式は除外 行方向に64px以下
+      if (this.bookInfo?.vertical) {
+        if (imageInfo.getWidth() <= 64) return -1;
+      } else {
+        if (imageInfo.getHeight() <= 64) return -1;
+      }
+
+      // 回転時は縦横入れ替え
+      let imgW = imageInfo.getWidth();
+      let imgH = imageInfo.getHeight();
+
+      if (imageInfo.rotateAngle === 90 || imageInfo.rotateAngle === 270) {
+        imgW = imageInfo.getHeight();
+        imgH = imageInfo.getWidth();
+      }
+
+      if (imgW === imgH) {
+        // wide = 0 のまま
+      } else if (imgW > imgH) {
+        wide = 1;
+      } else {
+        wide = 2;
+      }
     }
+
+  } catch (e) {
+    console.error(e);
+  }
+
+  return wide;
+}
+
 
     /** Kindleかどうかを設定 Kindleなら例外処理を行う */
     setIsKindle(isKindle) {
