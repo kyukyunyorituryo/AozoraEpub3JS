@@ -1,31 +1,28 @@
 export default class LogAppender {
-  static textArea = null;
-/*
-  static setTextArea(textArea) {
-    this.textArea = textArea;
-  }
-*/
-  static println(log) {
-    if(log)this.append(log);
-    this.append("\n");
-  }
+
+  static buffer = "";
 
   static append(log) {
-    /*
-    if (this.textArea) {
-      this.textArea.value += log;
-      this.textArea.scrollTop = this.textArea.scrollHeight;
+    if (log == null) return;
+    this.buffer += String(log);
+  }
+
+  static println(log = "") {
+    if (log) this.append(log);
+    console.log(this.buffer);
+    this.buffer = "";
+  }
+
+  static flush() {
+    if (this.buffer.length > 0) {
+      console.log(this.buffer);
+      this.buffer = "";
     }
-      */
-    //process.stdout.write(log);
-    console.log(log)
   }
 
   static printStackTrace(e) {
-    e.stack.split("\n").forEach(ste => {
-      this.append(ste);
-      this.append("\n");
-    });
+    if (!e) return;
+    console.error(e.stack || e.toString());
   }
 
   static msg(lineNum, msg, desc) {
@@ -35,34 +32,31 @@ export default class LogAppender {
       this.append(" : ");
       this.append(desc);
     }
-    this.append("\n");
   }
 
-
-
   static error(...args) {
-    if(args.length==1){
-      this.append("[ERROR] ");
+    this.append("[ERROR] ");
+
+    if (args.length === 1) {
       this.append(args[0]);
-      this.append("\n");
+    } else if (args.length === 2) {
+      this.msg(args[0], args[1]);
+    } else if (args.length === 3) {
+      this.msg(args[0], args[1], args[2]);
     }
-    if(args.length==2){
-      this.append("[ERROR] ");
-      this.msg(args[0], args[1], null);
-    }
-    if(args.length==3){
-      this.append("[ERROR] ");
-      this.msg(args[0], args[1], args[2])
-    }
+
+    this.println(); // ここでまとめて出力
   }
 
   static warn(lineNum, msg, desc = null) {
-    this.append('[WARN] ');
+    this.append("[WARN] ");
     this.msg(lineNum, msg, desc);
-}
+    this.println();
+  }
 
-static info(lineNum, msg, desc = null) {
-    this.append('[INFO] ');
+  static info(lineNum, msg, desc = null) {
+    this.append("[INFO] ");
     this.msg(lineNum, msg, desc);
-}
+    this.println();
+  }
 }
