@@ -2321,13 +2321,13 @@ replaceChukiSufTag(line) {
                   if (imgFileName != null) {
                     switch (orient) {
                       case 0:
-                        buf.push(String.format(this.chukiMap.get("外字画像")[0], imgFileName));
+                        buf.push(this.chukiMap.get("外字画像")[0].replace("%s", imgFileName));
                         break;
                       case 1:
-                        buf.push(String.format(this.chukiMap.get("横長外字画像")[0], imgFileName));
+                        buf.push(this.chukiMap.get("横長外字画像")[0].replace("%s", imgFileName));
                         break;
                       case 2:
-                        buf.push(String.format(this.chukiMap.get("縦長外字画像")[0], imgFileName));
+                        buf.push(this.chukiMap.get("縦長外字画像")[0].replace("%s", imgFileName));
                         break;
                     }
                     // ログ出力
