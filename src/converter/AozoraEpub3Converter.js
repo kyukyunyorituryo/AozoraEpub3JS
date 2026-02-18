@@ -1924,7 +1924,7 @@ replaceChukiSufTag(line) {
 
     this.nextLineIsCaption = false;
 
-    let ch = line.split('');
+    let ch = Array.from(line);
     let charStart = 0;
 
     // 行頭半角スペース除去
@@ -3754,9 +3754,9 @@ replaceChukiSufTag(line) {
           lines = Math.max(1, lines);
         }
         for (let i = lines - 1; i >= 0; i--) {
-          out.concat("<p>");
-          out.concat(br);
-          out.concat("</p>\n");
+          out.push("<p>");
+          out.push(br);
+          out.push("</p>\n");
         }
         this.pageByteSize += (br.length + 8) * lines;
         this.printEmptyLines = 0;
@@ -3772,7 +3772,7 @@ replaceChukiSufTag(line) {
             line = line.replace(/(<[\d|\w]+)/, `$1 id="${chapterId}"`);
           } else {
             //タグでなければ一文字目をspanに入れる
-            out.concat(`<span id="${chapterId}">${line.charAt(0)}</span>`);
+            out.push(`<span id="${chapterId}">${line.charAt(0)}</span>`);
             this.pageByteSize += (chapterId.length + 20);
             line = line.substring(1);
           }
@@ -3781,20 +3781,20 @@ replaceChukiSufTag(line) {
         //改行用のp出力 見出しなら強制ID出力 koboの栞用IDに利用可能なkobo.のIDで出力
         if (this.withMarkId || (chapterLineInfo !== null && !chapterLineInfo?.pageBreakChapter)) {
           chapterId = `kobo.${this.lineIdNum}.${idIdx++}`;
-          out.concat(`<p id="${chapterId}">`);
+          out.push(`<p id="${chapterId}">`);
           this.pageByteSize += (chapterId.length + 14);
         } else {
-          out.concat("<p>");
+          out.push("<p>");
           this.pageByteSize += 7;
         }
       }
-      out.concat(line);
+      out.push(line);
       //ページバイト数加算
       if (this.forcePageBreak) this.pageByteSize += Buffer.byteLength(line, "UTF-8");
 
       //改行のpを閉じる
       if (!noBr) {
-        out.concat("</p>\n");
+        out.push("</p>\n");
       }
 
       //見出しのChapterをWriterに追加 同じ行で数回呼ばれるので初回のみ
