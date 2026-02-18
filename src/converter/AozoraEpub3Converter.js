@@ -614,7 +614,7 @@ export default class AozoraEpub3Converter {
    * @param imageInfoReader テキスト内の画像ファイル名を格納して返却
    * @param titleType 表題種別
    * //@param coverFileName 表紙ファイル名 nullなら表紙無し ""は先頭ファイル "*"は同じファイル名 */
-  async getBookInfo(srcFile, src, imageInfoReader, titleType, pubFirst) {
+  getBookInfo(srcFile, src, imageInfoReader, titleType, pubFirst) {
     this.bookInfo = new BookInfo(srcFile);
 
     let line;
@@ -2568,11 +2568,11 @@ replaceChukiSufTag(line) {
       } else {
         //単ページ出力 タグの外のみ
         //改ページの前に文字があれば前のページに出力
-        if (buf.length > 0) await this.printLineBuffer(out, buf.join("")[0], lineNum, true);
+        if (buf.length > 0) this.printLineBuffer(out, buf.join("")[0], lineNum, true);
         buf.push(`${this.chukiMap.get("画像")[0]}${dstFileName}`);
         buf.push(this.chukiMap.get("画像終わり")[0]);
         //単ページ出力
-        await this.printImagePage(out, buf, lineNum, srcFileName, dstFileName, imagePageType);
+        this.printImagePage(out, buf, lineNum, srcFileName, dstFileName, imagePageType);
         return true;
       }
     } else {
@@ -3596,7 +3596,7 @@ replaceChukiSufTag(line) {
   // 画像単一ページチェック
   /** 前後に改ページを入れて画像を出力
    * @throws IOException */
-  async printImagePage(out, buf, lineNum, srcFileName, dstFileName, imagePageType) {
+  printImagePage(out, buf, lineNum, srcFileName, dstFileName, imagePageType) {
     // 画像の前に改ページがある場合
     const hasPageBreakTriger = this.pageBreakTrigger !== null && !this.pageBreakTrigger.noChapter;
 
@@ -3622,7 +3622,7 @@ replaceChukiSufTag(line) {
         this.pageBreakImageAuto.srcFileName = srcFileName;
         this.pageBreakImageAuto.dstFileName = dstFileName;
     }
-    await this.printLineBuffer(out, buf, lineNum, true);
+    this.printLineBuffer(out, buf, lineNum, true);
 
     if (hasPageBreakTriger) this.setPageBreakTrigger(this.pageBreakNormal);
     else this.setPageBreakTrigger(this.pageBreakNoChapter);
@@ -3649,7 +3649,7 @@ replaceChukiSufTag(line) {
  * @param noBr pタグで括れない次以降の行で閉じるブロック注記がある場合
  * //@param chapterLevel Chapterレベル 指定無し=0, 大見出し=1, 中見出し=2, 見出し=2, 小見出し=3 (パターン抽出時は設定に合わせるか目次リストで選択したレベル)
  * @throws IOException */
-  async printLineBuffer(out, buf, lineNum, noBr) {
+  printLineBuffer(out, buf, lineNum, noBr) {
     let line = buf.toString();
     let length = buf.length;
     //すべて空白は空行にする
