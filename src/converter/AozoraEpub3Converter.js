@@ -677,7 +677,7 @@ export default class AozoraEpub3Converter {
       // コメント除外 50文字以上をコメントにする
       if (noRubyLine.startsWith('--------------------------------')) {
         if (!noRubyLine.startsWith('--------------------------------------------------')) {
-          LogAppender.warn(this.lineNum, 'コメント行の文字数が足りません');
+          LogAppender.warn(lineNum, 'コメント行の文字数が足りません');
         } else {
           if (firstCommentLineNum === -1) firstCommentLineNum = this.lineNum;
           // コメントブロックに入ったらタイトル著者終了
@@ -685,13 +685,13 @@ export default class AozoraEpub3Converter {
           if (this.inComment) {
             // コメント行終了
             if (this.commentLineNum > 20)
-              LogAppender.warn(this.lineNum, `コメントが ${this.commentLineNum} 行 (${this.commentLineStart + 1}) -`);
+              LogAppender.warn(lineNum, `コメントが ${this.commentLineNum} 行 (${this.commentLineStart + 1}) -`);
             this.commentLineNum = 0;
             this.inComment = false;
             continue;
           } else {
-            if (this.lineNum > 10 && !(this.commentPrint && this.commentConvert))
-              LogAppender.warn(this.lineNum, 'コメント開始行が10行目以降にあります');
+            if (lineNum > 10 && !(this.commentPrint && this.commentConvert))
+              LogAppender.warn(lineNum, 'コメント開始行が10行目以降にあります');
             // コメント行開始
             this.commentLineStart = this.lineNum;
             this.inComment = true;
@@ -703,7 +703,7 @@ export default class AozoraEpub3Converter {
 
       // 空行チェック
       if (noRubyLine === '' || noRubyLine === ' ' || noRubyLine === '　') {
-        this.lastEmptyLine = this.lineNum;
+        this.lastEmptyLine = lineNum;
         // 空行なので次の行へ
         continue;
       }
@@ -722,10 +722,10 @@ export default class AozoraEpub3Converter {
           // 字下げ注記等は飛ばして次の行を見る
           if (name.length > 0) {
             this.preChapterLineInfo.setChapterName(name);
-            this.preChapterLineInfo.lineNum = this.lineNum;
+            this.preChapterLineInfo.lineNum = lineNum;
             this.addChapterName = false;
             // 次の行を繋げる設定
-            if (this.useNextLineChapterName) this.addNextChapterName = this.lineNum + 1;
+            if (this.useNextLineChapterName) this.addNextChapterName = lineNum + 1;
             this.addSectionChapter = false; // 改ページ後のChapter出力を抑止
           }
           // 必ず文字が入る
@@ -746,25 +746,25 @@ export default class AozoraEpub3Converter {
           const chapterType = this.chapterChukiMap.get(chukiName);
           if (noRubyLine.length === m.index + chukiTag.length) {
             this.preChapterLineInfo = {
-              lineNum: this.lineNum + 1,
+              lineNum: lineNum + 1,
               chapterType: chapterType,
               addSectionChapter: this.addSectionChapter,
               level: ChapterLineInfo.getLevel(chapterType),
-              isAfterEmptyLine: this.lastEmptyLine === this.lineNum - 1
+              isAfterEmptyLine: this.lastEmptyLine === lineNum - 1
             };
             this.bookInfo.addChapterLineInfo(this.preChapterLineInfo);
             this.addChapterName = true; // 次の行を見出しとして利用
             this.addNextChapterName = -1;
           } else {
             this.bookInfo.addChapterLineInfo({
-              lineNum: this.lineNum,
+              lineNum: lineNum,
               chapterType: chapterType,
               addSectionChapter: this.addSectionChapter,
               level: ChapterLineInfo.getLevel(chapterType),
-              isAfterEmptyLine: this.lastEmptyLine === this.lineNum - 1,
+              isAfterEmptyLine: this.lastEmptyLine === lineNum - 1,
               chapterName: this.getChapterName(noRubyLine.substring(m.index + chukiTag.length))
             });
-            if (this.useNextLineChapterName) this.addNextChapterName = this.lineNum + 1; // 次の行を連結
+            if (this.useNextLineChapterName) this.addNextChapterName = lineNum + 1; // 次の行を連結
             this.addChapterName = false; // 次の行を見出しとして利用しない
           }
           this.addSectionChapter = false; // 改ページ後のChapter出力を抑止
@@ -784,7 +784,7 @@ export default class AozoraEpub3Converter {
               if (this.bookInfo.firstImageLineNum === -1) {
                 const imageInfo = imageInfoReader.getImageInfo(imageInfoReader.correctExt(imageFileName));
                 if (imageInfo && imageInfo.width > 64 && imageInfo.height > 64) {
-                  this.bookInfo.firstImageLineNum = this.lineNum;
+                  this.bookInfo.firstImageLineNum = lineNum;
                   this.bookInfo.firstImageIdx = imageInfoReader.countImageFileNames() - 1;
                 }
               }
@@ -798,7 +798,7 @@ export default class AozoraEpub3Converter {
             if (this.bookInfo.firstImageLineNum === -1) {
               const imageInfo = imageInfoReader.getImageInfo(imageInfoReader.correctExt(imageFileName));
               if (imageInfo && imageInfo.width > 64 && imageInfo.height > 64) {
-                this.bookInfo.firstImageLineNum = this.lineNum;
+                this.bookInfo.firstImageLineNum = lineNum;
                 this.bookInfo.firstImageIdx = imageInfoReader.countImageFileNames() - 1;
               }
             }
@@ -811,7 +811,7 @@ export default class AozoraEpub3Converter {
 
       // 見出し行パターン抽出 パターン抽出時はレベル+10
       // TODO パターンと目次レベルは設定可能にする 空行指定の場合はpreLines利用
-      if (this.autoChapter && this.bookInfo.getChapterLevel(this.lineNum) === 0) {
+      if (this.autoChapter && this.bookInfo.getChapterLevel(lineNum) === 0) {
         // 文字列から注記と前の空白を除去
         const noChukiLine = this.removeSpace(this.removeTag(noRubyLine));
 
@@ -820,15 +820,15 @@ export default class AozoraEpub3Converter {
           if (this.chapterPattern.test(noChukiLine)) {
             this.bookInfo.addChapterLineInfo(
               new ChapterLineInfo(
-                this.lineNum,
+                lineNum,
                 ChapterLineInfo.TYPE_PATTERN,
                 this.addSectionChapter,
                 ChapterLineInfo.getLevel(ChapterLineInfo.TYPE_PATTERN),
-                this.lastEmptyLine === this.lineNum - 1,
+                this.lastEmptyLine === lineNum - 1,
                 this.getChapterName(noRubyLine)
               )
             );
-            if (this.useNextLineChapterName) this.addNextChapterName = this.lineNum + 1; // 次の行を連結
+            if (this.useNextLineChapterName) this.addNextChapterName = lineNum + 1; // 次の行を連結
             this.addSectionChapter = false; // 改ページ後のChapter出力を抑止
           }
         }
@@ -886,15 +886,15 @@ export default class AozoraEpub3Converter {
           if (isChapter) {
             this.bookInfo.addChapterLineInfo(
               new ChapterLineInfo(
-                this.lineNum,
+                lineNum,
                 ChapterLineInfo.TYPE_CHAPTER_NAME,
                 this.addSectionChapter,
                 ChapterLineInfo.getLevel(ChapterLineInfo.TYPE_CHAPTER_NAME),
-                this.lastEmptyLine === this.lineNum - 1,
+                this.lastEmptyLine === lineNum - 1,
                 this.getChapterName(noRubyLine)
               )
             );
-            if (this.useNextLineChapterName) this.addNextChapterName = this.lineNum + 1; // 次の行を連結
+            if (this.useNextLineChapterName) this.addNextChapterName = lineNum + 1; // 次の行を連結
             this.addChapterName = false; // 次の行を見出しとして利用
             this.addSectionChapter = false; // 改ページ後のChapter出力を抑止
           }
@@ -909,15 +909,15 @@ export default class AozoraEpub3Converter {
           ) {
             this.bookInfo.addChapterLineInfo(
               new ChapterLineInfo(
-                this.lineNum,
+                lineNum,
                 ChapterLineInfo.TYPE_CHAPTER_NUM,
                 this.addSectionChapter,
                 ChapterLineInfo.getLevel(ChapterLineInfo.TYPE_CHAPTER_NUM),
-                this.lastEmptyLine === this.lineNum - 1,
+                this.lastEmptyLine === lineNum - 1,
                 this.getChapterName(noRubyLine)
               )
             );
-            if (this.useNextLineChapterName) this.addNextChapterName = this.lineNum + 1; // 次の行を連結
+            if (this.useNextLineChapterName) this.addNextChapterName = lineNum + 1; // 次の行を連結
             this.addChapterName = false; // 次の行を見出しとして利用しない
             this.addSectionChapter = false; // 改ページ後のChapter出力を抑止
           }
@@ -943,15 +943,15 @@ export default class AozoraEpub3Converter {
                 ) {
                   this.bookInfo.addChapterLineInfo(
                     new ChapterLineInfo(
-                      this.lineNum,
+                      lineNum,
                       ChapterLineInfo.TYPE_CHAPTER_NUM,
                       this.addSectionChapter,
                       13,
-                      this.lastEmptyLine === this.lineNum - 1,
+                      this.lastEmptyLine === lineNum - 1,
                       this.getChapterName(noRubyLine)
                     )
                   );
-                  if (this.useNextLineChapterName) this.addNextChapterName = this.lineNum + 1; // 次の行を連結
+                  if (this.useNextLineChapterName) this.addNextChapterName = lineNum + 1; // 次の行を連結
                   this.addChapterName = false; // 次の行を見出しとして利用しない
                   this.addSectionChapter = false; // 改ページ後のChapter出力を抑止
                 }
@@ -976,26 +976,26 @@ export default class AozoraEpub3Converter {
           if (name.replace(/◇|◆|□|■|▽|▼|☆|★|＊|＋|×|†|　/g, '').length > 0) {
             this.bookInfo.addChapterLineInfo(
               new ChapterLineInfo(
-                this.lineNum,
+                lineNum,
                 ChapterLineInfo.TYPE_PAGEBREAK,
                 true,
                 1,
-                lastEmptyLine === this.lineNum - 1,
+                lastEmptyLine === lineNum - 1,
                 name
               )
             );
-            if (this.useNextLineChapterName) this.addNextChapterName = this.lineNum + 1;
+            if (this.useNextLineChapterName) this.addNextChapterName = lineNum + 1;
             this.addSectionChapter = false; // 改ページ後のChapter出力を抑止
           }
         }
       }
 
       // 見出しの次の行＆見出しでない
-      if (this.addNextChapterName === this.lineNum && this.bookInfo.getChapterLineInfo(this.lineNum) === null) {
+      if (this.addNextChapterName === lineNum && this.bookInfo.getChapterLineInfo(lineNum) === null) {
         // 見出しの次の行を繋げる
         const name = this.getChapterName(noRubyLine);
         if (name.length > 0) {
-          const info = this.bookInfo.getChapterLineInfo(this.lineNum - 1);
+          const info = this.bookInfo.getChapterLineInfo(lineNum - 1);
           if (info !== null) info.joinChapterName(name);
         }
         this.addNextChapterName = -1;
@@ -1029,7 +1029,7 @@ export default class AozoraEpub3Converter {
       preLines[0] = noRubyLine;
     }
     // 行数設定
-    this.bookInfo.totalLineNum = this.lineNum;
+    this.bookInfo.totalLineNum = lineNum;
 
     if (this.inComment) {
       LogAppender.error(this.commentLineStart, "コメントが閉じていません");
@@ -1076,7 +1076,7 @@ export default class AozoraEpub3Converter {
 
     return this.bookInfo;
     //console.error(e);
-    //LogAppender.error(this.lineNum, "");
+    //LogAppender.error(lineNum, "");
   }
   /** 目次やタイトル用の文字列を取得 ルビ関連の文字 ｜《》 は除外済で他の特殊文字は'※'エスケープ */
   getChapterName(line) {
@@ -1245,15 +1245,15 @@ export default class AozoraEpub3Converter {
     // BOM除去
     line = CharUtils.removeBOM(line);
     do {
-      this.lineNum++;
+      lineNum++;
 
       if (skipTitle) {
         // タイトル文字行前までバッファ
-        if (this.bookInfo.metaLineStart > this.lineNum) {
+        if (this.bookInfo.metaLineStart > lineNum) {
           preTitleBuf.push(line);
         }
         // タイトル文字行 前の行のバッファがあれば出力
-        if (this.bookInfo.metaLineStart === this.lineNum && preTitleBuf.length > 0) {
+        if (this.bookInfo.metaLineStart === lineNum && preTitleBuf.length > 0) {
           noImage = false;
           if (lastZeroTagLevelLineNum >= 0) {
             // タイトル行前のtagLevel=0の行以前のバッファを出力
@@ -1267,7 +1267,7 @@ export default class AozoraEpub3Converter {
             let i = 0;
             while (this.lineNum < lineNumBak) {
               // 出力しない行を飛ばす
-              if (this.bookInfo.isIgnoreLine(this.lineNum)) continue;
+              if (this.bookInfo.isIgnoreLine(lineNum)) continue;
               if (this.lineNum <= lastZeroTagLevelLineNum)
                 this.convertTextLineToEpub3(orgOut, preTitleBuf[i++], this.lineNum, false, false);
               else
@@ -1279,7 +1279,7 @@ export default class AozoraEpub3Converter {
           preTitleBuf.length = 0;
         }
         // タイトルページの改ページ
-        if (this.bookInfo.titleEndLine + 1 === this.lineNum) {
+        if (this.bookInfo.titleEndLine + 1 === lineNum) {
           if (this.tagLevel > 0) this.bookInfo.titleEndLine++;
           else {
             skipTitle = false;
@@ -1292,10 +1292,10 @@ export default class AozoraEpub3Converter {
       }
 
       // 改ページ指定行なら改ページフラグ設定 タグ内は次の行へ
-      if (this.bookInfo.isPageBreakLine(this.lineNum) && this.sectionCharLength > 0) {
+      if (this.bookInfo.isPageBreakLine(lineNum) && this.sectionCharLength > 0) {
         // タグの中なら次の行へ
         if (this.tagLevel === 0) this.setPageBreakTrigger(this.pageBreakNormal);
-        else this.bookInfo.addPageBreakLine(this.lineNum + 1);
+        else this.bookInfo.addPageBreakLine(lineNum + 1);
       }
 
       // コメント除外
@@ -1338,7 +1338,7 @@ export default class AozoraEpub3Converter {
                   buf.push(ch[idx]);
               }
             }
-            this.printLineBuffer(out, buf.join(""), this.lineNum, false);
+            this.printLineBuffer(out, buf.join(""), lineNum, false);
             continue;
           }
         } else {
@@ -1346,47 +1346,47 @@ export default class AozoraEpub3Converter {
         }
       }
       // 出力しない行を飛ばす
-      if (this.bookInfo.isIgnoreLine(this.lineNum)) continue;
+      if (this.bookInfo.isIgnoreLine(lineNum)) continue;
 
-      if (this.lineNum === this.bookInfo.titleLine) {
+      if (lineNum === this.bookInfo.titleLine) {
         this.printLineBuffer(out, this.chukiMap.get("表題前")[0], -1, true);
-        this.convertTextLineToEpub3(out, line, this.lineNum, false, noImage);
+        this.convertTextLineToEpub3(out, line, lineNum, false, noImage);
         this.printLineBuffer(out, this.chukiMap.get("表題後")[0], -1, true);
-      } else if (this.lineNum === this.bookInfo.orgTitleLine) {
+      } else if (lineNum === this.bookInfo.orgTitleLine) {
         this.printLineBuffer(out, this.chukiMap.get("原題前")[0], -1, true);
-        this.convertTextLineToEpub3(out, line, this.lineNum, false, noImage);
+        this.convertTextLineToEpub3(out, line, lineNum, false, noImage);
         this.printLineBuffer(out, this.chukiMap.get("原題後")[0], -1, true);
-      } else if (this.lineNum === this.bookInfo.subTitleLine) {
+      } else if (lineNum === this.bookInfo.subTitleLine) {
         this.printLineBuffer(out, this.chukiMap.get("副題前")[0], -1, true);
-        this.convertTextLineToEpub3(out, line, this.lineNum, false, noImage);
+        this.convertTextLineToEpub3(out, line, lineNum, false, noImage);
         this.printLineBuffer(out, this.chukiMap.get("副題後")[0], -1, true);
-      } else if (this.lineNum === this.bookInfo.subOrgTitleLine) {
+      } else if (lineNum === this.bookInfo.subOrgTitleLine) {
         this.printLineBuffer(out, this.chukiMap.get("副原題前")[0], -1, true);
-        this.convertTextLineToEpub3(out, line, this.lineNum, false, noImage);
+        this.convertTextLineToEpub3(out, line, lineNum, false, noImage);
         this.printLineBuffer(out, this.chukiMap.get("副原題後")[0], -1, true);
-      } else if (this.lineNum === this.bookInfo.creatorLine) {
+      } else if (lineNum === this.bookInfo.creatorLine) {
         this.printLineBuffer(out, this.chukiMap.get("著者前")[0], -1, true);
-        this.convertTextLineToEpub3(out, line, this.lineNum, false, noImage);
+        this.convertTextLineToEpub3(out, line, lineNum, false, noImage);
         this.printLineBuffer(out, this.chukiMap.get("著者後")[0], -1, true);
-      } else if (this.lineNum === this.bookInfo.subCreatorLine) {
+      } else if (lineNum === this.bookInfo.subCreatorLine) {
         this.printLineBuffer(out, this.chukiMap.get("副著者前")[0], -1, true);
-        this.convertTextLineToEpub3(out, line, this.lineNum, false, noImage);
+        this.convertTextLineToEpub3(out, line, lineNum, false, noImage);
         this.printLineBuffer(out, this.chukiMap.get("副著者後")[0], -1, true);
       } else {
-        this.convertTextLineToEpub3(out, line, this.lineNum, false, noImage);
+        this.convertTextLineToEpub3(out, line, lineNum, false, noImage);
       }
       if (this.canceled) return;
-      if (this.writer.jProgressBar != null && this.lineNum % 10 === 0) {
-        this.writer.jProgressBar.setValue(this.lineNum / 10);
+      if (this.writer.jProgressBar != null && lineNum % 10 === 0) {
+        this.writer.jProgressBar.setValue(lineNum / 10);
         this.writer.jProgressBar.repaint();
       }
 
-      if (this.tagLevel === 0) lastZeroTagLevelLineNum = this.lineNum;
+      if (this.tagLevel === 0) lastZeroTagLevelLineNum = lineNum;
       j++;
       line = lines[j];
     } while ( lines.length>j);
 
-    //LogAppender.error(this.lineNum, "");
+    //LogAppender.error(lineNum, "");
 
   }
 
@@ -1496,7 +1496,7 @@ export default class AozoraEpub3Converter {
         // 変換不可 画像指定付き外字なら画像注記に変更
         if (this.hasInnerChuki(line, chukiStart)) {
           gaiji = "〓";
-          LogAppender.warn(this.lineNum, "外字注記内に注記があります", chuki);
+          LogAppender.warn(lineNum, "外字注記内に注記があります", chuki);
         } else {
           // 画像指定外字
           let imageStartIdx = chuki.indexOf('（', 2);
@@ -1555,7 +1555,7 @@ export default class AozoraEpub3Converter {
  * 注記文字変換は2回目に行う
  * 前にルビがあって｜で始まる場合は｜の前に追加 */
 replaceChukiSufTag(line) {
-
+  let lineNum = 0;
   // 前方参照注記がなければそのまま返却
   if (line.indexOf("［＃「") === -1) return line;
 
@@ -1579,7 +1579,7 @@ replaceChukiSufTag(line) {
       if (innerTagLevel <= 1) {
         buf.push(tag);
       } else if (innerTagLevel === 2) {
-        LogAppender.warn(this.lineNum, "注記内に注記があります",
+        LogAppender.warn(lineNum, "注記内に注記があります",
           line.substring(innerTagStart, mTagEnd));
       }
       innerTagLevel--;
@@ -1630,7 +1630,7 @@ replaceChukiSufTag(line) {
       chukiTagStart += ruby.length;
       chukiTagEnd += ruby.length;
 
-      LogAppender.warn(this.lineNum,
+      LogAppender.warn(lineNum,
         "ルビが注記の後ろにあります", ruby);
     }
 
@@ -2624,12 +2624,12 @@ getTargetStart(buf, chukiTagStart, chOffset, targetLength) {
     switch (ch[begin]) {
       case 0xDB40:
         begin += 2;
-        LogAppender.warn(this.lineNum, "先頭にあるIVSを除去します");
+        LogAppender.warn(lineNum, "先頭にあるIVSを除去します");
         break;
       case 0xFE00: case 0xFE01: case 0xFE02: case 0xFE03: case 0xFE04: case 0xFE05: case 0xFE06: case 0xFE07:
       case 0xFE08: case 0xFE09: case 0xFE0A: case 0xFE0B: case 0xFE0C: case 0xFE0D: case 0xFE0E: case 0xFE0F:
         begin++;
-        LogAppender.warn(this.lineNum, "先頭にあるIVSを除去します");
+        LogAppender.warn(lineNum, "先頭にあるIVSを除去します");
         break;
     }
 
@@ -2742,7 +2742,7 @@ getTargetStart(buf, chukiTagStart, chOffset, targetLength) {
             if (rubyTopStart - rubyStart >= 30) {
                 // タグは除去 面倒なので文字列で置換
               if (line.substring(rubyStart, rubyTopStart).replace(/<[^>]+>/g, ' ').length >= 30) {
-                LogAppender.warn(this.lineNum, "ルビが長すぎます");
+                LogAppender.warn(lineNum, "ルビが長すぎます");
               }
             }
               // 同じ長さで同じ文字なら一文字づつルビを振る
@@ -2773,7 +2773,7 @@ getTargetStart(buf, chukiTagStart, chOffset, targetLength) {
             }
           }
           if (rubyStart === -1 && !noRuby) {
-            LogAppender.warn(this.lineNum, "ルビ開始文字無し");
+            LogAppender.warn(lineNum, "ルビ開始文字無し");
           }
           inRuby = false;
           rubyStart = -1;
@@ -3049,7 +3049,7 @@ getTargetStart(buf, chukiTagStart, chOffset, targetLength) {
           gaijiFileName = this.ivs32FontMap.get(className);
           if (gaijiFileName != null) {
             if (this.printGlyphFontTag(buf, gaijiFileName, className, "〓")) {
-              LogAppender.info(this.lineNum, "外字フォント利用(IVS含む)", "" + ch[i] + "(" + gaijiFileName + ")");
+              LogAppender.info(lineNum, "外字フォント利用(IVS含む)", "" + ch[i] + "(" + gaijiFileName + ")");
               i++; // IVSの次へ
               continue;
             }
@@ -3060,7 +3060,7 @@ getTargetStart(buf, chukiTagStart, chOffset, targetLength) {
           gaijiFileName = this.utf16FontMap.get(ch[i]);
           if (gaijiFileName != null) {
             if (this.printGlyphFontTag(buf, gaijiFileName, "u" + ch[i].toString(16), "〓")) {
-              LogAppender.info(this.lineNum, "外字フォント利用(IVS除外)", "" + ch[i] + "(" + gaijiFileName + ") -" + ch[i + 1].toString(16));
+              LogAppender.info(lineNum, "外字フォント利用(IVS除外)", "" + ch[i] + "(" + gaijiFileName + ") -" + ch[i + 1].toString(16));
               i++; // IVSの次へ
               continue;
             }
@@ -3071,10 +3071,10 @@ getTargetStart(buf, chukiTagStart, chOffset, targetLength) {
         if (this.printIvsBMP) {
           buf.push(ch[i]);
           buf.push(ch[i + 1]);
-          LogAppender.info(this.lineNum, "IVSを出力します", "" + ch[i] + ch[i + 1] + "(u+" + ch[i].toString(16) + "+" + ch[i + 1].toString(16) + ")");
+          LogAppender.info(lineNum, "IVSを出力します", "" + ch[i] + ch[i + 1] + "(u+" + ch[i].toString(16) + "+" + ch[i + 1].toString(16) + ")");
         } else {
           buf.push(ch[i]);
-          LogAppender.info(this.lineNum, "IVS除外", ch[i] + "(u+" + ch[i].toString(16) + ") -" + ch[i + 1].toString(16));
+          LogAppender.info(lineNum, "IVS除外", ch[i] + "(u+" + ch[i].toString(16) + ") -" + ch[i + 1].toString(16));
         }
         i++; // IVSの次へ
         continue;
@@ -3086,7 +3086,7 @@ getTargetStart(buf, chukiTagStart, chOffset, targetLength) {
         gaijiFileName = this.utf16FontMap.get(ch[i]);
         if (gaijiFileName != null) {
           if (this.printGlyphFontTag(buf, gaijiFileName, "u" + ch[i].toString(16), "〓")) {
-            LogAppender.info(this.lineNum, "外字フォント利用", "" + ch[i] + "(" + gaijiFileName + ")");
+            LogAppender.info(lineNum, "外字フォント利用", "" + ch[i] + "(" + gaijiFileName + ")");
             // 次の文字へ
             continue;
           }
