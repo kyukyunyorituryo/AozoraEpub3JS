@@ -1647,7 +1647,7 @@ replaceChukiSufTag(line) {
         chukiTagStart + chOffset);
 
       if (start !== -1) {
-        buf.splice(start, 7);
+        buf.splice(start+1, 6);
         buf[start] = '｜';
         chOffset -= 6;
       }
