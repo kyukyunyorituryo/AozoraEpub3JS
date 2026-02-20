@@ -2,7 +2,7 @@
 //import com.github.hmdev.util.LogAppender;
 import ImageInfo from '../info/ImageInfo.js';
 import LogAppender from '../util/LogAppender.js';
-import Jimp from 'jimp';
+import * as Jimp from 'jimp';
 
 export default class ImageUtils {
  /** 4bitグレースケール時のRGB階調カラーモデル Singleton */
