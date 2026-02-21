@@ -6,7 +6,7 @@ import { propertiesReader } from 'properties-reader';
 import Archive from 'node-unrar-js';
 import AozoraEpub3Converter from './converter/AozoraEpub3Converter.js';
 import ImageInfoReader from './image/ImageInfoReader.js';
-import BookInfo,{getFileTitleCreator} from './info/BookInfo.js';
+import BookInfo from './info/BookInfo.js';
 import SectionInfo from './info/SectionInfo.js';
 import Detector from './util/Detector.js';
 import LogAppender from './util/LogAppender.js';
@@ -411,7 +411,7 @@ options.parse(process.argv);
         }
         bookInfo.coverFileName = coverFileName;
 
-        const titleCreator = getFileTitleCreator(path.basename(srcFile));
+        const titleCreator = BookInfo.getFileTitleCreator(path.basename(srcFile));
         if (titleCreator != null) {
             if (useFileName) {
                 if (titleCreator[0] && titleCreator[0].trim().length > 0) bookInfo.title = titleCreator[0];
@@ -422,7 +422,6 @@ options.parse(process.argv);
                 if (!bookInfo.creator || bookInfo.creator.length === 0) bookInfo.creator = titleCreator[1] ?? "";
             }
         }
-
         const outFile = await getOutFile(srcFile, dstPath, bookInfo, autoFileName, outExt);
         await convertFile(
             srcFile, ext, outFile,
