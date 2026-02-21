@@ -785,21 +785,13 @@ export default class BookInfo {
   reloadMetadata(titleType, pubFirst) {
     this.setMetaInfo(titleType, pubFirst, this.metaLines, this.metaLineStart, this.firstCommentLineNum);
   }
-
-
-  /** ファイルまたはURLの文字列から画像を読み込んで表紙イメージとして設定 */
-  loadCoverImage(path) {
-    this.coverImage = ImageUtils.loadImage(path);
-  }
-}
-
 //メソッドを関数化した
 /**
  * ファイル名からタイトルと著者名を取得
  * @param {string} fileName ファイル名
  * @returns {Array<string|null>} タイトルと著者名を格納した配列
  */
-export function getFileTitleCreator(fileName) {
+static getFileTitleCreator(fileName) {
   // ファイル名からタイトル取得
   let titleCreator = [null, null];
   let noExtName = fileName
@@ -839,5 +831,13 @@ export function getFileTitleCreator(fileName) {
   }
 
   return titleCreator;
+}
+
+
+
+  /** ファイルまたはURLの文字列から画像を読み込んで表紙イメージとして設定 */
+  loadCoverImage(path) {
+    this.coverImage = ImageUtils.loadImage(path);
+  }
 }
 
