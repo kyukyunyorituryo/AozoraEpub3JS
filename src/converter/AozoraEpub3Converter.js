@@ -615,6 +615,7 @@ export default class AozoraEpub3Converter {
    * //@param coverFileName 表紙ファイル名 nullなら表紙無し ""は先頭ファイル "*"は同じファイル名 */
   getBookInfo(srcFile, src, imageInfoReader, titleType, pubFirst) {
     this.bookInfo = new BookInfo(srcFile);
+    let lineNum = 0;
 
     let line;
     this.lineNum = -1;
@@ -1183,6 +1184,7 @@ export default class AozoraEpub3Converter {
   convertTextToEpub3(out, src, bookInfo) {
     // ダミー切り替え用
     const orgOut = out;
+    let lineNum = 0;
 
     this.canceled = false;
 
@@ -2077,19 +2079,19 @@ getTargetStart(buf, chukiTagStart, chOffset, targetLength) {
       // 横組みチェック
       if (chukiName.endsWith('横組み')) {
         this.inYoko = true;
-        this.noTcyStart.add(buf.length());
+        this.noTcyStart.add(buf.length);
       } else if (this.inYoko && chukiName.endsWith('横組み終わり')) {
         this.inYoko = false;
-        this.noTcyEnd.add(buf.length());
+        this.noTcyEnd.add(buf.length);
       }
 
       // 縦中横チェック
       if (!this.inYoko) {
         if (chukiName.startsWith('縦中横')) {
           if (chukiName.endsWith('終わり')) {
-            this.noTcyEnd.add(buf.length());
+            this.noTcyEnd.add(buf.length);
           } else {
-            this.noTcyStart.add(buf.length());
+            this.noTcyStart.add(buf.length);
           }
         }
       }
