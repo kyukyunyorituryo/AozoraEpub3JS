@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { Command } from 'commander';
-import PropertiesReader from 'properties-reader';
+import { propertiesReader } from 'properties-reader';
 //import { ZipFile } from 'yazl';
 import Archive from 'node-unrar-js';
 import AozoraEpub3Converter from './converter/AozoraEpub3Converter.js';
@@ -39,12 +39,12 @@ let epub3ImageWriter;
 /** 設定ファイル */
 let props;
 /** 設定ファイル名 */
-const propFileName = "AozoraEpub3.ini";
+const propFileName = "./AozoraEpub3.ini";
 /** 出力先パス */
 let dstPath = null;
 
 //メイン関数　即時関数
-(async function main() {
+
 // コマンドライン オプション設定
 const options = new Command();
 options
@@ -69,7 +69,6 @@ options.parse(process.argv);
 
   if (options.args.length === 0) {
     options.help();
-    return
   }
   const commandLine = options.opts();
   const fileNames = options.args;
@@ -87,10 +86,10 @@ options.parse(process.argv);
   }
   // iniファイル確認
   if (commandLine.ini) {
+    propFileName=commandLine.ini
 
     if (!fs.existsSync(commandLine.ini)) {
       LogAppender.error(`-i : ini file not exist. ${commandLine.ini}:`);
-      return;
     }
   }
 
@@ -98,16 +97,15 @@ options.parse(process.argv);
   if (commandLine.dst) {
     if (!fs.existsSync(commandLine.dst)) {
       LogAppender.error(`-d : dst path not exist. ${commandLine.dst}:`);
-      return;
     }
   }
 
   // ePub出力クラス初期化
-  let epub3Writer = new Epub3Writer(`${jarPath}template/`);
+  epub3Writer = new Epub3Writer(`${jarPath}template/`);
   //let epub3ImageWriter = new Epub3ImageWriter(`${jarPath}template/`);
   // 設定ファイルの読み込み
-  if (commandLine.ini) {
-    props = PropertiesReader(commandLine.ini);
+  if (propFileName) {
+    props = propertiesReader({ sourceFile: propFileName });
     // console.log(props)
   }
   let titleIndex = 0; // 表題
@@ -290,6 +288,7 @@ options.parse(process.argv);
     chapterName,
     chapterNumOnly, chapterNumTitle, chapterNumParen, chapterNumParenTitle,
     chapterPattern);
+(async function main() {
   ////////////////////////////////
   // 各ファイルを変換処理
   ////////////////////////////////
