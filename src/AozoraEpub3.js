@@ -422,7 +422,7 @@ options.parse(process.argv);
                 if (!bookInfo.creator || bookInfo.creator.length === 0) bookInfo.creator = titleCreator[1] ?? "";
             }
         }
-        const outFile = await getOutFile(srcFile, dstPath, bookInfo, autoFileName, outExt);
+        const outFile = getOutFile(srcFile, dstPath, bookInfo, autoFileName, outExt);
         await convertFile(
             srcFile, ext, outFile,
             aozoraConverter, writer,
@@ -435,7 +435,7 @@ options.parse(process.argv);
 
  
 	/** 出力ファイルを生成 */
-  async function getOutFile(srcFile, dstPath, bookInfo, autoFileName, outExt) {
+  function getOutFile(srcFile, dstPath, bookInfo, autoFileName, outExt) {
     // 出力ファイル
     if (dstPath === null) dstPath = path.dirname(srcFile);
     let outFileName = "";
