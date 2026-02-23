@@ -19,41 +19,42 @@ export default class BookInfo {
       return Object.values(this).slice(0, 6)[idx];  // 列挙型の名前を返すためにsliceを使用
     },
 
-    hasTitleAuthor(type) {
-      switch (type) {
-        case this.TITLE_ONLY:
-        case this.NONE:
-          return false;
-        default:
-          return true;
-      }
-    },
+    TITLE_AUTHOR: {
+    titleFirst: () => true,
+    hasAuthor: () => true,
+    hasTitle: () => true
+  },
 
-    hasTitle(type) {
-      return type !== this.NONE;
-    },
+  AUTHOR_TITLE: {
+    titleFirst: () => false,
+    hasAuthor: () => true,
+    hasTitle: () => true
+  },
 
-    hasAuthor(type) {
-      switch (type) {
-        case this.TITLE_ONLY:
-        case this.NONE:
-          return false;
-        default:
-          return true;
-      }
-    },
+  SUBTITLE_AUTHOR: {
+    titleFirst: () => true,
+    hasAuthor: () => true,
+    hasTitle: () => true
+  },
 
-    titleFirst(type) {
-      switch (type) {
-        case this.TITLE_AUTHOR:
-        case this.SUBTITLE_AUTHOR:
-        case this.TITLE_ONLY:
-        case this.TITLE_AUTHOR_ONLY:
-          return true;
-        default:
-          return false;
-      }
-    }
+  TITLE_ONLY: {
+    titleFirst: () => true,
+    hasAuthor: () => false,
+    hasTitle: () => true
+  },
+
+  TITLE_AUTHOR_ONLY: {
+    titleFirst: () => true,
+    hasAuthor: () => true,
+    hasTitle: () => true
+  },
+
+  NONE: {
+    titleFirst: () => false,
+    hasAuthor: () => false,
+    hasTitle: () => false
+  }
+
   };
 
   // 表題ページ種別定数
