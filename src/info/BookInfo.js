@@ -712,8 +712,8 @@ export default class BookInfo {
                   firstCommentLineNum > 0 &&
                   firstCommentLineNum <= 6 &&
                   metaLines[3 + arrIndex] &&
-                  !metaLines[3 + arrIndex].length() &&
-                  (!metaLines[4 + arrIndex] || !metaLines[4 + arrIndex].length())
+                  !metaLines[3 + arrIndex].length &&
+                  (!metaLines[4 + arrIndex] || !metaLines[4 + arrIndex].length)
                 ) {
                   this.titleLine = metaLineStart;
                   this.subTitleLine = metaLineStart + 1;
@@ -745,8 +745,8 @@ export default class BookInfo {
               if (titleType.hasAuthor()) {
                 if (
                   metaLines[2 + arrIndex] &&
-                  !metaLines[2 + arrIndex].length() &&
-                  (!metaLines[3 + arrIndex] || !metaLines[3 + arrIndex].length())
+                  !metaLines[2 + arrIndex].length &&
+                  (!metaLines[3 + arrIndex] || !metaLines[3 + arrIndex].length)
                 ) {
                   this.creatorLine = metaLineStart + 2;
                   this.creator = metaLines[2 + arrIndex];
@@ -760,8 +760,8 @@ export default class BookInfo {
               if (titleType.hasTitle()) {
                 if (
                   metaLines[2 + arrIndex] &&
-                  !metaLines[2 + arrIndex].length() &&
-                  (!metaLines[3 + arrIndex] || !metaLines[3 + arrIndex].length())
+                  !metaLines[2 + arrIndex].length &&
+                  (!metaLines[3 + arrIndex] || !metaLines[3 + arrIndex].length)
                 ) {
                   this.titleLine = metaLineStart + 2;
                   this.title = metaLines[2 + arrIndex];
