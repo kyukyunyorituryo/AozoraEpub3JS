@@ -1,89 +1,88 @@
 import fs from 'fs';
 import path from 'path';
+import assert from 'assert';
 import { fileURLToPath } from 'url';
-import AozoraGaijiConverter from './converter/AozoraGaijiConverter.js';
+import AozoraGaijiConverter from '../converter/AozoraGaijiConverter.js';
 
-// Helper function to resolve the directory name in ES module
+// ES Module用 __dirname
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Mock files and their contents
-const mockJarPath = path.join(__dirname, '/');
+// 安全な一時ディレクトリ
+const mockJarPath = path.join(__dirname, 'tmp_test_dir');
+
+// ファイル名
 const mockIvsFile = 'chuki_ivs.txt';
 const mockUtfFile = 'chuki_utf.txt';
 const mockAltFile = 'chuki_alt.txt';
 
-// Mock content
+// 可視Unicodeのみ使用
 const mockIvsContent = `
-# comment line
-U+0001\tglyph_name\t※［＃character_name］
-U+0002\tglyph_name\t※［＃another_character_name］
+# comment
+U+0041\tglyph_name\t※［＃character_name］
+U+3042\tglyph_name\t※［＃another_character_name］
 `;
+
 const mockUtfContent = `
-# comment line
-U+0003\tutf_name\t※［＃character_name_2］
-U+0004\tutf_name\t※［＃another_character_name_2］
+# comment
+U+0042\tutf_name\t※［＃character_name_2］
+U+3044\tutf_name\t※［＃another_character_name_2］
 `;
+
 const mockAltContent = `
-# comment line
-U+0005\talt_name\t※［＃character_name_3］
-U+0006\talt_name\t※［＃another_character_name_3］
+# comment
+U+0043\talt_name\t※［＃character_name_3］
+U+3046\talt_name\t※［＃another_character_name_3］
 `;
 
-// Helper function to write mock files
-const writeMockFile = (filename, content) => {
-    fs.writeFileSync(path.resolve(mockJarPath, filename), content, 'utf-8');
-};
+// ファイル書き込み
+function writeMockFile(filename, content) {
+    fs.writeFileSync(path.join(mockJarPath, filename), content.trim(), 'utf-8');
+}
 
-// Test cases
-const testAozoraGaijiConverter = () => {
-    // Ensure the mock directory exists
-    if (!fs.existsSync(mockJarPath)) {
-        fs.mkdirSync(mockJarPath);
+function runTests() {
+    console.log('Running AozoraGaijiConverter tests...');
+
+    fs.mkdirSync(mockJarPath, { recursive: true });
+
+    try {
+        // モックファイル作成
+        writeMockFile(mockIvsFile, mockIvsContent);
+        writeMockFile(mockUtfFile, mockUtfContent);
+        writeMockFile(mockAltFile, mockAltContent);
+
+        const converter = new AozoraGaijiConverter(mockJarPath);
+
+        // === Map初期化確認 ===
+        assert.strictEqual(converter.chukiUtfMap.get('character_name'), 'U+0041');
+        assert.strictEqual(converter.chukiUtfMap.get('another_character_name'), 'U+3042');
+        assert.strictEqual(converter.chukiUtfMap.get('character_name_2'), 'U+0042');
+        assert.strictEqual(converter.chukiUtfMap.get('another_character_name_2'), 'U+3044');
+
+        assert.strictEqual(converter.chukiAltMap.get('character_name_3'), 'U+0043');
+        assert.strictEqual(converter.chukiAltMap.get('another_character_name_3'), 'U+3046');
+
+        // === toUtf ===
+        assert.strictEqual(converter.toUtf('character_name'), 'U+0041');
+        assert.strictEqual(converter.toUtf('character_name_2'), 'U+0042');
+
+        // === toAlterString ===
+        assert.strictEqual(converter.toAlterString('character_name_3'), 'U+0043');
+
+        // === codeToCharString ===
+        assert.strictEqual(converter.codeToCharString('U+0041'), 'A');
+        assert.strictEqual(converter.codeToCharString('U+1F600'), '😀');
+
+        // === charStringToCode ===
+        assert.strictEqual(converter.charStringToCode('A'), 0x41);
+        assert.strictEqual(converter.charStringToCode('😀'), 0x1F600);
+
+        console.log('✅ All tests passed!');
+
+    } finally {
+        // 必ず削除
+        fs.rmSync(mockJarPath, { recursive: true, force: true });
     }
+}
 
-    // Write mock files
-    writeMockFile(mockIvsFile, mockIvsContent);
-    writeMockFile(mockUtfFile, mockUtfContent);
-    writeMockFile(mockAltFile, mockAltContent);
-
-    // Initialize AozoraGaijiConverter
-    const converter = new AozoraGaijiConverter(mockJarPath);
-
-    // Test chukiUtfMap and chukiAltMap initialization
-    console.assert(converter.chukiUtfMap.get('character_name') === 'U+0001', 'chukiUtfMap character_name');
-    console.assert(converter.chukiUtfMap.get('another_character_name') === 'U+0002', 'chukiUtfMap another_character_name');
-    console.assert(converter.chukiUtfMap.get('character_name_2') === 'U+0003', 'chukiUtfMap character_name_2');
-    console.assert(converter.chukiUtfMap.get('another_character_name_2') === 'U+0004', 'chukiUtfMap another_character_name_2');
-    console.assert(converter.chukiAltMap.get('character_name_3') === 'U+0005', 'chukiAltMap character_name_3');
-    console.assert(converter.chukiAltMap.get('another_character_name_3') === 'U+0006', 'chukiAltMap another_character_name_3');
-
-    // Test toUtf method
-    console.assert(converter.toUtf('character_name') === 'U+0001', 'toUtf character_name');
-    console.assert(converter.toUtf('another_character_name') === 'U+0002', 'toUtf another_character_name');
-    console.assert(converter.toUtf('character_name_2') === 'U+0003', 'toUtf character_name_2');
-    console.assert(converter.toUtf('another_character_name_2') === 'U+0004', 'toUtf another_character_name_2');
-
-    // Test toAlterString method
-    console.assert(converter.toAlterString('character_name_3') === 'U+0005', 'toAlterString character_name_3');
-    console.assert(converter.toAlterString('another_character_name_3') === 'U+0006', 'toAlterString another_character_name_3');
-
-    // Test codeToCharString method
-    console.assert(converter.codeToCharString('U+0041') === 'A', 'codeToCharString U+0041');
-    console.assert(converter.codeToCharString('U+1F600') === '😀', 'codeToCharString U+1F600'); // Unicode Emoji
-
-    // Test charStringToCode method
-    console.assert(converter.charStringToCode('A') === 0x41, 'charStringToCode A');
-    console.assert(converter.charStringToCode('😀') === 0x1F600, 'charStringToCode 😀'); // Unicode Emoji
-
-    // Clean up mock files
-    fs.unlinkSync(path.resolve(mockJarPath, mockIvsFile));
-    fs.unlinkSync(path.resolve(mockJarPath, mockUtfFile));
-    fs.unlinkSync(path.resolve(mockJarPath, mockAltFile));
-    fs.rmdirSync(mockJarPath);
-
-    console.log('All tests passed!');
-};
-
-// Run tests
-testAozoraGaijiConverter();
+runTests();

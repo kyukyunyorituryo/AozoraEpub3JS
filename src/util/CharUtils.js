@@ -239,9 +239,7 @@ chapterTagClosePattern = new RegExp("< */ *(img|a)(>| [^>]*>)", "i");
     return str;
   }
 
-  static getChapterName(line, maxLength) {
-    return this._getChapterName(line, maxLength, true);
-  }
+
 	/** BOMが文字列の先頭にある場合は除去 */
   static removeBOM(str) {
     if (str && str.length > 0) {
@@ -255,10 +253,4 @@ chapterTagClosePattern = new RegExp("< */ *(img|a)(>| [^>]*>)", "i");
     }
   }
 
-  // Assuming _getChapterName is a private method that you would implement
-  static _getChapterName(line, maxLength, reduce) {
-    // Implementation of _getChapterName
-    // Placeholder implementation
-    return line.substring(0, maxLength);
-  }
 }

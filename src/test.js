@@ -7,18 +7,38 @@ const __dirname = path.dirname(__filename);
 import Epub3Writer from  './writer/Epub3Writer.js';
 import AozoraEpub3Converter from  './converter/AozoraEpub3Converter.js';
 
-//const Epub3Writer = require('./writer/Epub3Writer.js');
-//const AozoraEpub3Converter = require('./converter/AozoraEpub3Converter.js');
 const jarPath = path.join(__dirname, '/');
 const epub3Writer = new Epub3Writer(jarPath+"template/");
 console.log(epub3Writer)
-
+const TEMPLATE_FILE_NAMES_STANDARD = [
+  "META-INF/container.xml",
+  //Epub3Writer.OPS_PATH + Epub3Writer.CSS_PATH + "vertical_text.css",
+  //Epub3Writer.OPS_PATH + Epub3Writer.CSS_PATH + "middle.css",
+  //Epub3Writer.OPS_PATH + Epub3Writer.CSS_PATH + "image.css",
+  Epub3Writer.OPS_PATH + Epub3Writer.CSS_PATH + "font.css",
+  Epub3Writer.OPS_PATH + Epub3Writer.CSS_PATH + "aozora.css",
+  Epub3Writer.OPS_PATH + Epub3Writer.CSS_PATH + "fixed-layout-jp.css",
+  Epub3Writer.OPS_PATH + Epub3Writer.CSS_PATH + "book-style.css",
+  Epub3Writer.OPS_PATH + Epub3Writer.CSS_PATH + "style-reset.css",
+  Epub3Writer.OPS_PATH + Epub3Writer.CSS_PATH + "style-standard.css",
+  Epub3Writer.OPS_PATH + Epub3Writer.CSS_PATH + "style-advance.css",
+];
+console.log(TEMPLATE_FILE_NAMES_STANDARD)
+console.log(Epub3Writer.MIMETYPE_PATH)
 const ao = new AozoraEpub3Converter(epub3Writer, jarPath);
 //console.log(ao)
-/**/
+let line='※［＃「さんずい＋垂」、unicode6DB6］'
+console.log(ao.convertGaijiChuki(line,false,true))
+line='※［＃始め二重山括弧、1-1-52］'
+console.log(ao.convertGaijiChuki(line,false,true))
+let rubyStartChuki = ao.chukiMap.get("ルビ開始")[0];
+let rubyEndChuki = ao.chukiMap.get("ルビ終了")[0];
+console.log(rubyStartChuki)
+console.log(rubyEndChuki)
+/*
 import AozoraEpub3 from  './AozoraEpub3.js';
 const ae = new AozoraEpub3();
-/*
+*//*
 converterフォルダー
 */
 import Epub3ImageWriter from  './writer/Epub3ImageWriter.js';
@@ -28,10 +48,11 @@ const epub3ImageWriter = new Epub3ImageWriter(jarPath+"template/");
 //const JarPath = path.join(__dirname, '/');
 import AozoraGaijiConverter from './converter/AozoraGaijiConverter.js';
 const gaijiconverter = new AozoraGaijiConverter(jarPath);
-
+//console.log(gaijiconverter);
 // Test chukiUtfMap and chukiAltMap initialization
 console.log(gaijiconverter.codeToCharString('U+0041'));
 console.log(gaijiconverter.codeToCharString('U+04E02'));
+console.log(gaijiconverter.toAlterString('感嘆符三つ'));
 //console.log(gaijiconverter.codeToCharString('※［＃感嘆符三つ］'));
 //console.log(gaijiconverter.toUtf('U+04E02'));
 
@@ -78,7 +99,7 @@ import ImageUtils from './image/ImageUtils.js';
 var imageInfoReader = new ImageInfoReader("png",imageUrl);
 var imageutil = new ImageUtils();
 
-import jimp from 'jimp';
+import * as Jimp from 'jimp';
 (async() => {
   const image = await ImageUtils.loadImage(imageUrl);
       /*/ ファイル読み込み
@@ -98,16 +119,24 @@ infoフォルダー
 import BookInfo from './info/BookInfo.js';
 //const BookInfo = require('./info/BookInfo.js');
 
-var bookInfo = new BookInfo();
-bookInfo.title = "サンプルタイトル";
-bookInfo.creator = "著者名";
-
-console.log(bookInfo);
+//var bookInfo = new BookInfo();
+//bookInfo.title = "サンプルタイトル";
+//bookInfo.creator = "著者名";
+var srcFile = 'C:/Users/Owner/Desktop/test用の青空文庫形式/aozoratest.txt'
+const titleCreator = BookInfo.getFileTitleCreator(srcFile)
+console.log(titleCreator)
+let bookjohou = new BookInfo(srcFile);
+console.log(bookjohou)
+const src = fs.readFileSync(srcFile, 'utf-8')
+let titleIndex = 0; // 表題
+//console.log(src)
+//const bookInfo = await ao.getBookInfo(srcFile, src, imageInfoReader, BookInfo.TitleType.indexOf(titleIndex), false);
+//console.log(bookInfo);
 
 
 import BookInfoHistory from './info/BookInfoHistory.js';
 //const BookInfoHistory = require('./info/BookInfoHistory.cjs');
-bookInfo = {
+let bookInfo = {
     coverEditInfo: null,
     coverFileName: 'cover.jpg',
     coverImageIndex: 0,
@@ -157,6 +186,7 @@ import CharUtils from  './util/CharUtils.js';
 //const CharUtils = require('./util/CharUtils.js');
 var rt=CharUtils.removeTag("あ<IMG>あ<IMG1>あ<img src=\"\"/>い<A>い<A1>い<AB>う<ab href=\"\">うう<a href=\"\">え<br>え<br/>え</a>お</ab>おお", "br", "img|a", "a")
 console.log(rt)
+console.log("エスケープ文字かどうか"+CharUtils.isEscapedChar("※",1))
 
 import FileNameComparator from  './util/FileNameComparator.js';
 //const FileNameComparator = require('./util/FileNameComparator.js');

@@ -334,7 +334,7 @@ export default class AozoraEpub3Converter {
     this.chukiPatternMap.set("字下げ終わり複合", /^［＃ここで字下げ.*終わり/);
 
     // 前方参照注記
-    const chukiSufFilePath = path.join(jarPath, "chuki_tag_suf.txt");const chukiSufFileContent = fs.readFileSync(chukiSufFilePath, "utf-8");
+    const chukiSufFilePath = path.join(jarPath, "chuki_tag_suf.txt"); const chukiSufFileContent = fs.readFileSync(chukiSufFilePath, "utf-8");
     const chukiSufFileLines = chukiSufFileContent.split(/\r?\n/);
     this.sufChukiMap = new Map();
     lineNum = 0;
@@ -614,9 +614,7 @@ export default class AozoraEpub3Converter {
    * @param titleType 表題種別
    * //@param coverFileName 表紙ファイル名 nullなら表紙無し ""は先頭ファイル "*"は同じファイル名 */
   getBookInfo(srcFile, src, imageInfoReader, titleType, pubFirst) {
-    let bookInfo = new BookInfo(srcFile);
-    let lineNum = 0;
-
+    const bookInfo = new BookInfo(srcFile);
     let line;
     this.lineNum = -1;
     // 前の行のバッファ [1行前, 2行前]
@@ -631,7 +629,7 @@ export default class AozoraEpub3Converter {
     let firstCommentLineNum = -1;
 
     // 先頭行
-    const firstLines = new Array(10);
+    const firstLines = new Array(10).fill(null);
     // 先頭行の開始行番号
     let firstLineStart = -1;
 
@@ -665,7 +663,7 @@ export default class AozoraEpub3Converter {
     // 最後まで回す 
     var lines = src.split(/\n/);
     for (let i = 0; i < lines.length; i++) {
-      let line = lines[i];
+      line = lines[i];
 
       this.lineNum++;
       // 見出し等の取得のため前方参照注記は変換 外字文字は置換
@@ -678,97 +676,97 @@ export default class AozoraEpub3Converter {
       // コメント除外 50文字以上をコメントにする
       if (noRubyLine.startsWith('--------------------------------')) {
         if (!noRubyLine.startsWith('--------------------------------------------------')) {
-          LogAppender.warn(lineNum, 'コメント行の文字数が足りません');
+          LogAppender.warn(this.lineNum, 'コメント行の文字数が足りません');
         } else {
           if (firstCommentLineNum === -1) firstCommentLineNum = this.lineNum;
           // コメントブロックに入ったらタイトル著者終了
-          firstCommentStarted = true;
-          if (inComment) {
+          this.firstCommentStarted = true;
+          if (this.inComment) {
             // コメント行終了
-            if (commentLineNum > 20)
-              LogAppender.warn(lineNum, `コメントが ${commentLineNum} 行 (${commentLineStart + 1}) -`);
-            commentLineNum = 0;
-            inComment = false;
+            if (this.commentLineNum > 20)
+              LogAppender.warn(this.lineNum, `コメントが ${this.commentLineNum} 行 (${this.commentLineStart + 1}) -`);
+            this.commentLineNum = 0;
+            this.inComment = false;
             continue;
           } else {
-            if (lineNum > 10 && !(commentPrint && commentConvert))
-              LogAppender.warn(lineNum, 'コメント開始行が10行目以降にあります');
+            if (this.lineNum > 10 && !(this.commentPrint && this.commentConvert))
+              LogAppender.warn(this.lineNum, 'コメント開始行が10行目以降にあります');
             // コメント行開始
-            commentLineStart = this.lineNum;
-            inComment = true;
+            this.commentLineStart = this.lineNum;
+            this.inComment = true;
             continue;
           }
         }
-        if (inComment) commentLineNum++;
+        if (this.inComment) this.commentLineNum++;
       }
 
       // 空行チェック
       if (noRubyLine === '' || noRubyLine === ' ' || noRubyLine === '　') {
-        lastEmptyLine = lineNum;
+        this.lastEmptyLine = this.lineNum;
         // 空行なので次の行へ
         continue;
       }
 
-      if (inComment && !this.commentPrint) continue;
+      if (this.inComment && !this.commentPrint) continue;
 
       // 2行前が改ページと画像の行かをチェックして行番号をbookInfoに保存
-      if (!noIllust)
+      if (!this.noIllust)
         this.checkImageOnly(bookInfo, preLines, noRubyLine, this.lineNum);
 
       // 見出しのChapter追加
-      if (addChapterName) {
-        if (preChapterLineInfo === null) addChapterName = false; // 前の見出しがなければ中止
+      if (this.addChapterName) {
+        if (this.preChapterLineInfo === null) this.addChapterName = false; // 前の見出しがなければ中止
         else {
           const name = this.getChapterName(noRubyLine);
           // 字下げ注記等は飛ばして次の行を見る
           if (name.length > 0) {
-            preChapterLineInfo.setChapterName(name);
-            preChapterLineInfo.lineNum = lineNum;
-            addChapterName = false;
+            this.preChapterLineInfo.setChapterName(name);
+            this.preChapterLineInfo.lineNum = this.lineNum;
+            this.addChapterName = false;
             // 次の行を繋げる設定
-            if (this.useNextLineChapterName) addNextChapterName = lineNum + 1;
-            addSectionChapter = false; // 改ページ後のChapter出力を抑止
+            if (this.useNextLineChapterName) this.addNextChapterName = this.lineNum + 1;
+            this.addSectionChapter = false; // 改ページ後のChapter出力を抑止
           }
           // 必ず文字が入る
-          preChapterLineInfo = null;
+          this.preChapterLineInfo = null;
         }
       }
       // 画像のファイル名の順にimageInfoReaderにファイル名を追加
-      let m = chukiPattern.exec(noRubyLine);
+      let m = this.chukiPattern.exec(noRubyLine);
       while (m !== null) {
         const chukiTag = m[0];
         const chukiName = chukiTag.substring(2, chukiTag.length - 1);
 
-        if (chukiFlagPageBreak.has(chukiName)) {
+        if (this.chukiFlagPageBreak.has(chukiName)) {
           // 改ページ注記ならフラグON
           this.addSectionChapter = true;
-        } else if (chapterChukiMap != null && this.chapterChukiMap.has(chukiName)) {
+        } else if (this.chapterChukiMap != null && this.chapterChukiMap.has(chukiName)) {
           // 見出し注記
-          const chapterType = chapterChukiMap.get(chukiName);
+          const chapterType = this.chapterChukiMap.get(chukiName);
           if (noRubyLine.length === m.index + chukiTag.length) {
-            preChapterLineInfo = {
-              lineNum: lineNum + 1,
+            this.preChapterLineInfo = {
+              lineNum: this.lineNum + 1,
               chapterType: chapterType,
               addSectionChapter: this.addSectionChapter,
               level: ChapterLineInfo.getLevel(chapterType),
-              isAfterEmptyLine: this.lastEmptyLine === lineNum - 1
+              isAfterEmptyLine: this.lastEmptyLine === this.lineNum - 1
             };
             bookInfo.addChapterLineInfo(this.preChapterLineInfo);
-            addChapterName = true; // 次の行を見出しとして利用
-            addNextChapterName = -1;
+            this.addChapterName = true; // 次の行を見出しとして利用
+            this.addNextChapterName = -1;
           } else {
             bookInfo.addChapterLineInfo({
-              lineNum: lineNum,
+              lineNum: this.lineNum,
               chapterType: chapterType,
               addSectionChapter: this.addSectionChapter,
               level: ChapterLineInfo.getLevel(chapterType),
-              isAfterEmptyLine: lastEmptyLine === lineNum - 1,
+              isAfterEmptyLine: this.lastEmptyLine === this.lineNum - 1,
               chapterName: this.getChapterName(noRubyLine.substring(m.index + chukiTag.length))
             });
-            if (this.useNextLineChapterName) addNextChapterName = lineNum + 1; // 次の行を連結
-            addChapterName = false; // 次の行を見出しとして利用しない
+            if (this.useNextLineChapterName) this.addNextChapterName = this.lineNum + 1; // 次の行を連結
+            this.addChapterName = false; // 次の行を見出しとして利用しない
           }
-          addSectionChapter = false; // 改ページ後のChapter出力を抑止
+          this.addSectionChapter = false; // 改ページ後のChapter出力を抑止
         }
 
         const lowerChukiTag = chukiTag.toLowerCase();
@@ -785,7 +783,7 @@ export default class AozoraEpub3Converter {
               if (bookInfo.firstImageLineNum === -1) {
                 const imageInfo = imageInfoReader.getImageInfo(imageInfoReader.correctExt(imageFileName));
                 if (imageInfo && imageInfo.width > 64 && imageInfo.height > 64) {
-                  bookInfo.firstImageLineNum = lineNum;
+                  bookInfo.firstImageLineNum = this.lineNum;
                   bookInfo.firstImageIdx = imageInfoReader.countImageFileNames() - 1;
                 }
               }
@@ -799,7 +797,7 @@ export default class AozoraEpub3Converter {
             if (bookInfo.firstImageLineNum === -1) {
               const imageInfo = imageInfoReader.getImageInfo(imageInfoReader.correctExt(imageFileName));
               if (imageInfo && imageInfo.width > 64 && imageInfo.height > 64) {
-                bookInfo.firstImageLineNum = lineNum;
+                bookInfo.firstImageLineNum = this.lineNum;
                 bookInfo.firstImageIdx = imageInfoReader.countImageFileNames() - 1;
               }
             }
@@ -812,7 +810,7 @@ export default class AozoraEpub3Converter {
 
       // 見出し行パターン抽出 パターン抽出時はレベル+10
       // TODO パターンと目次レベルは設定可能にする 空行指定の場合はpreLines利用
-      if (autoChapter && bookInfo.getChapterLevel(lineNum) === 0) {
+      if (this.autoChapter && bookInfo.getChapterLevel(this.lineNum) === 0) {
         // 文字列から注記と前の空白を除去
         const noChukiLine = CharUtils.removeSpace(CharUtils.removeTag(noRubyLine));
 
@@ -821,16 +819,16 @@ export default class AozoraEpub3Converter {
           if (this.chapterPattern.test(noChukiLine)) {
             bookInfo.addChapterLineInfo(
               new ChapterLineInfo(
-                lineNum,
+                this.lineNum,
                 ChapterLineInfo.TYPE_PATTERN,
-                addSectionChapter,
+                this.addSectionChapter,
                 ChapterLineInfo.getLevel(ChapterLineInfo.TYPE_PATTERN),
-                lastEmptyLine === lineNum - 1,
+                this.lastEmptyLine === this.lineNum - 1,
                 this.getChapterName(noRubyLine)
               )
             );
-            if (useNextLineChapterName) addNextChapterName = lineNum + 1; // 次の行を連結
-            addSectionChapter = false; // 改ページ後のChapter出力を抑止
+            if (this.useNextLineChapterName) this.addNextChapterName = this.lineNum + 1; // 次の行を連結
+            this.addSectionChapter = false; // 改ページ後のChapter出力を抑止
           }
         }
         const noChukiLineLength = noChukiLine.length;
@@ -843,7 +841,7 @@ export default class AozoraEpub3Converter {
               if (noChukiLine.length === prefix.length) {
                 isChapter = true;
                 break;
-              } else if (isChapterSeparator(noChukiLine.charAt(prefix.length))) {
+              } else if (this.isChapterSeparator(noChukiLine.charAt(prefix.length))) {
                 isChapter = true;
                 break;
               }
@@ -856,7 +854,7 @@ export default class AozoraEpub3Converter {
               if (noChukiLine.startsWith(prefix)) {
                 let idx = prefix.length;
                 // 次が数字かチェック
-                while (noChukiLineLength > idx && isChapterNum(noChukiLine.charAt(idx))) idx++;
+                while (noChukiLineLength > idx && this.isChapterNum(noChukiLine.charAt(idx))) idx++;
                 if (idx <= prefix.length) break; // 数字がなければ抽出しない
                 // 後ろをチェック prefixに対応するsuffixで回す
                 for (const suffix of this.chapterNumSuffix[i]) {
@@ -866,7 +864,7 @@ export default class AozoraEpub3Converter {
                       if (noChukiLine.length === idx) {
                         isChapter = true;
                         break;
-                      } else if (isChapterSeparator(noChukiLine.charAt(idx))) {
+                      } else if (this.isChapterSeparator(noChukiLine.charAt(idx))) {
                         isChapter = true;
                         break;
                       }
@@ -875,7 +873,7 @@ export default class AozoraEpub3Converter {
                     if (noChukiLine.length === idx) {
                       isChapter = true;
                       break;
-                    } else if (isChapterSeparator(noChukiLine.charAt(idx))) {
+                    } else if (this.isChapterSeparator(noChukiLine.charAt(idx))) {
                       isChapter = true;
                       break;
                     }
@@ -887,40 +885,40 @@ export default class AozoraEpub3Converter {
           if (isChapter) {
             bookInfo.addChapterLineInfo(
               new ChapterLineInfo(
-                lineNum,
+                this.lineNum,
                 ChapterLineInfo.TYPE_CHAPTER_NAME,
-                addSectionChapter,
+                this.addSectionChapter,
                 ChapterLineInfo.getLevel(ChapterLineInfo.TYPE_CHAPTER_NAME),
-                lastEmptyLine === lineNum - 1,
+                this.lastEmptyLine === this.lineNum - 1,
                 this.getChapterName(noRubyLine)
               )
             );
-            if (this.useNextLineChapterName) addNextChapterName = lineNum + 1; // 次の行を連結
-            addChapterName = false; // 次の行を見出しとして利用
-            addSectionChapter = false; // 改ページ後のChapter出力を抑止
+            if (this.useNextLineChapterName) this.addNextChapterName = this.lineNum + 1; // 次の行を連結
+            this.addChapterName = false; // 次の行を見出しとして利用
+            this.addSectionChapter = false; // 改ページ後のChapter出力を抑止
           }
         }
         if (this.autoChapterNumOnly || this.autoChapterNumTitle) {
           // 数字
           let idx = 0;
-          while (noChukiLineLength > idx && isChapterNum(noChukiLine.charAt(idx))) idx++;
+          while (noChukiLineLength > idx && this.isChapterNum(noChukiLine.charAt(idx))) idx++;
           if (
             (this.autoChapterNumOnly && noChukiLine.length === idx) ||
-            (this.autoChapterNumTitle && noChukiLine.length > idx && isChapterSeparator(noChukiLine.charAt(idx)))
+            (this.autoChapterNumTitle && noChukiLine.length > idx && this.isChapterSeparator(noChukiLine.charAt(idx)))
           ) {
             bookInfo.addChapterLineInfo(
               new ChapterLineInfo(
                 lineNum,
                 ChapterLineInfo.TYPE_CHAPTER_NUM,
-                addSectionChapter,
+                this.addSectionChapter,
                 ChapterLineInfo.getLevel(ChapterLineInfo.TYPE_CHAPTER_NUM),
-                lastEmptyLine === lineNum - 1,
+                this.lastEmptyLine === lineNum - 1,
                 this.getChapterName(noRubyLine)
               )
             );
-            if (this.useNextLineChapterName) addNextChapterName = lineNum + 1; // 次の行を連結
-            addChapterName = false; // 次の行を見出しとして利用しない
-            addSectionChapter = false; // 改ページ後のChapter出力を抑止
+            if (this.useNextLineChapterName) this.addNextChapterName = this.lineNum + 1; // 次の行を連結
+            this.addChapterName = false; // 次の行を見出しとして利用しない
+            this.addSectionChapter = false; // 改ページ後のChapter出力を抑止
           }
         }
         if (this.autoChapterNumParen || this.autoChapterNumParenTitle) {
@@ -930,7 +928,7 @@ export default class AozoraEpub3Converter {
             if (noChukiLine.startsWith(prefix)) {
               let idx = prefix.length;
               // 次が数字かチェック
-              while (noChukiLineLength > idx && isChapterNum(noChukiLine.charAt(idx))) idx++;
+              while (noChukiLineLength > idx && this.isChapterNum(noChukiLine.charAt(idx))) idx++;
               if (idx <= prefix.length) break; // 数字がなければ抽出しない
               // 後ろをチェック
               const suffix = this.chapterNumParenSuffix[i];
@@ -940,21 +938,21 @@ export default class AozoraEpub3Converter {
                   (this.autoChapterNumParen && noChukiLine.length === idx) ||
                   (this.autoChapterNumParenTitle &&
                     noChukiLine.length > idx &&
-                    isChapterSeparator(noChukiLine.charAt(idx)))
+                    this.isChapterSeparator(noChukiLine.charAt(idx)))
                 ) {
                   bookInfo.addChapterLineInfo(
                     new ChapterLineInfo(
                       lineNum,
                       ChapterLineInfo.TYPE_CHAPTER_NUM,
-                      addSectionChapter,
+                      this.addSectionChapter,
                       13,
-                      lastEmptyLine === lineNum - 1,
+                      this.lastEmptyLine === lineNum - 1,
                       this.getChapterName(noRubyLine)
                     )
                   );
-                  if (this.useNextLineChapterName) addNextChapterName = lineNum + 1; // 次の行を連結
-                  addChapterName = false; // 次の行を見出しとして利用しない
-                  addSectionChapter = false; // 改ページ後のChapter出力を抑止
+                  if (this.useNextLineChapterName) this.addNextChapterName = lineNum + 1; // 次の行を連結
+                  this.addChapterName = false; // 次の行を見出しとして利用しない
+                  this.addSectionChapter = false; // 改ページ後のChapter出力を抑止
                 }
               }
             }
@@ -962,7 +960,7 @@ export default class AozoraEpub3Converter {
         }
       }
       // 改ページ後の注記以外の本文を追加
-      if (this.chapterSection && addSectionChapter) {
+      if (this.chapterSection && this.addSectionChapter) {
         // 底本：は目次に出さない
         if (
           noRubyLine.length > 2 &&
@@ -970,7 +968,7 @@ export default class AozoraEpub3Converter {
           noRubyLine.charAt(1) === '本' &&
           noRubyLine.charAt(2) === '：'
         ) {
-          addSectionChapter = false; // 改ページ後のChapter出力を抑止
+          this.addSectionChapter = false; // 改ページ後のChapter出力を抑止
         } else {
           // 記号のみの行は無視して次の行へ
           const name = this.getChapterName(noRubyLine);
@@ -985,14 +983,14 @@ export default class AozoraEpub3Converter {
                 name
               )
             );
-            if (this.useNextLineChapterName) addNextChapterName = lineNum + 1;
-            addSectionChapter = false; // 改ページ後のChapter出力を抑止
+            if (this.useNextLineChapterName) this.addNextChapterName = lineNum + 1;
+            this.addSectionChapter = false; // 改ページ後のChapter出力を抑止
           }
         }
       }
 
       // 見出しの次の行＆見出しでない
-      if (addNextChapterName === lineNum && bookInfo.getChapterLineInfo(lineNum) === null) {
+      if (this.addNextChapterName === this.lineNum && bookInfo.getChapterLineInfo(this.lineNum) === null) {
         // 見出しの次の行を繋げる
         const name = this.getChapterName(noRubyLine);
         if (name.length > 0) {
@@ -1001,10 +999,11 @@ export default class AozoraEpub3Converter {
         }
         this.addNextChapterName = -1;
       }
-
+        console.log("noRubyLine"+noRubyLine)
       // コメント行の後はタイトル取得はしない
       if (!firstCommentStarted) {
-        const replaced = CharUtils.getChapterName(noRubyLine, 0);
+        let replaced = CharUtils.getChapterName(noRubyLine, 0);
+        console.log("replaced"+replaced)
         if (firstLineStart === -1) {
           // 改ページチェック
           // タイトル前の改ページ位置を保存
@@ -1013,15 +1012,15 @@ export default class AozoraEpub3Converter {
           // 文字の行が来たら先頭行開始
           if (replaced.length > 0) {
             firstLineStart = this.lineNum;
-            firstLines[0] = noRubyLine;
+            firstLines[0] = line;
           }
         } else {
           // 改ページで終了
-          if (isPageBreakLine(noRubyLine)) firstCommentStarted = true;
+          if (this.isPageBreakLine(noRubyLine)) firstCommentStarted = true;
           if (this.lineNum - firstLineStart > firstLines.length - 1) {
             firstCommentStarted = true;
           } else if (replaced.length > 0) {
-            firstLines[this.lineNum - firstLineStart] = noRubyLine;
+            firstLines[this.lineNum - firstLineStart] = line;
           }
         }
       }
@@ -1030,15 +1029,15 @@ export default class AozoraEpub3Converter {
       preLines[0] = noRubyLine;
     }
     // 行数設定
-    bookInfo.totalLineNum = lineNum;
+    bookInfo.totalLineNum = this.lineNum;
 
-    if (inComment) {
-      LogAppender.error(commentLineStart, "コメントが閉じていません");
+    if (this.inComment) {
+      LogAppender.error(this.commentLineStart, "コメントが閉じていません");
     }
     // 表題と著者を先頭行から設定
     bookInfo.setMetaInfo(titleType, pubFirst, firstLines, firstLineStart, firstCommentLineNum);
     // bookInfo.preTitlePageBreak = preTitlePageBreak; // タイトルがあればタイトル前の改ページ状況を設定
-
+console.log(titleType, pubFirst, firstLines, firstLineStart, firstCommentLineNum)
     // タイトルのChapter追加
     if (bookInfo.titleLine > -1) {
       const name = this.getChapterName(bookInfo.title);
@@ -1074,11 +1073,12 @@ export default class AozoraEpub3Converter {
     // 目次ページの見出しを除外
     // 前後2行前と2行後に3つ以上に抽出した見出しがある場合連続する見出しを除去
     if (this.excludeSeqencialChapter) bookInfo.excludeTocChapter();
-
+console.log(bookInfo)
     return bookInfo;
     //console.error(e);
     //LogAppender.error(lineNum, "");
   }
+
   /** 目次やタイトル用の文字列を取得 ルビ関連の文字 ｜《》 は除外済で他の特殊文字は'※'エスケープ */
   getChapterName(line) {
     return CharUtils.getChapterName(line, this.maxChapterNameLength);
@@ -1238,7 +1238,7 @@ export default class AozoraEpub3Converter {
 
     // 先頭行取得
     var lines = src.replace(/\r\n/g, "\n").split('\n');
-    let j=0;
+    let j = 0;
     line = lines[j];
     //line = src.readLine();
     if (line == null) {
@@ -1386,7 +1386,7 @@ export default class AozoraEpub3Converter {
       if (this.tagLevel === 0) lastZeroTagLevelLineNum = lineNum;
       j++;
       line = lines[j];
-    } while ( lines.length>j);
+    } while (lines.length > j);
 
     //LogAppender.error(lineNum, "");
 
@@ -1556,286 +1556,286 @@ export default class AozoraEpub3Converter {
  * 重複等の法則が変則すぎるのでバッファを利用
  * 注記文字変換は2回目に行う
  * 前にルビがあって｜で始まる場合は｜の前に追加 */
-replaceChukiSufTag(line) {
-  let lineNum = 0;
-  // 前方参照注記がなければそのまま返却
-  if (line.indexOf("［＃「") === -1) return line;
+  replaceChukiSufTag(line) {
+    let lineNum = 0;
+    // 前方参照注記がなければそのまま返却
+    if (line.indexOf("［＃「") === -1) return line;
 
-  // 注記内注記があれば除外
-  let buf = [];
-  let mTagRegex = /((［＃)|］)/g;
-  let mTag;
-  let mTagEnd = 0;
-  let innerTagLevel = 0;
-  let innerTagStart = 0;
+    // 注記内注記があれば除外
+    let buf = [];
+    let mTagRegex = /((［＃)|］)/g;
+    let mTag;
+    let mTagEnd = 0;
+    let innerTagLevel = 0;
+    let innerTagStart = 0;
 
-  while ((mTag = mTagRegex.exec(line)) !== null) {
+    while ((mTag = mTagRegex.exec(line)) !== null) {
 
-    if (innerTagLevel <= 1)
-      buf.push(line.substring(mTagEnd, mTag.index));
+      if (innerTagLevel <= 1)
+        buf.push(line.substring(mTagEnd, mTag.index));
 
-    mTagEnd = mTagRegex.lastIndex;
-    let tag = mTag[0];
+      mTagEnd = mTagRegex.lastIndex;
+      let tag = mTag[0];
 
-    if (tag === "］") {
-      if (innerTagLevel <= 1) {
-        buf.push(tag);
-      } else if (innerTagLevel === 2) {
-        LogAppender.warn(lineNum, "注記内に注記があります",
-          line.substring(innerTagStart, mTagEnd));
-      }
-      innerTagLevel--;
-    } else {
-      innerTagLevel++;
-      if (innerTagLevel <= 1) {
-        buf.push(tag);
-      } else if (innerTagLevel === 2) {
-        innerTagStart = mTag.index;
+      if (tag === "］") {
+        if (innerTagLevel <= 1) {
+          buf.push(tag);
+        } else if (innerTagLevel === 2) {
+          LogAppender.warn(lineNum, "注記内に注記があります",
+            line.substring(innerTagStart, mTagEnd));
+        }
+        innerTagLevel--;
+      } else {
+        innerTagLevel++;
+        if (innerTagLevel <= 1) {
+          buf.push(tag);
+        } else if (innerTagLevel === 2) {
+          innerTagStart = mTag.index;
+        }
       }
     }
-  }
 
-  buf.push(line.substring(mTagEnd));
-  line = buf.join("");
+    buf.push(line.substring(mTagEnd));
+    line = buf.join("");
 
-  // --- 1回目のパターン ---
-  let m = this.chukiSufPattern;
-  m.lastIndex = 0;
+    // --- 1回目のパターン ---
+    let m = this.chukiSufPattern;
+    m.lastIndex = 0;
 
-  if (!m.test(line)) return line;
+    if (!m.test(line)) return line;
 
-  let chOffset = 0;
-  buf = Array.from(line);
+    let chOffset = 0;
+    buf = Array.from(line);
 
-  m.lastIndex = 0;
+    m.lastIndex = 0;
 
-  let match;
-  while ((match = m.exec(line)) !== null) {
+    let match;
+    while ((match = m.exec(line)) !== null) {
 
-    let target = match[1];
-    let chuki = match[2];
-    let tags = this.sufChukiMap.get(chuki);
+      let target = match[1];
+      let chuki = match[2];
+      let tags = this.sufChukiMap.get(chuki);
 
-    let chukiTagStart = match.index;
-    let chukiTagEnd = match.index + match[0].length;
+      let chukiTagStart = match.index;
+      let chukiTagEnd = match.index + match[0].length;
 
-    // ルビが後ろにある場合
-    if (chukiTagEnd < line.length &&
+      // ルビが後ろにある場合
+      if (chukiTagEnd < line.length &&
         buf[chukiTagEnd + chOffset] === '《') {
 
-      let rubyEnd = buf.indexOf("》", chukiTagEnd + chOffset + 2);
-      let ruby = buf.slice(chukiTagEnd + chOffset, rubyEnd + 1).join("");
+        let rubyEnd = buf.indexOf("》", chukiTagEnd + chOffset + 2);
+        let ruby = buf.slice(chukiTagEnd + chOffset, rubyEnd + 1).join("");
 
-      buf.splice(chukiTagEnd + chOffset, rubyEnd + 1 - (chukiTagEnd + chOffset));
-      buf.splice(chukiTagStart + chOffset, 0, ...ruby);
+        buf.splice(chukiTagEnd + chOffset, rubyEnd + 1 - (chukiTagEnd + chOffset));
+        buf.splice(chukiTagStart + chOffset, 0, ...ruby);
 
-      chukiTagStart += ruby.length;
-      chukiTagEnd += ruby.length;
+        chukiTagStart += ruby.length;
+        chukiTagEnd += ruby.length;
 
-      LogAppender.warn(lineNum,
-        "ルビが注記の後ろにあります", ruby);
-    }
-
-    if (chuki.endsWith("の注記付き終わり")) {
-
-      buf.splice(chukiTagStart + chOffset,
-        chukiTagEnd - chukiTagStart);
-
-      let ruby = "《" + target + "》";
-      buf.splice(chukiTagStart + chOffset, 0, ...ruby);
-
-      let fullStr = buf.join("");
-      let start = fullStr.lastIndexOf("［＃注記付き］",
-        chukiTagStart + chOffset);
-
-      if (start !== -1) {
-        buf.splice(start+1, 6);
-        buf[start] = '｜';
-        chOffset -= 6;
+        LogAppender.warn(lineNum,
+          "ルビが注記の後ろにあります", ruby);
       }
 
-      chOffset += target.length + 2 -
-        (chukiTagEnd - chukiTagStart);
+      if (chuki.endsWith("の注記付き終わり")) {
 
-    } else if (tags != null) {
+        buf.splice(chukiTagStart + chOffset,
+          chukiTagEnd - chukiTagStart);
 
-      let targetStart = this.getTargetStart(
-        buf,
-        chukiTagStart,
-        chOffset,
-        CharUtils.removeRuby(target).length
-      );
+        let ruby = "《" + target + "》";
+        buf.splice(chukiTagStart + chOffset, 0, ...ruby);
 
-      // 後ろタグ
-      let backTag = "［＃" + tags[1] + "］";
-      buf.splice(chukiTagStart + chOffset,
-        chukiTagEnd - chukiTagStart,
-        ...backTag);
+        let fullStr = buf.join("");
+        let start = fullStr.lastIndexOf("［＃注記付き］",
+          chukiTagStart + chOffset);
 
-      // 前タグ
-      let frontTag = "［＃" + tags[0] + "］";
-      buf.splice(targetStart, 0, ...frontTag);
+        if (start !== -1) {
+          buf.splice(start + 1, 6);
+          buf[start] = '｜';
+          chOffset -= 6;
+        }
 
-      chOffset +=
-        tags[0].length + tags[1].length + 6 -
-        (chukiTagEnd - chukiTagStart);
+        chOffset += target.length + 2 -
+          (chukiTagEnd - chukiTagStart);
+
+      } else if (tags != null) {
+
+        let targetStart = this.getTargetStart(
+          buf,
+          chukiTagStart,
+          chOffset,
+          CharUtils.removeRuby(target).length
+        );
+
+        // 後ろタグ
+        let backTag = "［＃" + tags[1] + "］";
+        buf.splice(chukiTagStart + chOffset,
+          chukiTagEnd - chukiTagStart,
+          ...backTag);
+
+        // 前タグ
+        let frontTag = "［＃" + tags[0] + "］";
+        buf.splice(targetStart, 0, ...frontTag);
+
+        chOffset +=
+          tags[0].length + tags[1].length + 6 -
+          (chukiTagEnd - chukiTagStart);
+      }
     }
-  }
 
-  line = buf.join("");
+    line = buf.join("");
 
-  // --- 2回目パターン ---
-  m = this.chukiSufPattern2;
-  m.lastIndex = 0;
+    // --- 2回目パターン ---
+    m = this.chukiSufPattern2;
+    m.lastIndex = 0;
 
-  if (!m.test(line)) return line;
+    if (!m.test(line)) return line;
 
-  chOffset = 0;
-  buf = Array.from(line);
-  m.lastIndex = 0;
+    chOffset = 0;
+    buf = Array.from(line);
+    m.lastIndex = 0;
 
-  while ((match = m.exec(line)) !== null) {
+    while ((match = m.exec(line)) !== null) {
 
-    let target = match[1];
-    let chuki = match[2];
-    let tags = this.sufChukiMap.get(chuki);
+      let target = match[1];
+      let chuki = match[2];
+      let tags = this.sufChukiMap.get(chuki);
 
-    let targetLength = target.length;
-    let chukiTagStart = match.index;
-    let chukiTagEnd = match.index + match[0].length;
+      let targetLength = target.length;
+      let chukiTagStart = match.index;
+      let chukiTagEnd = match.index + match[0].length;
 
-    if (tags == null) {
+      if (tags == null) {
 
-      if (chuki.endsWith("のルビ") ||
+        if (chuki.endsWith("のルビ") ||
           (this.chukiRuby && chuki.endsWith("の注記"))) {
 
-        if (chuki.startsWith("に「") &&
+          if (chuki.startsWith("に「") &&
             !chuki.startsWith("に「ママ")) {
 
-          let targetStart = this.getTargetStart(
-            buf,
-            chukiTagStart,
-            chOffset,
-            targetLength
-          );
+            let targetStart = this.getTargetStart(
+              buf,
+              chukiTagStart,
+              chOffset,
+              targetLength
+            );
 
-          let rt = chuki.substring(
-            chuki.indexOf('「') + 1,
-            chuki.indexOf('」')
-          );
-
-          buf.splice(chukiTagStart + chOffset,
-            chukiTagEnd - chukiTagStart,
-            ..."《" + rt + "》");
-
-          buf.splice(targetStart, 0, "｜");
-
-          chOffset += rt.length + 3 -
-            (chukiTagEnd - chukiTagStart);
-        }
-
-      } else if (this.chukiKogaki &&
-                 chuki.endsWith("の注記")) {
-
-        if (chuki.startsWith("に「") &&
-            !chuki.startsWith("に「ママ")) {
-
-          let kogaki =
-            "［＃小書き］" +
-            chuki.substring(
+            let rt = chuki.substring(
               chuki.indexOf('「') + 1,
               chuki.indexOf('」')
-            ) +
-            "［＃小書き終わり］";
+            );
 
-          buf.splice(chukiTagStart + chOffset,
-            chukiTagEnd - chukiTagStart,
-            ...kogaki);
+            buf.splice(chukiTagStart + chOffset,
+              chukiTagEnd - chukiTagStart,
+              ..."《" + rt + "》");
 
-          chOffset += kogaki.length -
-            (chukiTagEnd - chukiTagStart);
+            buf.splice(targetStart, 0, "｜");
+
+            chOffset += rt.length + 3 -
+              (chukiTagEnd - chukiTagStart);
+          }
+
+        } else if (this.chukiKogaki &&
+          chuki.endsWith("の注記")) {
+
+          if (chuki.startsWith("に「") &&
+            !chuki.startsWith("に「ママ")) {
+
+            let kogaki =
+              "［＃小書き］" +
+              chuki.substring(
+                chuki.indexOf('「') + 1,
+                chuki.indexOf('」')
+              ) +
+              "［＃小書き終わり］";
+
+            buf.splice(chukiTagStart + chOffset,
+              chukiTagEnd - chukiTagStart,
+              ...kogaki);
+
+            chOffset += kogaki.length -
+              (chukiTagEnd - chukiTagStart);
+          }
         }
       }
     }
-  }
 
-  return buf.join("");
-}
+    return buf.join("");
+  }
 
 
   /** 前方参照注記の前タグ挿入位置を取得 */
-getTargetStart(buf, chukiTagStart, chOffset, targetLength) {
+  getTargetStart(buf, chukiTagStart, chOffset, targetLength) {
 
-  // 置換済みの文字列で注記追加位置を探す
-  let idx = chukiTagStart - 1 + chOffset;
-  let hasRuby = false;
-  let length = 0;
+    // 置換済みの文字列で注記追加位置を探す
+    let idx = chukiTagStart - 1 + chOffset;
+    let hasRuby = false;
+    let length = 0;
 
-  // 間にあるルビと注記タグは除外
-  while (targetLength > length && idx >= 0) {
+    // 間にあるルビと注記タグは除外
+    while (targetLength > length && idx >= 0) {
 
-    const ch = buf[idx];
+      const ch = buf[idx];
 
-    switch (ch) {
+      switch (ch) {
 
-      case '》':
-        idx--;
-
-        // エスケープ文字
-        if (CharUtils.isEscapedChar(buf, idx)) {
-          length++;
-          break;
-        }
-
-        while (
-          idx >= 0 &&
-          buf[idx] !== '《' &&
-          !CharUtils.isEscapedChar(buf, idx)
-        ) {
+        case '》':
           idx--;
-        }
 
-        hasRuby = true;
-        break;
+          // エスケープ文字
+          if (CharUtils.isEscapedChar(buf, idx)) {
+            length++;
+            break;
+          }
 
-      case '］':
-        idx--;
+          while (
+            idx >= 0 &&
+            buf[idx] !== '《' &&
+            !CharUtils.isEscapedChar(buf, idx)
+          ) {
+            idx--;
+          }
 
-        if (CharUtils.isEscapedChar(buf, idx)) {
-          length++;
+          hasRuby = true;
           break;
-        }
 
-        while (
-          idx >= 0 &&
-          buf[idx] !== '［' &&
-          !CharUtils.isEscapedChar(buf, idx)
-        ) {
+        case '］':
           idx--;
-        }
 
-        break;
+          if (CharUtils.isEscapedChar(buf, idx)) {
+            length++;
+            break;
+          }
 
-      case '｜':
-        if (CharUtils.isEscapedChar(buf, idx)) {
+          while (
+            idx >= 0 &&
+            buf[idx] !== '［' &&
+            !CharUtils.isEscapedChar(buf, idx)
+          ) {
+            idx--;
+          }
+
+          break;
+
+        case '｜':
+          if (CharUtils.isEscapedChar(buf, idx)) {
+            length++;
+          }
+          break;
+
+        default:
           length++;
-        }
-        break;
+      }
 
-      default:
-        length++;
+      idx--;
     }
 
-    idx--;
-  }
+    // ルビがあれば先頭の｜を含める
+    if (hasRuby && idx >= 0 && buf[idx] === '｜') {
+      return idx;
+    }
 
-  // ルビがあれば先頭の｜を含める
-  if (hasRuby && idx >= 0 && buf[idx] === '｜') {
-    return idx;
+    return idx + 1;
   }
-
-  return idx + 1;
-}
 
 
   /** タイトル用にルビと外字画像注記と縦中横注記(縦書きのみ)のみ変換する
@@ -1990,7 +1990,7 @@ getTargetStart(buf, chukiTagStart, chOffset, targetLength) {
     let bufSuf = [];
     // 注記タグ変換
     //let m = this.chukiPattern.exec(line);
-    let m ;
+    let m;
     let chukiStart = 0;
 
     this.noTcyStart = new Set();
@@ -2114,7 +2114,7 @@ getTargetStart(buf, chukiTagStart, chOffset, targetLength) {
           if (buf.length > 0) {
             printLineBuffer(out, this.convertRubyText(buf.join("")), lineNum, true);
             // bufはクリア
-            buf.length=0;
+            buf.length = 0;
           }
 
           noBr = true;
@@ -2740,15 +2740,15 @@ getTargetStart(buf, chukiTagStart, chOffset, targetLength) {
         // ルビ終わり エスケープ文字なら処理しない
         if (ch[i] === '》' && !CharUtils.isEscapedChar(ch, i)) {
           if (rubyStart !== -1 && rubyTopStart !== -1) {
-               // 長すぎるルビを警告
+            // 長すぎるルビを警告
             if (rubyTopStart - rubyStart >= 30) {
-                // タグは除去 面倒なので文字列で置換
+              // タグは除去 面倒なので文字列で置換
               if (line.substring(rubyStart, rubyTopStart).replace(/<[^>]+>/g, ' ').length >= 30) {
                 LogAppender.warn(lineNum, "ルビが長すぎます");
               }
             }
-              // 同じ長さで同じ文字なら一文字づつルビを振る
-              if (rubyTopStart - rubyStart === i - rubyTopStart - 1 && CharUtils.isSameChars(ch, rubyTopStart + 1, i)) {
+            // 同じ長さで同じ文字なら一文字づつルビを振る
+            if (rubyTopStart - rubyStart === i - rubyTopStart - 1 && CharUtils.isSameChars(ch, rubyTopStart + 1, i)) {
               if (buf.join('').indexOf(rubyEndChuki, buf.length - rubyEndChuki.length) === -1) {
                 buf.push(rubyStartChuki);
               } else {
@@ -2872,7 +2872,7 @@ getTargetStart(buf, chukiTagStart, chOffset, targetLength) {
     // ファイルの存在を確認
     if (!fs.existsSync(gaijiFilePath)) {
       return false; // ファイルが存在しない場合
-  }
+    }
 
     this.writer.addGaijiFont(className, gaijiFilePath);
     buf.push(`<span class="glyph ${className}">${baseChar}</span>`);
@@ -3359,17 +3359,17 @@ getTargetStart(buf, chukiTagStart, chOffset, targetLength) {
         case '＃':
         case '※':
           if (ch[idx - 1] === '※') {
-            buf.length=(length - 1);// 1文字削除
+            buf.length = (length - 1);// 1文字削除
             escaped = true;
           }
       }
     }
 
     if (this.replaceMap !== null) {
-        const replaced = this.replaceMap.get(ch[idx]);
-          if (replaced != null) {   // ← ここ
-          buf.push(replaced);
-          return;
+      const replaced = this.replaceMap.get(ch[idx]);
+      if (replaced != null) {   // ← ここ
+        buf.push(replaced);
+        return;
       }
     }
 
@@ -3379,7 +3379,7 @@ getTargetStart(buf, chukiTagStart, chOffset, targetLength) {
         const replaced = this.replace2Map.get(`${ch[idx - (escaped ? 2 : 1)]}${ch[idx]}`);
         // 置換して終了
         if (replaced != null) {
-          buf.length=(length - 1);// 1文字削除
+          buf.length = (length - 1);// 1文字削除
           buf.push(replaced);
           return;
         }
@@ -3684,7 +3684,7 @@ getTargetStart(buf, chukiTagStart, chOffset, targetLength) {
     let idIdx = 1;
     let chapterId = null;
 
-    let chapterLineInfo =new ChapterLineInfo();
+    let chapterLineInfo = new ChapterLineInfo();
     chapterLineInfo = null;
     //空白除去の時はスペースのみの行は空行扱い
     if (this.removeEmptyLine > 0 && length > 0 && CharUtils.isSpace(line)) {
@@ -3697,7 +3697,7 @@ getTargetStart(buf, chukiTagStart, chOffset, targetLength) {
         this.printEmptyLines++;
       }
       //バッファクリア
-      buf=[];
+      buf = [];
       return;
     }
 
@@ -3841,9 +3841,9 @@ getTargetStart(buf, chukiTagStart, chOffset, targetLength) {
     this.tagLevel += tagStart - tagEnd;
 
     //バッファクリア
-    buf=[];
+    buf = [];
   }
-//サロゲートペアの高サロゲート文字かどうかを判定するためのメソッド
+  //サロゲートペアの高サロゲート文字かどうかを判定するためのメソッド
   isHighSurrogate(char) {
     const code = char.charCodeAt(0);
     return code >= 0xD800 && code <= 0xDBFF;

@@ -73,7 +73,7 @@ var opf = ejs.render(opftemplete, {
     images:images,
     sections:sections
 })
-//console.log(opf)
+console.log(opf)
 var nav = ejs.render(navtemplete, {
     bookInfo: bookInfo,
     title: title,
