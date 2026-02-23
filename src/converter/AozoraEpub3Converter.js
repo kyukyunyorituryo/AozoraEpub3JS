@@ -661,7 +661,9 @@ export default class AozoraEpub3Converter {
     // ブロック見出し注記、次の行を繋げる場合に設定
     let preChapterLineInfo = null;
     // 最後まで回す 
-    var lines = src.split(/\n/);
+      const lines = typeof src === "string"
+        ? src.split(/\r?\n/)
+        : [];
     for (let i = 0; i < lines.length; i++) {
       line = lines[i];
 
@@ -975,11 +977,11 @@ export default class AozoraEpub3Converter {
           if (name.replace(/◇|◆|□|■|▽|▼|☆|★|＊|＋|×|†|　/g, '').length > 0) {
             bookInfo.addChapterLineInfo(
               new ChapterLineInfo(
-                lineNum,
+                this.lineNum,
                 ChapterLineInfo.TYPE_PAGEBREAK,
                 true,
                 1,
-                lastEmptyLine === lineNum - 1,
+                lastEmptyLine === this.lineNum - 1,
                 name
               )
             );
@@ -999,11 +1001,9 @@ export default class AozoraEpub3Converter {
         }
         this.addNextChapterName = -1;
       }
-        console.log("noRubyLine"+noRubyLine)
       // コメント行の後はタイトル取得はしない
       if (!firstCommentStarted) {
         let replaced = CharUtils.getChapterName(noRubyLine, 0);
-        console.log("replaced"+replaced)
         if (firstLineStart === -1) {
           // 改ページチェック
           // タイトル前の改ページ位置を保存
