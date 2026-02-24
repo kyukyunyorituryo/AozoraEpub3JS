@@ -1037,7 +1037,7 @@ export default class AozoraEpub3Converter {
     // 表題と著者を先頭行から設定
     bookInfo.setMetaInfo(titleType, pubFirst, firstLines, firstLineStart, firstCommentLineNum);
     // bookInfo.preTitlePageBreak = preTitlePageBreak; // タイトルがあればタイトル前の改ページ状況を設定
-console.log(titleType, pubFirst, firstLines, firstLineStart, firstCommentLineNum)
+
     // タイトルのChapter追加
     if (bookInfo.titleLine > -1) {
       const name = this.getChapterName(bookInfo.title);
@@ -1073,7 +1073,7 @@ console.log(titleType, pubFirst, firstLines, firstLineStart, firstCommentLineNum
     // 目次ページの見出しを除外
     // 前後2行前と2行後に3つ以上に抽出した見出しがある場合連続する見出しを除去
     if (this.excludeSeqencialChapter) bookInfo.excludeTocChapter();
-console.log(bookInfo)
+
     return bookInfo;
     //console.error(e);
     //LogAppender.error(lineNum, "");
