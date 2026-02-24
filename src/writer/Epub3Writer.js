@@ -435,7 +435,7 @@ export default class Epub3Writer {
         this.ejsData.bookInfo = bookInfo;
 
         // 更新日時
-        this.ejsData.modified = dateFormat(bookInfo.modified);
+        this.ejsData.modified = this.dateFormat(bookInfo.modified);
 
         // 目次階層化
         this.ejsData.navNest = this.navNest;
@@ -936,7 +936,7 @@ export default class Epub3Writer {
 
     /** 本文を出力する */
     async writeSections(converter, src, bw, srcFile, srcExt, zos) {
-        // this.startSection(0, bookInfo.startMiddle);
+         this.startSection(0, this.bookInfo.startMiddle);
         // ePub3変換して出力
         // 改ページ時にnextSection() を、画像出力時にgetImageFilePath() 呼び出し
         converter.vertical = this.bookInfo.vertical;
@@ -1010,7 +1010,7 @@ export default class Epub3Writer {
 
         const bw = fs.readFileSync(path.resolve(__dirname, this.templatePath + Epub3Writer.OPS_PATH + Epub3Writer.XHTML_PATH + Epub3Writer.XHTML_FOOTER_EJS), 'utf-8');
         const zosdata = ejs.render(bw, this.ejsData)
-        // this.zos.file(this.zos, zosdata);
+         this.zos.file(this.zos, zosdata);
     }
 
     /** 章を追加 */
@@ -1254,10 +1254,10 @@ export default class Epub3Writer {
     getGaijiFontPath() {
         return Epub3Writer.GAIJI_PATH;
     }
-}
+
 
 /** 更新日時フォーマット 2011-06-29T12:00:00Z */
-function dateFormat(date) {
+dateFormat(date) {
     const dateformat = new Date(date)
     const dateFor = new Intl.DateTimeFormat('sv-SE', {
         year: 'numeric',
@@ -1272,7 +1272,7 @@ function dateFormat(date) {
     const time = dateFor + 'Z';
     return time
 }
-
+}
 
 //export { Epub3Writer };
 //module.exports = Epub3Writer
