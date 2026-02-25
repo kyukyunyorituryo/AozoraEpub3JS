@@ -1184,7 +1184,6 @@ export default class AozoraEpub3Converter {
   convertTextToEpub3(out, src, bookInfo) {
     // ダミー切り替え用
     const orgOut = out;
-    let lineNum = 0;
 
     this.canceled = false;
 
@@ -1247,15 +1246,15 @@ export default class AozoraEpub3Converter {
     // BOM除去
     line = CharUtils.removeBOM(line);
     do {
-      lineNum++;
+      this.lineNum++;
 
       if (skipTitle) {
         // タイトル文字行前までバッファ
-        if (this.bookInfo.metaLineStart > lineNum) {
+        if (this.bookInfo.metaLineStart > this.lineNum) {
           preTitleBuf.push(line);
         }
         // タイトル文字行 前の行のバッファがあれば出力
-        if (this.bookInfo.metaLineStart === lineNum && preTitleBuf.length > 0) {
+        if (this.bookInfo.metaLineStart === this.lineNum && preTitleBuf.length > 0) {
           noImage = false;
           if (lastZeroTagLevelLineNum >= 0) {
             // タイトル行前のtagLevel=0の行以前のバッファを出力
@@ -1281,7 +1280,7 @@ export default class AozoraEpub3Converter {
           preTitleBuf.length = 0;
         }
         // タイトルページの改ページ
-        if (this.bookInfo.titleEndLine + 1 === lineNum) {
+        if (this.bookInfo.titleEndLine + 1 === this.lineNum) {
           if (this.tagLevel > 0) this.bookInfo.titleEndLine++;
           else {
             skipTitle = false;
@@ -1294,7 +1293,7 @@ export default class AozoraEpub3Converter {
       }
 
       // 改ページ指定行なら改ページフラグ設定 タグ内は次の行へ
-      if (this.bookInfo.isPageBreakLine(lineNum) && this.sectionCharLength > 0) {
+      if (this.bookInfo.isPageBreakLine(this.lineNum) && this.sectionCharLength > 0) {
         // タグの中なら次の行へ
         if (this.tagLevel === 0) this.setPageBreakTrigger(this.pageBreakNormal);
         else this.bookInfo.addPageBreakLine(lineNum + 1);
@@ -1348,42 +1347,42 @@ export default class AozoraEpub3Converter {
         }
       }
       // 出力しない行を飛ばす
-      if (this.bookInfo.isIgnoreLine(lineNum)) continue;
+      if (this.bookInfo.isIgnoreLine(this.lineNum)) continue;
 
-      if (lineNum === this.bookInfo.titleLine) {
+      if (this.lineNum === this.bookInfo.titleLine) {
         this.printLineBuffer(out, this.chukiMap.get("表題前")[0], -1, true);
-        this.convertTextLineToEpub3(out, line, lineNum, false, noImage);
+        this.convertTextLineToEpub3(out, line, this.lineNum, false, noImage);
         this.printLineBuffer(out, this.chukiMap.get("表題後")[0], -1, true);
-      } else if (lineNum === this.bookInfo.orgTitleLine) {
+      } else if (this.lineNum === this.bookInfo.orgTitleLine) {
         this.printLineBuffer(out, this.chukiMap.get("原題前")[0], -1, true);
         this.convertTextLineToEpub3(out, line, lineNum, false, noImage);
         this.printLineBuffer(out, this.chukiMap.get("原題後")[0], -1, true);
-      } else if (lineNum === this.bookInfo.subTitleLine) {
+      } else if (this.lineNum === this.bookInfo.subTitleLine) {
         this.printLineBuffer(out, this.chukiMap.get("副題前")[0], -1, true);
-        this.convertTextLineToEpub3(out, line, lineNum, false, noImage);
+        this.convertTextLineToEpub3(out, line, this.lineNum, false, noImage);
         this.printLineBuffer(out, this.chukiMap.get("副題後")[0], -1, true);
-      } else if (lineNum === this.bookInfo.subOrgTitleLine) {
+      } else if (this.lineNum === this.bookInfo.subOrgTitleLine) {
         this.printLineBuffer(out, this.chukiMap.get("副原題前")[0], -1, true);
-        this.convertTextLineToEpub3(out, line, lineNum, false, noImage);
+        this.convertTextLineToEpub3(out, line, this.lineNum, false, noImage);
         this.printLineBuffer(out, this.chukiMap.get("副原題後")[0], -1, true);
-      } else if (lineNum === this.bookInfo.creatorLine) {
+      } else if (this.lineNum === this.bookInfo.creatorLine) {
         this.printLineBuffer(out, this.chukiMap.get("著者前")[0], -1, true);
-        this.convertTextLineToEpub3(out, line, lineNum, false, noImage);
+        this.convertTextLineToEpub3(out, line, this.lineNum, false, noImage);
         this.printLineBuffer(out, this.chukiMap.get("著者後")[0], -1, true);
-      } else if (lineNum === this.bookInfo.subCreatorLine) {
+      } else if (this.lineNum === this.bookInfo.subCreatorLine) {
         this.printLineBuffer(out, this.chukiMap.get("副著者前")[0], -1, true);
-        this.convertTextLineToEpub3(out, line, lineNum, false, noImage);
+        this.convertTextLineToEpub3(out, line, this.lineNum, false, noImage);
         this.printLineBuffer(out, this.chukiMap.get("副著者後")[0], -1, true);
       } else {
-        this.convertTextLineToEpub3(out, line, lineNum, false, noImage);
+        this.convertTextLineToEpub3(out, line, this.lineNum, false, noImage);
       }
       if (this.canceled) return;
-      if (this.writer.jProgressBar != null && lineNum % 10 === 0) {
-        this.writer.jProgressBar.setValue(lineNum / 10);
+      if (this.writer.jProgressBar != null && this.lineNum % 10 === 0) {
+        this.writer.jProgressBar.setValue(this.lineNum / 10);
         this.writer.jProgressBar.repaint();
       }
 
-      if (this.tagLevel === 0) lastZeroTagLevelLineNum = lineNum;
+      if (this.tagLevel === 0) lastZeroTagLevelLineNum = this.lineNum;
       j++;
       line = lines[j];
     } while (lines.length > j);
@@ -2112,7 +2111,7 @@ export default class AozoraEpub3Converter {
 
           // 改ページの前に文字があれば出力
           if (buf.length > 0) {
-            printLineBuffer(out, this.convertRubyText(buf.join("")), lineNum, true);
+            this.printLineBuffer(out, this.convertRubyText(buf.join("")), lineNum, true);
             // bufはクリア
             buf.length = 0;
           }
