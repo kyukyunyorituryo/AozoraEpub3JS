@@ -1268,7 +1268,7 @@ export default class AozoraEpub3Converter {
             let i = 0;
             while (this.lineNum < lineNumBak) {
               // 出力しない行を飛ばす
-              if (this.bookInfo.isIgnoreLine(lineNum)) continue;
+              if (this.bookInfo.isIgnoreLine(this.lineNum)) continue;
               if (this.lineNum <= lastZeroTagLevelLineNum)
                 this.convertTextLineToEpub3(orgOut, preTitleBuf[i++], this.lineNum, false, false);
               else
@@ -1296,7 +1296,7 @@ export default class AozoraEpub3Converter {
       if (this.bookInfo.isPageBreakLine(this.lineNum) && this.sectionCharLength > 0) {
         // タグの中なら次の行へ
         if (this.tagLevel === 0) this.setPageBreakTrigger(this.pageBreakNormal);
-        else this.bookInfo.addPageBreakLine(lineNum + 1);
+        else this.bookInfo.addPageBreakLine(this.lineNum + 1);
       }
 
       // コメント除外
@@ -1339,7 +1339,7 @@ export default class AozoraEpub3Converter {
                   buf.push(ch[idx]);
               }
             }
-            this.printLineBuffer(out, buf.join(""), lineNum, false);
+            this.printLineBuffer(out, buf.join(""), this.lineNum, false);
             continue;
           }
         } else {
@@ -1355,7 +1355,7 @@ export default class AozoraEpub3Converter {
         this.printLineBuffer(out, this.chukiMap.get("表題後")[0], -1, true);
       } else if (this.lineNum === this.bookInfo.orgTitleLine) {
         this.printLineBuffer(out, this.chukiMap.get("原題前")[0], -1, true);
-        this.convertTextLineToEpub3(out, line, lineNum, false, noImage);
+        this.convertTextLineToEpub3(out, line, this.lineNum, false, noImage);
         this.printLineBuffer(out, this.chukiMap.get("原題後")[0], -1, true);
       } else if (this.lineNum === this.bookInfo.subTitleLine) {
         this.printLineBuffer(out, this.chukiMap.get("副題前")[0], -1, true);
@@ -1556,7 +1556,8 @@ export default class AozoraEpub3Converter {
  * 注記文字変換は2回目に行う
  * 前にルビがあって｜で始まる場合は｜の前に追加 */
   replaceChukiSufTag(line) {
-    let lineNum = 0;
+    if(this.lineNum==undefined)this.lineNum=0
+
     // 前方参照注記がなければそのまま返却
     if (line.indexOf("［＃「") === -1) return line;
 
@@ -1580,7 +1581,7 @@ export default class AozoraEpub3Converter {
         if (innerTagLevel <= 1) {
           buf.push(tag);
         } else if (innerTagLevel === 2) {
-          LogAppender.warn(lineNum, "注記内に注記があります",
+          LogAppender.warn(this.lineNum, "注記内に注記があります",
             line.substring(innerTagStart, mTagEnd));
         }
         innerTagLevel--;
@@ -1631,7 +1632,7 @@ export default class AozoraEpub3Converter {
         chukiTagStart += ruby.length;
         chukiTagEnd += ruby.length;
 
-        LogAppender.warn(lineNum,
+        LogAppender.warn(this.lineNum,
           "ルビが注記の後ろにあります", ruby);
       }
 
