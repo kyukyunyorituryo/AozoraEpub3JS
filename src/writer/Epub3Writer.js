@@ -933,7 +933,7 @@ export default class Epub3Writer {
 
     /** 本文を出力する */
     async writeSections(converter, src) {
-        this.startSection(0, this.bookInfo.startMiddle);
+        //this.startSection(0, this.bookInfo.startMiddle);
         // ePub3変換して出力
         // 改ページ時にnextSection() を、画像出力時にgetImageFilePath() 呼び出し
         let bw = [];
