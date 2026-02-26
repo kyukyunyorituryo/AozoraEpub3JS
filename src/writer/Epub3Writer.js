@@ -1035,10 +1035,10 @@ export default class Epub3Writer {
      * 変更前と変更後のファイル名はimageFileNamesに格納される (images/0001.jpg)
      * @return 画像タグを出力しない場合はnullを返す
      * @throws IOException */
-    getImageFilePath(srcImageFileName, lineNum) {
+    async getImageFilePath(srcImageFileName, lineNum) {
         let isCover = false;
 
-        let imageInfo = this.imageInfoReader.getImageInfo(srcImageFileName);
+        let imageInfo = await this.imageInfoReader.getImageInfo(srcImageFileName);
         // 拡張子修正
         if (imageInfo === null) {
             // 画像があるかチェック
@@ -1206,11 +1206,11 @@ export default class Epub3Writer {
     }
 
     // 外字画像の縦と横の長さを比較して、同じなら0、横長なら1、縦長なら2を返す。
-    getImageOrientation(srcFilePath) {
+    async getImageOrientation(srcFilePath) {
         let wide = 0;
 
         try {
-            const imageInfo = this.imageInfoReader.getImageInfo(srcFilePath);
+            const imageInfo = await this.imageInfoReader.getImageInfo(srcFilePath);
 
             if (imageInfo != null) {
 
