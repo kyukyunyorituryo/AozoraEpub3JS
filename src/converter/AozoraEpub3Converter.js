@@ -661,9 +661,9 @@ export default class AozoraEpub3Converter {
     // ブロック見出し注記、次の行を繋げる場合に設定
     let preChapterLineInfo = null;
     // 最後まで回す 
-      const lines = typeof src === "string"
-        ? src.split(/\r?\n/)
-        : [];
+    const lines = typeof src === "string"
+      ? src.split(/\r?\n/)
+      : [];
     for (let i = 0; i < lines.length; i++) {
       line = lines[i];
 
@@ -1302,44 +1302,26 @@ export default class AozoraEpub3Converter {
       // コメント除外
       if (line.startsWith("--------------------------------------------------")) {
         if (this.commentPrint) {
-          if (inComment) {
-            inComment = false;
-          } else {
-            inComment = true;
-          }
+          inComment = !inComment;
         } else {
-          if (inComment) {
-            inComment = false;
-            continue;
-          } else {
-            // コメント開始
-            inComment = true;
-            continue;
-          }
+          //コメント開始
+          inComment = !inComment;
+          continue;
         }
       }
       if (inComment) {
         if (this.commentPrint) {
           if (!this.commentConvert) {
-            // そのまま出力
-            const buf = [];
-            const ch = [...line];
-            for (let idx = 0; idx < ch.length; idx++) {
-              switch (ch[idx]) {
-                case "&":
-                  buf.push("&amp;");
-                  break;
-                case "<":
-                  buf.push("&lt;");
-                  break;
-                case ">":
-                  buf.push("&gt;");
-                  break;
-                default:
-                  buf.push(ch[idx]);
-              }
+
+            const escaped = line
+              .replace(/&/g, "&amp;")
+              .replace(/</g, "&lt;")
+              .replace(/>/g, "&gt;");
+
+            if (out) {
+              this.printLineBuffer(out, escaped, lineNum, false);
             }
-            this.printLineBuffer(out, buf.join(""), this.lineNum, false);
+
             continue;
           }
         } else {
@@ -1556,7 +1538,7 @@ export default class AozoraEpub3Converter {
  * 注記文字変換は2回目に行う
  * 前にルビがあって｜で始まる場合は｜の前に追加 */
   replaceChukiSufTag(line) {
-    if(this.lineNum==undefined)this.lineNum=0
+    if (this.lineNum == undefined) this.lineNum = 0
 
     // 前方参照注記がなければそのまま返却
     if (line.indexOf("［＃「") === -1) return line;
