@@ -1229,7 +1229,7 @@ export default class AozoraEpub3Converter {
       // 開始位置がタグの中なら次の行へ
       skipTitle = true;
       // outがnullなら改ページと出力はされない
-      out = null;
+      out.length = 0;
       // バッファ
       preTitleBuf = [];
       noImage = true;
@@ -3722,7 +3722,7 @@ export default class AozoraEpub3Converter {
       }
     }
 
-    if (out !== null) {
+    if (out.length !== 0) {
       //強制改ページ処理
       //改ページトリガが設定されていない＆タグの外
       if (this.forcePageBreak && this.pageBreakTrigger === null && this.tagLevel === 0) {
