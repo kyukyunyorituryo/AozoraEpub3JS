@@ -476,9 +476,9 @@ export default class Epub3Writer {
         }
 
         // zip出力用Writer
-        //let bw = [];
+        let bw = [];
         // 本文を出力
-        await this.writeSections(converter, src);
+        await this.writeSections(converter, bw, src);
         if (this.canceled) return;
 
         // 外字のcssを格納
@@ -932,17 +932,20 @@ export default class Epub3Writer {
     }
 
     /** 本文を出力する */
-    async writeSections(converter, src) {
+    async writeSections(converter, bw, src) {
         //this.startSection(0, this.bookInfo.startMiddle);
         // ePub3変換して出力
         // 改ページ時にnextSection() を、画像出力時にgetImageFilePath() 呼び出し
-        let bw = [];
+        bw.length=0;
         converter.vertical = this.bookInfo.vertical;
         await converter.convertTextToEpub3(bw, src, this.bookInfo);
-        if (bw.length > 0) {
-            this.currentSectionBuffer += bws.join("");
+
+        if (this.sectionIndex > 0) {
+            if (bw.length > 0) {
+                this.currentSectionBuffer += bw.join("");
+            }
+            await this.endSection();
         }
-        this.endSection();
     }
 
 
