@@ -598,14 +598,22 @@ async function getTextCharset(srcFile, ext, imageInfoReader, txtIdx) {
     //cs = Detector.getCharset(is);
     return cs;
   } else if (ext === 'zip' || ext === 'txtz') {
-    const zis = new ZipArchiveInputStream(fs.createReadStream(srcFile), 'MS932', false);
-    let entry;
-    while ((entry = await zis.getNextEntry()) !== null) {
-      const entryName = entry.getName();
-      if (entryName.substring(entryName.lastIndexOf('.') + 1).toLowerCase() === 'txt' && txtIdx-- === 0) {
-        if (imageInfoReader) imageInfoReader.setArchiveTextEntry(entryName);
-        const cs = encoding.detect(zis)
-        return cs;
+    const buffer = fs.readFileSync(srcFile);
+    const zip = await JSZip.loadAsync(buffer);
+    let foundIndex = 0;
+    for (const path in zip.files) {
+      const file = zip.files[path];
+      if (!file.dir && path.toLowerCase().endsWith(".txt")) {
+        if (foundIndex === txtIdx) {
+          // Java版: imageInfoReader.setArchiveTextEntry(entryName)
+          if (imageInfoReader && imageInfoReader.setArchiveTextEntry) {imageInfoReader.setArchiveTextEntry(path);}
+          // ファイル内容取得（Uint8Array）
+          const uint8 = await file.async("uint8array");
+          // encoding-japaneseで判定
+          const charset = encoding.detect(uint8);
+          return charset;
+        }
+        foundIndex++;
       }
     }
     LogAppender.append('zip内にtxtファイルがありません: ');
@@ -657,27 +665,27 @@ async function getTextCharset(srcFile, ext, imageInfoReader, txtIdx) {
  */
 export async function countZipText(zipPath) {
 
-    let txtCount = 0;
+  let txtCount = 0;
 
-    // ① ZIPをバイナリで読む
-    const buffer = fs.readFileSync(zipPath);
+  // ① ZIPをバイナリで読む
+  const buffer = fs.readFileSync(zipPath);
 
-    // ② JSZipで読み込み
-    const zip = await JSZip.loadAsync(buffer);
+  // ② JSZipで読み込み
+  const zip = await JSZip.loadAsync(buffer);
 
-    // ③ 全エントリを走査
-    zip.forEach((relativePath, file) => {
+  // ③ 全エントリを走査
+  zip.forEach((relativePath, file) => {
 
-        if (!file.dir) {
-            const ext = relativePath.split(".").pop();
-            if (ext && ext.toLowerCase() === "txt") {
-                txtCount++;
-            }
-        }
+    if (!file.dir) {
+      const ext = relativePath.split(".").pop();
+      if (ext && ext.toLowerCase() === "txt") {
+        txtCount++;
+      }
+    }
 
-    });
+  });
 
-    return txtCount;
+  return txtCount;
 }
 
 /** Ripファイル内のテキストファイルの数を取得 */
