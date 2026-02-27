@@ -203,21 +203,21 @@ export default class ImageInfoReader {
                 const file = zip.files[entry];
                 if (idx++ % 10 === 0) LogAppender.append(".");
                 if (!file.dir) {
-                const entryName = file.name;
-                const lowerName = entryName.toLowerCase();
-                if (['.png', '.jpg', '.jpeg', '.gif'].some(ext => lowerName.endsWith(ext))) {
-                    try {
-                        const imageInfo = await ImageInfo.getImageInfo(file._data.compressedContent);
-                        if (imageInfo) {
-                            this.imageFileInfos.set(entryName, imageInfo);
-                            if (addFileName) this.addImageFileName(entryName);
+                    const entryName = file.name;
+                    const lowerName = entryName.toLowerCase();
+                    if (['.png', '.jpg', '.jpeg', '.gif'].some(ext => lowerName.endsWith(ext))) {
+                        try {
+                            const imageInfo = await ImageInfo.getImageInfo(file._data.compressedContent);
+                            if (imageInfo) {
+                                this.imageFileInfos.set(entryName, imageInfo);
+                                if (addFileName) this.addImageFileName(entryName);
+                            }
+                        } catch (e) {
+                            LogAppender.error(`画像が読み込めませんでした: ${srcFile.getPath()}`);
+                            console.error(e);
                         }
-                    } catch (e) {
-                        LogAppender.error(`画像が読み込めませんでした: ${srcFile.getPath()}`);
-                        console.error(e);
                     }
                 }
-            }
             }
         } finally {
             LogAppender.println();
@@ -233,7 +233,7 @@ export default class ImageInfoReader {
     async loadRarImageInfos(srcFile, addFileName) {
         const buf = Uint8Array.from(fs.readFileSync(srcFile)).buffer;
         const extractor = await unrar.createExtractorFromData({ data: buf });
-      
+
         const list = extractor.getFileList();
         const listArcHeader = list.arcHeader; // archive header
         const fileHeaders = [...list.fileHeaders]; // load the file headers
@@ -241,30 +241,30 @@ export default class ImageInfoReader {
             let idx = 0;
             for (let fileHeader of fileHeaders) {
                 if (idx++ % 10 === 0) LogAppender.append(".");
-                    const entryName = fileHeader.name.replace('\\', '/');
-                    const lowerName = entryName.toLowerCase();
-                    if (['.png', '.jpg', '.jpeg', '.gif'].some(ext => lowerName.endsWith(ext))) {
-                        let imageInfo = null;
-                        try {
-                            const extracted = extractor.extract({ files: [fileHeader] });
-                            const files = [...extracted.files]; //load the files
-                            files[0].extraction;
-                            const buffer = files[0].extraction;
-                            imageInfo = ImageInfo.getImageInfo(buffer);
-                            if (imageInfo) {
-                                this.imageFileInfos.set(entryName, imageInfo);
-                                if (addFileName) this.addImageFileName(entryName);
-                            } else {
-                                LogAppender.println();
-                                LogAppender.error(`画像が読み込めませんでした: ${entryName}`);
-                            }
-                        } catch (e) {
+                const entryName = fileHeader.name.replace('\\', '/');
+                const lowerName = entryName.toLowerCase();
+                if (['.png', '.jpg', '.jpeg', '.gif'].some(ext => lowerName.endsWith(ext))) {
+                    let imageInfo = null;
+                    try {
+                        const extracted = extractor.extract({ files: [fileHeader] });
+                        const files = [...extracted.files]; //load the files
+                        files[0].extraction;
+                        const buffer = files[0].extraction;
+                        imageInfo = ImageInfo.getImageInfo(buffer);
+                        if (imageInfo) {
+                            this.imageFileInfos.set(entryName, imageInfo);
+                            if (addFileName) this.addImageFileName(entryName);
+                        } else {
                             LogAppender.println();
                             LogAppender.error(`画像が読み込めませんでした: ${entryName}`);
-                            console.error(e);
                         }
+                    } catch (e) {
+                        LogAppender.println();
+                        LogAppender.error(`画像が読み込めませんでした: ${entryName}`);
+                        console.error(e);
                     }
-                
+                }
+
             }
         } finally {
             LogAppender.println();
@@ -318,7 +318,7 @@ export default class ImageInfoReader {
             if (this.srcFile.endsWith('.rar')) {
                 const buf = Uint8Array.from(fs.readFileSync(this.srcFile)).buffer;
                 const extractor = await unrar.createExtractorFromData({ data: buf });
-              
+
                 const list = extractor.getFileList();
                 const listArcHeader = list.arcHeader; // archive header
                 const fileHeaders = [...list.fileHeaders]; // load the file headers
@@ -326,30 +326,30 @@ export default class ImageInfoReader {
                     if (!fileHeader.flags.directory) {
                         let entryName = fileHeader.name.replace(/\\/g, '/');
                         if (srcImageFileName === entryName) {
-                        const extracted = extractor.extract({ files: [fileHeader] });
-                        const files = [...extracted.files]; //load the files                    
-                        return await readImage(path.extname(srcImageFileName).toLowerCase(), files[0].extraction);
+                            const extracted = extractor.extract({ files: [fileHeader] });
+                            const files = [...extracted.files]; //load the files                    
+                            return await readImage(path.extname(srcImageFileName).toLowerCase(), files[0].extraction);
                         }
                     }
                 }
             } else {
-      try {
-        const fileContent = fs.readFileSync(this.srcFile, null).buffer;
-        const zip = new JSZip();
-        await zip.loadAsync(fileContent);
-        let entry = zip.files[srcImageFileName];
-        if (entry === null) {
-            srcImageFileName = this.correctExt(srcImageFileName);
-            entry = zip.files[srcImageFileName];
-            if (entry === null) return null;
-        }
-            const is = entry._data.compressedContent
-                const fileExtension = srcImageFileName.substring(srcImageFileName.lastIndexOf('.') + 1).toLowerCase();
-                return await readImage(fileExtension, is);
+                try {
+                    const fileContent = fs.readFileSync(this.srcFile, null).buffer;
+                    const zip = new JSZip();
+                    await zip.loadAsync(fileContent);
+                    let entry = zip.files[srcImageFileName];
+                    if (entry === null) {
+                        srcImageFileName = this.correctExt(srcImageFileName);
+                        entry = zip.files[srcImageFileName];
+                        if (entry === null) return null;
+                    }
+                    const is = entry._data.compressedContent
+                    const fileExtension = srcImageFileName.substring(srcImageFileName.lastIndexOf('.') + 1).toLowerCase();
+                    return await readImage(fileExtension, is);
 
-        } catch (e) {
-            console.error(e);
-        }
+                } catch (e) {
+                    console.error(e);
+                }
             }
         }
         return null;
