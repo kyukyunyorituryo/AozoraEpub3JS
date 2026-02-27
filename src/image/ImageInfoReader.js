@@ -194,28 +194,26 @@ export default class ImageInfoReader {
      * @throws {IOException}
      */
     async loadZipImageInfos(srcFile, addFileName) {
-        const fileContent = fs.readFileSync(srcFile).buffer;
-        const zip = new JSZip();
-        await zip.loadAsync(fileContent);
+        const buffer = fs.readFileSync(srcFile);
+        const zip = await JSZip.loadAsync(buffer);
         try {
             let idx = 0;
-            for (let entry of zip.files) {
-                const file = zip.files[entry];
+            for (const [entryName, file] of Object.entries(zip.files)) {
                 if (idx++ % 10 === 0) LogAppender.append(".");
-                if (!file.dir) {
-                    const entryName = file.name;
-                    const lowerName = entryName.toLowerCase();
-                    if (['.png', '.jpg', '.jpeg', '.gif'].some(ext => lowerName.endsWith(ext))) {
-                        try {
-                            const imageInfo = await ImageInfo.getImageInfo(file._data.compressedContent);
-                            if (imageInfo) {
-                                this.imageFileInfos.set(entryName, imageInfo);
-                                if (addFileName) this.addImageFileName(entryName);
-                            }
-                        } catch (e) {
-                            LogAppender.error(`画像が読み込めませんでした: ${srcFile.getPath()}`);
-                            console.error(e);
+                if (file.dir) continue;
+                const lowerName = entryName.toLowerCase();
+                if (['.png', '.jpg', '.jpeg', '.gif']
+                    .some(ext => lowerName.endsWith(ext))) {
+                    try {
+                        const uint8 = await file.async("uint8array");
+                        const imageInfo = await ImageInfo.getImageInfo(uint8);
+                        if (imageInfo) {
+                            this.imageFileInfos.set(entryName, imageInfo);
+                            if (addFileName) this.addImageFileName(entryName);
                         }
+                    } catch (e) {
+                        LogAppender.error(`画像が読み込めませんでした: ${srcFile}`);
+                        console.error(e);
                     }
                 }
             }
