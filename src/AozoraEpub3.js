@@ -341,7 +341,6 @@ aozoraConverter.setChapterLevel(maxLength, chapterExclude, chapterUseNextLine, c
       let encauto = "";
 
       encauto = await getTextCharset(srcFile, ext, imageInfoReader, txtIdx);
-      // if (encauto === "SHIFT_JIS") encauto = "MS932";
       if (encType === "AUTO") encType = encauto;
       if (!imageOnly) {
         bookInfo = await getBookInfo(srcFile, ext, txtIdx, imageInfoReader, aozoraConverter, encType, BookInfo.TitleType.indexOf(titleIndex), false);
@@ -465,17 +464,11 @@ function getOutFile(srcFile, dstPath, bookInfo, autoFileName, outExt) {
 async function getBookInfo(srcFile, ext, txtIdx, imageInfoReader, aozoraConverter, encType, titleType, pubFirst) {
   try {
     const textEntryName = [null];
-    const is = await getTextInputStream(srcFile, ext, imageInfoReader, textEntryName, txtIdx);
-    if (is === null) return null;
+    const src = await getTextInputStream(srcFile, ext, imageInfoReader, textEntryName, txtIdx);
+    if (src === null) return null;
     // タイトル、画像注記、左右中央注記、目次取得
 
-    const buffer = fs.readFileSync(is);
 
-    const src = encoding.convert(buffer, {
-      to: "UNICODE",
-      from: 'SJIS',
-      type: "string"
-    });
     const bookInfo = await aozoraConverter.getBookInfo(srcFile, src, imageInfoReader, titleType, pubFirst);
     bookInfo.textEntryName = textEntryName[0];
     return bookInfo;
@@ -535,18 +528,44 @@ async function convertFile(srcFile, ext, outFile, aozoraConverter, epubWriter, e
 */
 async function getTextInputStream(srcFile, ext, imageInfoReader, textEntryName, txtIdx) {
   if (ext === 'txt') {
-    return srcFile;
+        const buffer = fs.readFileSync(srcFile);
+
+    const src = encoding.convert(buffer, {
+      to: "UNICODE",
+      from: 'SJIS',
+      type: "string"
+    });
+    return src;
   } else if (ext === 'zip' || ext === 'txtz') {
-    const zis = new ZipArchiveInputStream(fs.createReadStream(srcFile), 'MS932', false);
-    let entry;
-    while ((entry = await zis.getNextEntry()) !== null) {
-      const entryName = entry.getName();
-      if (entryName.substring(entryName.lastIndexOf('.') + 1).toLowerCase() === 'txt' && txtIdx-- === 0) {
-        if (imageInfoReader) imageInfoReader.setArchiveTextEntry(entryName);
-        if (textEntryName) textEntryName[0] = entryName;
-        return zis;
+    const buffer = fs.readFileSync(srcFile);
+    // MS932ファイル名対応
+    const zip = await JSZip.loadAsync(buffer);
+    let foundIndex = 0;
+    for (const path in zip.files) {
+      const file = zip.files[path];
+      if (!file.dir && path.toLowerCase().endsWith(".txt")) {
+        if (foundIndex === txtIdx) {
+          if (imageInfoReader?.setArchiveTextEntry) {
+            imageInfoReader.setArchiveTextEntry(path);
+          }
+          if (textEntryName) {
+            textEntryName[0] = path;
+          }
+                      const uint8 = await file.async("uint8array");
+
+                        const charset = encoding.detect(uint8);
+
+                        return encoding.convert(uint8, {
+                            to: "UNICODE",
+                            from: charset,
+                            type: "string"
+                        });
+        }
+
+        foundIndex++;
       }
     }
+
     LogAppender.append('zip内にtxtファイルがありません: ');
     LogAppender.println(path.basename(srcFile));
     return null;
@@ -606,7 +625,7 @@ async function getTextCharset(srcFile, ext, imageInfoReader, txtIdx) {
       if (!file.dir && path.toLowerCase().endsWith(".txt")) {
         if (foundIndex === txtIdx) {
           // Java版: imageInfoReader.setArchiveTextEntry(entryName)
-          if (imageInfoReader && imageInfoReader.setArchiveTextEntry) {imageInfoReader.setArchiveTextEntry(path);}
+          if (imageInfoReader && imageInfoReader.setArchiveTextEntry) { imageInfoReader.setArchiveTextEntry(path); }
           // ファイル内容取得（Uint8Array）
           const uint8 = await file.async("uint8array");
           // encoding-japaneseで判定
