@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { Command } from 'commander';
 import { propertiesReader } from 'properties-reader';
-//import { ZipFile } from 'yazl';
+import JSZip from "jszip";
 import Archive from 'node-unrar-js';
 import AozoraEpub3Converter from './converter/AozoraEpub3Converter.js';
 import ImageInfoReader from './image/ImageInfoReader.js';
@@ -317,7 +317,7 @@ aozoraConverter.setChapterLevel(maxLength, chapterExclude, chapterUseNextLine, c
     let isFile = ext === "txt";
     if (ext === "zip" || ext === "txtz") {
       try {
-        txtCount = await AozoraEpub3.countZipText(srcFile);
+        txtCount = await countZipText(srcFile);
       } catch (e) {
         console.error(e);
       }
@@ -649,20 +649,35 @@ async function getTextCharset(srcFile, ext, imageInfoReader, txtIdx) {
   return null;
 }
 
-/** Zipファイル内のテキストファイルの数を取得 */
-async function countZipText(zipFile) {
-  let txtCount = 0;
-  const zis = new ZipArchiveInputStream(fs.createReadStream(zipFile), 'MS932', false);
-  try {
-    let entry;
-    while ((entry = await zis.getNextEntry()) !== null) {
-      const entryName = entry.getName();
-      if (entryName.substring(entryName.lastIndexOf('.') + 1).toLowerCase() === 'txt') txtCount++;
-    }
-  } finally {
-    await zis.close();
-  }
-  return txtCount;
+
+/**
+ * Zipファイル内のテキストファイル数を取得
+ * @param {string} zipPath
+ * @returns {Promise<number>}
+ */
+export async function countZipText(zipPath) {
+
+    let txtCount = 0;
+
+    // ① ZIPをバイナリで読む
+    const buffer = fs.readFileSync(zipPath);
+
+    // ② JSZipで読み込み
+    const zip = await JSZip.loadAsync(buffer);
+
+    // ③ 全エントリを走査
+    zip.forEach((relativePath, file) => {
+
+        if (!file.dir) {
+            const ext = relativePath.split(".").pop();
+            if (ext && ext.toLowerCase() === "txt") {
+                txtCount++;
+            }
+        }
+
+    });
+
+    return txtCount;
 }
 
 /** Ripファイル内のテキストファイルの数を取得 */
