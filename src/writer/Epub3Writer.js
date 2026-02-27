@@ -20,7 +20,7 @@ import ImageInfo from '../info/ImageInfo.js';
 import SectionInfo from '../info/SectionInfo.js';
 import CharUtils from '../util/CharUtils.js';
 import LogAppender from '../util/LogAppender.js';
-
+import Encoding from 'encoding-japanese';
 /** ePub3用のファイル一式をZipで固めたファイルを生成.
  * 本文は改ページでセクション毎に分割されて xhtml/以下に 0001.xhtml 0002.xhtml の連番ファイル名で格納
  * 画像は images/以下に 0001.jpg 0002.png のようにリネームして格納
@@ -846,13 +846,23 @@ export default class Epub3Writer {
             } else {
                 //////////////////////////////////
                 // Zip
-                const zis = new ZipArchiveInputStream(new BufferedInputStream(fs.createReadStream(srcFile), 65536), 'MS932', false);
-                let entry;
-                while ((entry = zis.getNextEntry())) {
-                    // アーカイブ内のサブフォルダは除外してテキストからのパスにする
-                    const srcImageFileName = entry.getName().substring(archivePathLength);
+                const buffer = fs.readFileSync(srcFile);
+                const zip = await JSZip.loadAsync(buffer, {
+                    decodeFileName: bytes =>
+                        Encoding.convert(bytes, {
+                            to: "UNICODE",
+                            from: "SJIS",
+                            type: "string"
+                        })
+                });
+                for (const [entryName, file] of Object.entries(zip.files)) {
+                    if (file.dir) continue;
+                    // Java: entry.getName().substring(archivePathLength)
+                    const srcImageFileName = entryName.substring(archivePathLength);
                     if (this.outImageFileNames.has(srcImageFileName)) {
-                        await this.writeArchiveImage(srcImageFileName, zis);
+                        // Java: this.writeArchiveImage(srcImageFileName, zis);
+                        const imageData = await file.async("uint8array");
+                        await this.writeArchiveImage(srcImageFileName, imageData);
                     }
                 }
             }
@@ -936,7 +946,7 @@ export default class Epub3Writer {
         //this.startSection(0, this.bookInfo.startMiddle);
         // ePub3変換して出力
         // 改ページ時にnextSection() を、画像出力時にgetImageFilePath() 呼び出し
-        bw.length=0;
+        bw.length = 0;
         converter.vertical = this.bookInfo.vertical;
         await converter.convertTextToEpub3(bw, src, this.bookInfo);
 
