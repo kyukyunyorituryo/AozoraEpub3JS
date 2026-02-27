@@ -108,64 +108,89 @@ if (propFileName) {
   props = propertiesReader({ sourceFile: propFileName });
   // console.log(props)
 }
-let titleIndex = 0; // 表題
+//ini取得ユーティリティ関数
+const getString = (key, def = null) =>
+  props.get(key) ?? def;
 
+const getBool = (key) =>
+  props.get(key) === "1";
+
+const getInt = (key, def = 0) => {
+  const v = parseInt(props.get(key));
+  return isNaN(v) ? def : v;
+};
+
+const getFloat = (key, def = 0) => {
+  const v = parseFloat(props.get(key));
+  return isNaN(v) ? def : v;
+};
+
+let titleIndex = 0;
 // コマンドラインオプション以外
-let coverPage = props.get('CoverPage') === '1'; // 表紙追加
-let titlePage = BookInfo.TITLE_NONE;
-if (props.get('TitlePageWrite') === '1') {
-  titlePage = parseInt(props.get('TitlePage'));
-}
-let withMarkId = props.get('MarkId') === '1';
-let commentPrint = props.get('CommentPrint') === '1';
-let commentConvert = props.get('CommentConvert') === '1';
-let autoYoko = props.get('AutoYoko') === '1';
-let autoYokoNum1 = props.get('AutoYokoNum1') === '1';
-let autoYokoNum3 = props.get('AutoYokoNum3') === '1';
-let autoYokoEQ1 = props.get('AutoYokoEQ1') === '1';
-let spaceHyp = 0;
-spaceHyp = parseInt(props.get('SpaceHyphenation'));
-let tocPage = props.get('TocPage') === '1'; // 目次追加
-let tocVertical = props.get('TocVertical') === '1'; // 目次縦書き
-let coverPageToc = props.get('CoverPageToc') === '1';
-let removeEmptyLine = 0;
-removeEmptyLine = parseInt(props.get('RemoveEmptyLine'));
-let maxEmptyLine = 0;
-maxEmptyLine = parseInt(props.get('MaxEmptyLine'));
-// 画面サイズと画像リサイズ
-let dispW = 600; dispW = parseInt(props.get("DispW"));
-let dispH = 800; dispH = parseInt(props.get("DispH"));
-let coverW = 600; coverW = parseInt(props.get("CoverW"));
-let coverH = 800; coverH = parseInt(props.get("CoverH"));
+const coverPage = getBool("CoverPage");// 表紙追加
 
-let resizeW = 0; if ("1" == props.get("ResizeW")) resizeW = parseInt(props.get("ResizeNumW"));
-let resizeH = 0; if ("1" == props.get("ResizeH")) resizeH = parseInt(props.get("ResizeNumH"));
-let singlePageSizeW = 480; singlePageSizeW = parseInt(props.get("SinglePageSizeW"));
-let singlePageSizeH = 640; singlePageSizeH = parseInt(props.get("SinglePageSizeH"));
-let singlePageWidth = 600; singlePageWidth = parseInt(props.get("SinglePageWidth"));
-let imageScale = 1; imageScale = parseFloat(props.get("ImageScale"));
-let imageFloatType = 0; imageFloatType = parseInt(props.get("ImageFloatType"));
-let imageFloatW = 0; imageFloatW = parseInt(props.get("ImageFloatW"));
-let imageFloatH = 0; imageFloatH = parseInt(props.get("ImageFloatH"));
-let imageSizeType = SectionInfo.IMAGE_SIZE_TYPE_HEIGHT; imageSizeType = parseInt(props.get("ImageSizeType"));
-let fitImage = "1" == props.get("FitImage");
-let svgImage = "1" == props.get("SvgImage");
-let rotateImage = 0; if ("1" == props.get("RotateImage")) rotateImage = 90; else if ("2" == props.get("RotateImage")) rotateImage = -90;
-let jpegQualty = 0.8; jpegQualty = parseInt(props.get("JpegQuality")) / 100;
-let gamma = 1.0; if ("1" == props.get("Gamma")) gamma = parseFloat(props.get("GammaValue"));
+let titlePage = 0;
+if (getBool("TitlePageWrite")) {
+  titlePage = getInt("TitlePage", 0);
+}
+
+const withMarkId = getBool("MarkId");
+const commentPrint = getBool("CommentPrint");
+const commentConvert = getBool("CommentConvert");
+
+const autoYoko = getBool("AutoYoko");
+const autoYokoNum1 = getBool("AutoYokoNum1");
+const autoYokoNum3 = getBool("AutoYokoNum3");
+const autoYokoEQ1 = getBool("AutoYokoEQ1");
+
+const spaceHyp = getInt("SpaceHyphenation", 0);
+
+const tocPage = getBool("TocPage");// 目次追加
+const tocVertical = getBool("TocVertical");// 目次縦書き
+const coverPageToc = getBool("CoverPageToc");
+
+const removeEmptyLine = getInt("RemoveEmptyLine", 0);
+const maxEmptyLine = getInt("MaxEmptyLine", 0);
+// 画面サイズと画像リサイズ
+const dispW = getInt("DispW", 600);
+const dispH = getInt("DispH", 800);
+const coverW = getInt("CoverW", 600);
+const coverH = getInt("CoverH", 800);
+let resizeW = 0;
+if (getBool("ResizeW")) resizeW = getInt("ResizeNumW", 0);
+let resizeH = 0;
+if (getBool("ResizeH")) resizeH = getInt("ResizeNumH", 0);
+const singlePageSizeW = getInt("SinglePageSizeW", 480);
+const singlePageSizeH = getInt("SinglePageSizeH", 640);
+const singlePageWidth = getInt("SinglePageWidth", 600);
+const imageScale = getFloat("ImageScale", 1);
+const imageFloatType = getInt("ImageFloatType", 0);
+const imageFloatW = getInt("ImageFloatW", 0);
+const imageFloatH = getInt("ImageFloatH", 0);
+const imageSizeType = getInt("ImageSizeType", 1);
+const fitImage = getBool("FitImage");
+const svgImage = getBool("SvgImage");
+let rotateImage = 0;
+if (getString("RotateImage") === "1") rotateImage = 90;
+else if (getString("RotateImage") === "2") rotateImage = -90;
+const jpegQualty = getInt("JpegQuality", 80) / 100;
+let gamma = 1.0;
+if (getBool("Gamma")) gamma = getFloat("GammaValue", 1.0);
+
 let autoMarginLimitH = 0;
 let autoMarginLimitV = 0;
 let autoMarginWhiteLevel = 80;
 let autoMarginPadding = 0;
 let autoMarginNombre = 0;
 let nobreSize = 0.03;
-if ("1" == props.get("AutoMargin")) {
-  autoMarginLimitH = parseInt(props.get("AutoMarginLimitH"));
-  autoMarginLimitV = parseInt(props.get("AutoMarginLimitV"));
-  autoMarginWhiteLevel = parseInt(props.get("AutoMarginWhiteLevel"));
-  autoMarginPadding = parseFloat(props.get("AutoMarginPadding"));
-  autoMarginNombre = parseInt(props.get("AutoMarginNombre"));
-  autoMarginPadding = parseFloat(props.get("AutoMarginNombreSize"));
+
+if (getBool("AutoMargin")) {
+  autoMarginLimitH = getInt("AutoMarginLimitH", 0);
+  autoMarginLimitV = getInt("AutoMarginLimitV", 0);
+  autoMarginWhiteLevel = getInt("AutoMarginWhiteLevel", 80);
+  autoMarginPadding = getFloat("AutoMarginPadding", 0);
+  autoMarginNombre = getInt("AutoMarginNombre", 0);
+  nobreSize = getFloat("AutoMarginNombreSize", 0.03);
 }
 epub3Writer.setImageParam(dispW, dispH, coverW, coverH, resizeW, resizeH, singlePageSizeW, singlePageSizeH, singlePageWidth, imageSizeType, fitImage, svgImage, rotateImage,
   imageScale, imageFloatType, imageFloatW, imageFloatH, jpegQualty, gamma, autoMarginLimitH, autoMarginLimitV, autoMarginWhiteLevel, autoMarginPadding, autoMarginNombre, nobreSize);
@@ -174,27 +199,32 @@ epub3Writer.setImageParam(dispW, dispH, coverW, coverH, resizeW, resizeH, single
     */
 
 // 目次階層化設定
-epub3Writer.setTocParam("1" == (props.get("NavNest")), "1" == (props.get("NcxNest")));
+const navNest = getBool("NavNest");
+const ncxNest = getBool("NcxNest");
+
+epub3Writer.setTocParam(navNest, ncxNest);
 
 // スタイル設定
-let pageMargin = [];
-pageMargin = props.get("PageMargin").split(",");
-if (pageMargin.length !== 4) pageMargin = ["0", "0", "0", "0"];
-else {
-  let pageMarginUnit = props.get("PageMarginUnit") === "0" ? "em" : "%";
-  for (let i = 0; i < 4; i++) { pageMargin[i] += pageMarginUnit; }
+function getMargin(key, unitKey) {
+  const raw = getString(key);
+  if (!raw) return ["0", "0", "0", "0"];
+
+  const parts = raw.split(",");
+  if (parts.length !== 4) return ["0", "0", "0", "0"];
+
+  const unit = getString(unitKey) === "0" ? "em" : "%";
+
+  return parts.map(v => v + unit);
 }
-let bodyMargin = [];
-bodyMargin = props.get("BodyMargin").split(",");
-if (bodyMargin.length !== 4) bodyMargin = ["0", "0", "0", "0"];
-else {
-  let bodyMarginUnit = props.get("BodyMarginUnit") === "0" ? "em" : "%";
-  for (let i = 0; i < 4; i++) { bodyMargin[i] += bodyMarginUnit; }
-}
-let lineHeight = 1.8; lineHeight = parseFloat(props.get("LineHeight"));
-let fontSize = 100; fontSize = parseInt(props.get("FontSize"));
-let boldUseGothic = "1" == (props.get("BoldUseGothic"));
-let gothicUseBold = "1" == (props.get("gothicUseBold"));
+
+const pageMargin = getMargin("PageMargin", "PageMarginUnit");
+const bodyMargin = getMargin("BodyMargin", "BodyMarginUnit");
+
+const lineHeight = getFloat("LineHeight", 1.8);
+const fontSize = getInt("FontSize", 100);
+
+const boldUseGothic = getBool("BoldUseGothic");
+const gothicUseBold = getBool("gothicUseBold");
 epub3Writer.setStyles(pageMargin, bodyMargin, lineHeight, fontSize, boldUseGothic, gothicUseBold);
 
 // 自動改ページ
@@ -203,36 +233,52 @@ let forcePageBreakEmpty = 0;
 let forcePageBreakEmptySize = 0;
 let forcePageBreakChapter = 0;
 let forcePageBreakChapterSize = 0;
-if (props.get("PageBreak") === "1") {
-  forcePageBreakSize = parseInt(props.get("PageBreakSize")) * 1024;
-  if (props.get("PageBreakEmpty") === "1") {
-    forcePageBreakEmpty = parseInt(props.get("PageBreakEmptyLine"));
-    forcePageBreakEmptySize = parseInt(props.get("PageBreakEmptySize")) * 1024;
+
+if (getBool("PageBreak")) {
+
+  forcePageBreakSize = getInt("PageBreakSize", 0) * 1024;
+
+  if (getBool("PageBreakEmpty")) {
+    forcePageBreakEmpty = getInt("PageBreakEmptyLine", 0);
+    forcePageBreakEmptySize = getInt("PageBreakEmptySize", 0) * 1024;
   }
-  if (props.get("PageBreakChapter") === "1") {
+
+  if (getBool("PageBreakChapter")) {
     forcePageBreakChapter = 1;
-    forcePageBreakChapterSize = parseInt(props.get("PageBreakChapterSize")) * 1024;
+    forcePageBreakChapterSize = getInt("PageBreakChapterSize", 0) * 1024;
   }
 }
 
-let maxLength = 64;
-maxLength = parseInt(props.get("ChapterNameLength"));
-let insertTitleToc = props.get("TitleToc") === "1";
-let chapterExclude = props.get("ChapterExclude") === "1";
-let chapterUseNextLine = props.get("ChapterUseNextLine") === "1";
-let chapterSection = !props.hasOwnProperty("ChapterSection") || props.get("ChapterSection") === "1";
-let chapterH = props.get("ChapterH") === "1";
-let chapterH1 = props.get("ChapterH1") === "1";
-let chapterH2 = props.get("ChapterH2") === "1";
-let chapterH3 = props.get("ChapterH3") === "1";
-let sameLineChapter = props.get("SameLineChapter") === "1";
-let chapterName = props.get("ChapterName") === "1";
-let chapterNumOnly = props.get("ChapterNumOnly") === "1";
-let chapterNumTitle = props.get("ChapterNumTitle") === "1";
-let chapterNumParen = props.get("ChapterNumParen") === "1";
-let chapterNumParenTitle = props.get("ChapterNumParenTitle") === "1";
+// =======================
+// Chapter設定
+// =======================
+
+const maxLength = getInt("ChapterNameLength", 64);
+
+const insertTitleToc = getBool("TitleToc");
+const chapterExclude = getBool("ChapterExclude");
+const chapterUseNextLine = getBool("ChapterUseNextLine");
+
+// Java:
+// !props.containsKey("ChapterSection") || "1".equals(...)
+const chapterSection =
+    props.get("ChapterSection") === undefined ||
+    getBool("ChapterSection");
+const chapterH  = getBool("ChapterH");
+const chapterH1 = getBool("ChapterH1");
+const chapterH2 = getBool("ChapterH2");
+const chapterH3 = getBool("ChapterH3");
+const sameLineChapter = getBool("SameLineChapter");
+const chapterName = getBool("ChapterName");
+const chapterNumOnly = getBool("ChapterNumOnly");
+const chapterNumTitle = getBool("ChapterNumTitle");
+const chapterNumParen = getBool("ChapterNumParen");
+// ⚠ Java側に typo あり（hapterNumParenTitle）
+const chapterNumParenTitle = getBool("ChapterNumParenTitle");
 let chapterPattern = "";
-if (props.get("ChapterPattern") === "1") chapterPattern = props.get("ChapterPatternText");
+if (getBool("ChapterPattern")) {
+    chapterPattern = getString("ChapterPatternText", "");
+}
 
 // オプション指定を反映
 let useFileName = false; // 表題に入力ファイル名利用
