@@ -467,8 +467,6 @@ async function getBookInfo(srcFile, ext, txtIdx, imageInfoReader, aozoraConverte
     const src = await getTextInputStream(srcFile, ext, imageInfoReader, textEntryName, txtIdx);
     if (src === null) return null;
     // タイトル、画像注記、左右中央注記、目次取得
-
-
     const bookInfo = await aozoraConverter.getBookInfo(srcFile, src, imageInfoReader, titleType, pubFirst);
     bookInfo.textEntryName = textEntryName[0];
     return bookInfo;
