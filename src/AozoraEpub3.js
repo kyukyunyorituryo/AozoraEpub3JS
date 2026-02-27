@@ -469,7 +469,13 @@ options.parse(process.argv);
       if (is === null) return null;
       // タイトル、画像注記、左右中央注記、目次取得
       
-      const src = fs.readFileSync(is, encType) 
+    const buffer = fs.readFileSync(is);
+
+    const src = encoding.convert(buffer, {
+      to: "UNICODE",
+      from: 'SJIS',
+      type: "string"
+    });
       const bookInfo = await aozoraConverter.getBookInfo(srcFile, src, imageInfoReader, titleType, pubFirst);
       bookInfo.textEntryName = textEntryName[0];
       return bookInfo;
@@ -496,7 +502,14 @@ try {
   if (!bookInfo.imageOnly) {
     //src = fs.createReadStream(srcFile, { encoding: encType });
     //src = fs.createReadStream(srcFile);
-    src = fs.readFileSync(srcFile, encType);
+      //src = fs.readFileSync(srcFile, encType);
+      const buffer = fs.readFileSync(srcFile);
+
+      src = encoding.convert(buffer, {
+        to: "UNICODE",
+        from: 'SJIS',
+        type: "string"
+      });
   }
   // ePub書き出し srcは中でクローズされる
   await epubWriter.write(aozoraConverter, src, srcFile, ext, outFile, bookInfo, imageInfoReader);
