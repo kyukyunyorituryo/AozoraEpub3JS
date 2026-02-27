@@ -528,7 +528,7 @@ async function convertFile(srcFile, ext, outFile, aozoraConverter, epubWriter, e
 */
 async function getTextInputStream(srcFile, ext, imageInfoReader, textEntryName, txtIdx) {
   if (ext === 'txt') {
-        const buffer = fs.readFileSync(srcFile);
+    const buffer = fs.readFileSync(srcFile);
 
     const src = encoding.convert(buffer, {
       to: "UNICODE",
@@ -551,21 +551,17 @@ async function getTextInputStream(srcFile, ext, imageInfoReader, textEntryName, 
           if (textEntryName) {
             textEntryName[0] = path;
           }
-                      const uint8 = await file.async("uint8array");
-
-                        const charset = encoding.detect(uint8);
-
-                        return encoding.convert(uint8, {
-                            to: "UNICODE",
-                            from: charset,
-                            type: "string"
-                        });
+          const uint8 = await file.async("uint8array");
+          const charset = encoding.detect(uint8);
+          return encoding.convert(uint8, {
+            to: "UNICODE",
+            from: charset,
+            type: "string"
+          });
         }
-
         foundIndex++;
       }
     }
-
     LogAppender.append('zip内にtxtファイルがありません: ');
     LogAppender.println(path.basename(srcFile));
     return null;
@@ -683,27 +679,20 @@ async function getTextCharset(srcFile, ext, imageInfoReader, txtIdx) {
  * @returns {Promise<number>}
  */
 export async function countZipText(zipPath) {
-
   let txtCount = 0;
-
   // ① ZIPをバイナリで読む
   const buffer = fs.readFileSync(zipPath);
-
   // ② JSZipで読み込み
   const zip = await JSZip.loadAsync(buffer);
-
   // ③ 全エントリを走査
   zip.forEach((relativePath, file) => {
-
     if (!file.dir) {
       const ext = relativePath.split(".").pop();
       if (ext && ext.toLowerCase() === "txt") {
         txtCount++;
       }
     }
-
   });
-
   return txtCount;
 }
 
