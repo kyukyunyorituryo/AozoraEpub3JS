@@ -3753,7 +3753,7 @@ export default class AozoraEpub3Converter {
       }
     }
 
-    if (out !== null) {
+    if (out != null) {
       //強制改ページ処理
       //改ページトリガが設定されていない＆タグの外
       if (this.forcePageBreak && this.pageBreakTrigger === null && this.tagLevel === 0) {
