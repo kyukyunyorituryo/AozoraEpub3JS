@@ -146,6 +146,8 @@ export default class BookInfo {
     this.coverEditInfo = null;
     /** 表紙ファイル名 フルパスかURL ""なら先頭の挿絵 nullなら表紙無し */
     this.coverFileName = '';
+    /** SVG表紙画像ありならtrue */
+    this.svgCoverImage = false;
     /** 表紙イメージがトリミングされた場合に設定される coverFileNameより優先される */
     this.coverImage = null;
     /** 表紙に使う挿絵の本文内Index -1なら本文内の挿絵は使わない */
@@ -407,7 +409,14 @@ export default class BookInfo {
   setCoverFileName(coverFileName) {
     this.coverFileName = coverFileName;
   }
-
+  isSvgCoverImage()
+	{
+		return svgCoverImage;
+	}
+  setSvgCoverImage(svgCoverImage)
+	{
+		this.svgCoverImage = svgCoverImage;
+	}
   isInsertCoverPage() {
     return this.insertCoverPage;
   }

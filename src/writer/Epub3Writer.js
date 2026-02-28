@@ -622,6 +622,10 @@ export default class Epub3Writer {
                 let coverTemplate = fs.readFileSync(path.resolve(__dirname, `${this.templatePath}${Epub3Writer.OPS_PATH}${Epub3Writer.XHTML_PATH}${Epub3Writer.COVER_EJS}`), 'utf-8');
                 const zosdata = ejs.render(coverTemplate, this.ejsData)
                 this.zos.file(`${Epub3Writer.OPS_PATH}${Epub3Writer.XHTML_PATH}${Epub3Writer.COVER_FILE}`, zosdata);
+            } else if (bookInfo.svgCoverImage) {
+                let coverTemplate = fs.readFileSync(path.resolve(__dirname, `${this.templatePath}${Epub3Writer.OPS_PATH}${Epub3Writer.XHTML_PATH}${Epub3Writer.COVER_EJS}`), 'utf-8');
+                const zosdata = ejs.render(coverTemplate, this.ejsData)
+                this.zos.file(`${Epub3Writer.OPS_PATH}${Epub3Writer.XHTML_PATH}${Epub3Writer.COVER_FILE}`, zosdata);
             } else {
                 // 画像がなかったら表紙ページ無し
                 bookInfo.insertCoverPage = false;
