@@ -1181,197 +1181,246 @@ export default class AozoraEpub3Converter {
    * @param src 入力テキストReader
    * @param bookInfo 事前読み込みで取得したメタ情報他  */
 
+
+  /**
+   * @param {Array<string>|null} out  出力バッファ（null可）
+   * @param {string} src              入力全文テキスト
+   * @param {BookInfo} bookInfo
+   */
   convertTextToEpub3(out, src, bookInfo) {
-    // ダミー切り替え用
-    const orgOut = out;
 
-    this.canceled = false;
+    try {
 
-    // BookInfoの参照を保持
-    this.bookInfo = bookInfo;
+      // ダミー切り替え用
+      let orgOut = out;
 
-    let line;
+      this.canceled = false;
+      this.bookInfo = bookInfo;
 
-    ////////////////////////////////
-    // 変換開始字のメンバ変数の初期化
-    this.pageByteSize = 0;
-    this.sectionCharLength = 0;
-    this.lineNum = -1;
-    this.lineIdNum = 1;
-    this.tagLevel = 0;
-    this.inJisage = -1;
-    // 最初のページの改ページフラグを設定
-    this.setPageBreakTrigger(this.pageBreakNormal);
-    ////////////////////////////////
+      //////////////////////////////////
+      // 初期化
+      this.pageByteSize = 0;
+      this.sectionCharLength = 0;
+      this.lineNum = -1;
+      this.lineIdNum = 1;
+      this.tagLevel = 0;
+      this.inJisage = -1;
+      this.setPageBreakTrigger(this.pageBreakNormal);
+      //////////////////////////////////
 
-    // 直前のtagLevel=0の行
-    let lastZeroTagLevelLineNum = -1;
+      let lastZeroTagLevelLineNum = -1;
+      let preTitleBuf = null;
+      let inComment = false;
+      let skipTitle = false;
+      let noImage = false;
 
-    // タイトル目の画像等をバッファ
-    let preTitleBuf = null;
+      // 表題バッファ処理判定
+      if (
+        bookInfo.titlePageType === BookInfo.TITLE_NONE ||
+        bookInfo.titlePageType === BookInfo.TITLE_MIDDLE ||
+        bookInfo.titlePageType === BookInfo.TITLE_HORIZONTAL
+      ) {
+        bookInfo.insertTitlePage = true;
+        skipTitle = true;
+        out = null;
+        preTitleBuf = [];
+        noImage = true;
+      }
 
-    // コメントブロック内
-    let inComment = false;
+      // 行分割（BufferedReader相当）
+      const lines = src.replace(/\r\n/g, "\n").split("\n");
 
-    // タイトルを出力しない
-    let skipTitle = false;
-    // バッファ中は画像は処理しない
-    let noImage = false;
+      if (lines.length === 0) return;
 
-    // 表題をバッファ処理
-    if (
-      this.bookInfo.titlePageType === BookInfo.TITLE_NONE ||
-      this.bookInfo.titlePageType === BookInfo.TITLE_MIDDLE ||
-      this.bookInfo.titlePageType === BookInfo.TITLE_HORIZONTAL
-    ) {
-      // ページ出力設定
-      this.bookInfo.insertTitlePage = true;
-      // 開始位置がタグの中なら次の行へ
-      skipTitle = true;
-      // outがnullなら改ページと出力はされない
-      out.length = 0;
-      // バッファ
-      preTitleBuf = [];
-      noImage = true;
-    }
+      // BOM除去
+      lines[0] = CharUtils.removeBOM(lines[0]);
 
-    // 先頭行取得
-    var lines = src.replace(/\r\n/g, "\n").split('\n');
-    let j = 0;
-    line = lines[j];
-    //line = src.readLine();
-    if (line == null) {
-      return;
-    }
-    // BOM除去
-    line = CharUtils.removeBOM(line);
-    do {
-      this.lineNum++;
+      for (let j = 0; j < lines.length; j++) {
 
-      if (skipTitle) {
-        // タイトル文字行前までバッファ
-        if (this.bookInfo.metaLineStart > this.lineNum) {
-          preTitleBuf.push(line);
-        }
-        // タイトル文字行 前の行のバッファがあれば出力
-        if (this.bookInfo.metaLineStart === this.lineNum && preTitleBuf.length > 0) {
-          noImage = false;
-          if (lastZeroTagLevelLineNum >= 0) {
-            // タイトル行前のtagLevel=0の行以前のバッファを出力
-            const lineNumBak = this.lineNum;
-            this.pageByteSize = 0;
-            this.sectionCharLength = 0;
-            this.lineNum = 0;
-            this.lineIdNum = 1;
-            this.tagLevel = 0;
-            this.inJisage = -1;
-            let i = 0;
-            while (this.lineNum < lineNumBak) {
-              // 出力しない行を飛ばす
-              if (this.bookInfo.isIgnoreLine(this.lineNum)) continue;
-              if (this.lineNum <= lastZeroTagLevelLineNum)
-                this.convertTextLineToEpub3(orgOut, preTitleBuf[i++], this.lineNum, false, false);
-              else
-                this.convertTextLineToEpub3(out, preTitleBuf[i++], this.lineNum, false, false);
+        let line = lines[j];
+        this.lineNum++;
 
-              this.lineNum++;
-            }
+        ////////////////////////////////
+        // タイトルスキップ処理
+        ////////////////////////////////
+        if (skipTitle) {
+
+          if (bookInfo.metaLineStart > this.lineNum) {
+            preTitleBuf.push(line);
           }
-          preTitleBuf.length = 0;
-        }
-        // タイトルページの改ページ
-        if (this.bookInfo.titleEndLine + 1 === this.lineNum) {
-          if (this.tagLevel > 0) this.bookInfo.titleEndLine++;
-          else {
-            skipTitle = false;
-            // ダミーから戻す
-            out = orgOut;
+
+          if (bookInfo.metaLineStart === this.lineNum && preTitleBuf.length > 0) {
+
             noImage = false;
-            this.bookInfo.addPageBreakLine(this.bookInfo.titleEndLine + 1);
-          }
-        }
-      }
 
-      // 改ページ指定行なら改ページフラグ設定 タグ内は次の行へ
-      if (this.bookInfo.isPageBreakLine(this.lineNum) && this.sectionCharLength > 0) {
-        // タグの中なら次の行へ
-        if (this.tagLevel === 0) this.setPageBreakTrigger(this.pageBreakNormal);
-        else this.bookInfo.addPageBreakLine(this.lineNum + 1);
-      }
+            if (lastZeroTagLevelLineNum >= 0) {
 
-      // コメント除外
-      if (line.startsWith("--------------------------------------------------")) {
-        if (this.commentPrint) {
-          inComment = !inComment;
-        } else {
-          //コメント開始
-          inComment = !inComment;
-          continue;
-        }
-      }
-      if (inComment) {
-        if (this.commentPrint) {
-          if (!this.commentConvert) {
+              const lineNumBak = this.lineNum;
 
-            const escaped = line
-              .replace(/&/g, "&amp;")
-              .replace(/</g, "&lt;")
-              .replace(/>/g, "&gt;");
+              this.pageByteSize = 0;
+              this.sectionCharLength = 0;
+              this.lineNum = 0;
+              this.lineIdNum = 1;
+              this.tagLevel = 0;
+              this.inJisage = -1;
 
-            if (out) {
-              this.printLineBuffer(out, escaped, lineNum, false);
+              let i = 0;
+
+              while (this.lineNum < lineNumBak) {
+
+                if (bookInfo.isIgnoreLine(this.lineNum)) {
+                  this.lineNum++;
+                  continue;
+                }
+
+                const targetOut =
+                  this.lineNum <= lastZeroTagLevelLineNum ? orgOut : out;
+
+                this.convertTextLineToEpub3(
+                  targetOut,
+                  preTitleBuf[i++],
+                  this.lineNum,
+                  false,
+                  false
+                );
+
+                this.lineNum++;
+              }
             }
 
+            preTitleBuf.length = 0;
+          }
+
+          if (bookInfo.titleEndLine + 1 === this.lineNum) {
+
+            if (this.tagLevel > 0) {
+              bookInfo.titleEndLine++;
+            } else {
+              skipTitle = false;
+              out = orgOut;
+              noImage = false;
+              bookInfo.addPageBreakLine(bookInfo.titleEndLine + 1);
+            }
+          }
+        }
+
+        ////////////////////////////////
+        // 改ページ処理
+        ////////////////////////////////
+        if (
+          bookInfo.isPageBreakLine(this.lineNum) &&
+          this.sectionCharLength > 0
+        ) {
+          if (this.tagLevel === 0) {
+            this.setPageBreakTrigger(this.pageBreakNormal);
+          } else {
+            bookInfo.addPageBreakLine(this.lineNum + 1);
+          }
+        }
+
+        ////////////////////////////////
+        // コメント処理
+        ////////////////////////////////
+        if (line.startsWith("--------------------------------------------------")) {
+          if (this.commentPrint) {
+            inComment = !inComment;
+          } else {
+            inComment = !inComment;
             continue;
           }
-        } else {
+        }
+
+        if (inComment) {
+
+          if (this.commentPrint) {
+
+            if (!this.commentConvert) {
+
+              const escaped = line
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;");
+
+              this.printLineBuffer(out, escaped, this.lineNum, false);
+              continue;
+            }
+
+          } else {
+            continue;
+          }
+        }
+
+        ////////////////////////////////
+        // 無視行
+        ////////////////////////////////
+        if (bookInfo.isIgnoreLine(this.lineNum)) {
           continue;
         }
+
+        ////////////////////////////////
+        // タイトル系処理
+        ////////////////////////////////
+        const chuki = (key) => this.chukiMap.get(key)[0];
+
+        if (this.lineNum === bookInfo.titleLine) {
+          this.printLineBuffer(out, chuki("表題前"), -1, true);
+          this.convertTextLineToEpub3(out, line, this.lineNum, false, noImage);
+          this.printLineBuffer(out, chuki("表題後"), -1, true);
+
+        } else if (this.lineNum === bookInfo.orgTitleLine) {
+          this.printLineBuffer(out, chuki("原題前"), -1, true);
+          this.convertTextLineToEpub3(out, line, this.lineNum, false, noImage);
+          this.printLineBuffer(out, chuki("原題後"), -1, true);
+
+        } else if (this.lineNum === bookInfo.subTitleLine) {
+          this.printLineBuffer(out, chuki("副題前"), -1, true);
+          this.convertTextLineToEpub3(out, line, this.lineNum, false, noImage);
+          this.printLineBuffer(out, chuki("副題後"), -1, true);
+
+        } else if (this.lineNum === bookInfo.subOrgTitleLine) {
+          this.printLineBuffer(out, chuki("副原題前"), -1, true);
+          this.convertTextLineToEpub3(out, line, this.lineNum, false, noImage);
+          this.printLineBuffer(out, chuki("副原題後"), -1, true);
+
+        } else if (this.lineNum === bookInfo.creatorLine) {
+          this.printLineBuffer(out, chuki("著者前"), -1, true);
+          this.convertTextLineToEpub3(out, line, this.lineNum, false, noImage);
+          this.printLineBuffer(out, chuki("著者後"), -1, true);
+
+        } else if (this.lineNum === bookInfo.subCreatorLine) {
+          this.printLineBuffer(out, chuki("副著者前"), -1, true);
+          this.convertTextLineToEpub3(out, line, this.lineNum, false, noImage);
+          this.printLineBuffer(out, chuki("副著者後"), -1, true);
+
+        } else {
+          this.convertTextLineToEpub3(out, line, this.lineNum, false, noImage);
+        }
+
+        ////////////////////////////////
+        // 中断判定
+        ////////////////////////////////
+        if (this.canceled) return;
+
+        ////////////////////////////////
+        // 進捗表示
+        ////////////////////////////////
+        if (this.writer?.jProgressBar && this.lineNum % 10 === 0) {
+          this.writer.jProgressBar.setValue(this.lineNum / 10);
+          this.writer.jProgressBar.repaint();
+        }
+
+        if (this.tagLevel === 0) {
+          lastZeroTagLevelLineNum = this.lineNum;
+        }
       }
-      // 出力しない行を飛ばす
-      if (this.bookInfo.isIgnoreLine(this.lineNum)) continue;
 
-      if (this.lineNum === this.bookInfo.titleLine) {
-        this.printLineBuffer(out, this.chukiMap.get("表題前")[0], -1, true);
-        this.convertTextLineToEpub3(out, line, this.lineNum, false, noImage);
-        this.printLineBuffer(out, this.chukiMap.get("表題後")[0], -1, true);
-      } else if (this.lineNum === this.bookInfo.orgTitleLine) {
-        this.printLineBuffer(out, this.chukiMap.get("原題前")[0], -1, true);
-        this.convertTextLineToEpub3(out, line, this.lineNum, false, noImage);
-        this.printLineBuffer(out, this.chukiMap.get("原題後")[0], -1, true);
-      } else if (this.lineNum === this.bookInfo.subTitleLine) {
-        this.printLineBuffer(out, this.chukiMap.get("副題前")[0], -1, true);
-        this.convertTextLineToEpub3(out, line, this.lineNum, false, noImage);
-        this.printLineBuffer(out, this.chukiMap.get("副題後")[0], -1, true);
-      } else if (this.lineNum === this.bookInfo.subOrgTitleLine) {
-        this.printLineBuffer(out, this.chukiMap.get("副原題前")[0], -1, true);
-        this.convertTextLineToEpub3(out, line, this.lineNum, false, noImage);
-        this.printLineBuffer(out, this.chukiMap.get("副原題後")[0], -1, true);
-      } else if (this.lineNum === this.bookInfo.creatorLine) {
-        this.printLineBuffer(out, this.chukiMap.get("著者前")[0], -1, true);
-        this.convertTextLineToEpub3(out, line, this.lineNum, false, noImage);
-        this.printLineBuffer(out, this.chukiMap.get("著者後")[0], -1, true);
-      } else if (this.lineNum === this.bookInfo.subCreatorLine) {
-        this.printLineBuffer(out, this.chukiMap.get("副著者前")[0], -1, true);
-        this.convertTextLineToEpub3(out, line, this.lineNum, false, noImage);
-        this.printLineBuffer(out, this.chukiMap.get("副著者後")[0], -1, true);
-      } else {
-        this.convertTextLineToEpub3(out, line, this.lineNum, false, noImage);
-      }
-      if (this.canceled) return;
-      if (this.writer.jProgressBar != null && this.lineNum % 10 === 0) {
-        this.writer.jProgressBar.setValue(this.lineNum / 10);
-        this.writer.jProgressBar.repaint();
-      }
-
-      if (this.tagLevel === 0) lastZeroTagLevelLineNum = this.lineNum;
-      j++;
-      line = lines[j];
-    } while (lines.length > j);
-
-    //LogAppender.error(lineNum, "");
-
+    } catch (e) {
+      console.error(e);
+      LogAppender.error(this.lineNum, "");
+      throw e;
+    }
   }
+
 
   /** 文字列内の外字を変換
    * ・外字はUTF-16文字列に変換
@@ -3704,7 +3753,7 @@ export default class AozoraEpub3Converter {
       }
     }
 
-    if (out.length !== 0) {
+    if (out !== null) {
       //強制改ページ処理
       //改ページトリガが設定されていない＆タグの外
       if (this.forcePageBreak && this.pageBreakTrigger === null && this.tagLevel === 0) {
