@@ -3817,7 +3817,9 @@ export default class AozoraEpub3Converter {
       }
 
       this.lineIdNum++;
-      if (noBr) {
+      const isBlockTag = /^\s*<(h\d|div|table|ul|ol|li|blockquote|section|article|header|footer)\b.*/.test(line);
+
+      if (noBr || isBlockTag) {
         //見出し用のID設定
         if (chapterLineInfo !== null) {
           chapterId = `kobo.${this.lineIdNum}.${idIdx++}`;
@@ -3831,6 +3833,8 @@ export default class AozoraEpub3Converter {
             line = line.substring(1);
           }
         }
+        out.push(line);
+        out.push("\n");
       } else {
         //改行用のp出力 見出しなら強制ID出力 koboの栞用IDに利用可能なkobo.のIDで出力
         if (this.withMarkId || (chapterLineInfo !== null && !chapterLineInfo?.pageBreakChapter)) {
@@ -3841,13 +3845,13 @@ export default class AozoraEpub3Converter {
           out.push("<p>");
           this.pageByteSize += 7;
         }
-      }
-      out.push(line);
-      //ページバイト数加算
-      if (this.forcePageBreak) this.pageByteSize += Buffer.byteLength(line, "UTF-8");
 
-      //改行のpを閉じる
-      if (!noBr) {
+        out.push(line);
+        //ページバイト数加算
+        if (this.forcePageBreak) this.pageByteSize += Buffer.byteLength(line, "UTF-8");
+
+        //改行のpを閉じる
+
         out.push("</p>\n");
       }
 
