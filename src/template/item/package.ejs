@@ -86,13 +86,13 @@
 <% } -%>
 
 <% if (bookInfo.ImageOnly) { -%>
-        <% for(var i = 0; i < sections.length; i++) { -%>
-        <item media-type="application/xhtml+xml" id="sec<%= sections[i].SectionId -%>" href="xhtml/<%= sections[i].SectionId -%>.xhtml" properties="svg"/>
-<% }; -%>
+    <% sections.forEach(function(section) { -%>
+        <item media-type="application/xhtml+xml" id="sec<%= section.sectionId -%>" href="xhtml/<%= section.sectionId -%>.xhtml"  properties="svg"/>
+    <% }) -%>
 <% } else { -%>
-        <% for(var i = 0; i < sections.length; i++) { -%>
-        <item id="sec<%= sections[i].SectionId -%>" href="xhtml/<%= sections[i].SectionId -%>.xhtml" media-type="application/xhtml+xml"/>
-<% }; -%>
+    <% sections.forEach(function(section) { -%>
+        <item id="sec<%= section.sectionId -%>" href="xhtml/<%= section.sectionId -%>.xhtml" media-type="application/xhtml+xml"/>
+    <% }) -%>
 <% } -%>
 <% for(var i = 0; i < vecGaijiInfo.length; i++) { -%>
         <item id="gaiji_<%= i + 1 -%>" href="gaiji/<%= vecGaijiInfo[i].FileName -%>" media-type="application/font-sfnt"/>
@@ -118,18 +118,18 @@
 <% for(var i = 0; i < sections.length; i++) { -%>
 <% if (bookInfo.ImageOnly && bookInfo.Vertical) { -%>
 <% if ((index + 1) % 2 === 0) { -%>
-        <itemref linear="yes" idref="sec<%= sections[i].SectionId -%>" properties="page-spread-left"/>
+        <itemref linear="yes" idref="sec<%= sections[i].sectionId -%>" properties="page-spread-left"/>
 <% } else { -%>
-        <itemref linear="yes" idref="sec<%= sections[i].SectionId -%>" properties="page-spread-right"/>
+        <itemref linear="yes" idref="sec<%= sections[i].sectionId -%>" properties="page-spread-right"/>
 <% } -%>
 <% } else if (bookInfo.ImageOnly && !bookInfo.Vertical) { -%>
 <% if ((index + 1) % 2 === 0) { -%>
-        <itemref linear="yes" idref="sec<%= sections[i].SectionId -%>" properties="page-spread-right"/>
+        <itemref linear="yes" idref="sec<%= sections[i].sectionId -%>" properties="page-spread-right"/>
 <% } else { -%>
-        <itemref linear="yes" idref="sec<%= sections[i].SectionId -%>" properties="page-spread-left"/>
+        <itemref linear="yes" idref="sec<%= sections[i].sectionId -%>" properties="page-spread-left"/>
 <% } -%>
 <% } else { -%>
-        <itemref linear="yes" idref="sec<%= sections[i].SectionId -%>"/>
+        <itemref linear="yes" idref="sec<%= sections[i].sectionId -%>"/>
 <% } -%>
 <% }; -%>
     </spine>
