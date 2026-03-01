@@ -2567,6 +2567,7 @@ export default class AozoraEpub3Converter {
       }
       //注記の後ろを文字開始位置に設定
       charStart = chukiStart + chukiTag.length;
+    }
       //注記の後ろの残りの文字
       if (charStart < ch.length) {
         this.convertEscapedText(buf, ch, charStart, ch.length);
@@ -2593,7 +2594,7 @@ export default class AozoraEpub3Converter {
       /*if (clearRight && clearLeft) out.append(chukiMap.get("クリア")[0]);
       else if (clearRight) out.append(chukiMap.get("右クリア")[0]);
       else if (clearLeft) out.append(chukiMap.get("左クリア")[0]);*/
-    }
+    
 
 
   }
