@@ -1,7 +1,7 @@
 # AozoraEpub3JS
 [AozoraEpub3](https://github.com/kyukyunyorituryo/AozoraEpub3)のJavaScriptに移植版
 
-現状はバグが多くまだ動作していない。
+現状はepubファイルが生成されるが本文が出力されない。AozoraEpub3Converter.jsのconvertTextLineToEpub3あたりで止まっている感じがする。
 ### 目標
 * CLIの部分をnode.jsで書いて動作を可能にしたい
 * rollupでjsやフォントなどまとめてブラウザ上で動かしたい

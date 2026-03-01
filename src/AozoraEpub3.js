@@ -19,7 +19,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // 定数
-const VERSION = "1.1.1b30Q";
+const VERSION = "1.1.1b31Q";
 //let jarPath = process.env['NODE_PATH'] || '';
 let jarPath = path.join(__dirname, '/');
 /*
