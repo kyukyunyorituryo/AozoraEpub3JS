@@ -137,14 +137,19 @@ export default class ImageInfoReader {
      * @throws {IOException}
      */
     correctExt(srcImageFileName) {
-        if (this.hasImage(srcImageFileName)) return srcImageFileName;
-
-        const extensions = ['png', 'jpg', 'jpeg', 'gif', 'PNG', 'JPG', 'JPEG', 'GIF', 'Png', 'Jpg', 'Jpeg', 'Gif'];
-
-        for (let ext of extensions) {
-            srcImageFileName = srcImageFileName.replace(/\.\w+$/, `.${ext}`);
-            if (this.hasImage(srcImageFileName)) return srcImageFileName;
+        if (this.hasImage(srcImageFileName)) {
+            return srcImageFileName;
         }
+
+        const extensions = ["png", "jpg", "jpeg", "gif", "webp"];
+
+        for (const ext of extensions) {
+            const candidate = srcImageFileName.replace(/\.\w+$/i, `.${ext}`);
+            if (this.hasImage(candidate)) {
+                return candidate;
+            }
+        }
+
         return null;
     }
 
@@ -190,35 +195,42 @@ export default class ImageInfoReader {
     }
 
     /**
-     * zip内の画像情報をすべて読み込み
-     * @param {File} srcFile
+     * zip内の画像情報をすべて読み込み（webp対応）
+     * @param {File|string} srcFile
      * @param {boolean} addFileName
-     * @throws {IOException}
      */
     async loadZipImageInfos(srcFile, addFileName) {
         const buffer = fs.readFileSync(srcFile);
         const zip = await JSZip.loadAsync(buffer);
+
         try {
             let idx = 0;
+
+            const imageExtensions = [".png", ".jpg", ".jpeg", ".gif", ".webp"];
+
             for (const [entryName, file] of Object.entries(zip.files)) {
                 if (idx++ % 10 === 0) LogAppender.append(".");
                 if (file.dir) continue;
+
                 const lowerName = entryName.toLowerCase();
-                if (['.png', '.jpg', '.jpeg', '.gif']
-                    .some(ext => lowerName.endsWith(ext))) {
+
+                if (imageExtensions.some(ext => lowerName.endsWith(ext))) {
                     try {
                         const uint8 = await file.async("uint8array");
+
                         const imageInfo = await ImageInfo.getImageInfo(uint8);
                         if (imageInfo) {
                             this.imageFileInfos.set(entryName, imageInfo);
                             if (addFileName) this.addImageFileName(entryName);
                         }
+
                     } catch (e) {
                         LogAppender.error(`画像が読み込めませんでした: ${srcFile}`);
                         console.error(e);
                     }
                 }
             }
+
         } finally {
             LogAppender.println();
         }
@@ -357,9 +369,9 @@ export default class ImageInfoReader {
     /**alt 属性（代替テキスト） を追加と取得
     */
     addImageAlt(fileName, altText) {
-    this.imageAltMap.set(this.correctExt(fileName), altText);
+        this.imageAltMap.set(this.correctExt(fileName), altText);
     }
     getImageAlt(fileName) {
-    return this.imageAltMap.get(this.correctExt(fileName));
+        return this.imageAltMap.get(this.correctExt(fileName));
     }
 }

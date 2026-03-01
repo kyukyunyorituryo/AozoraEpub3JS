@@ -1,182 +1,131 @@
-// ImageInfo.js
-
-import fs from 'fs';
-import path from 'path';
-import sharp  from 'sharp';
+import fs from "fs";
+import sharp from "sharp";
 
 export default class ImageInfo {
-    /**
-     * @param {string} ext - 画像フォーマット (png, jpg, gif)
-     * @param {number} width - 画像の幅
-     * @param {number} height - 画像の高さ
-     */
-    constructor(ext, width, height) {
-        this.id = '';
-        this.outFileName = '';
-        this.ext = ext.toLowerCase();
-        this.width = width;
-        this.height = height;
-        this.outWidth = -1;
-        this.outHeight = -1;
-        this.isCover = false;
-        this.rotateAngle = 0;
-    }
+  /** 画像の情報を生成
+   * @param {string} ext png jpg gif webp など
+   */
+  constructor(ext, width, height) {
+    this.id = null;                // ファイルID
+    this.outFileName = null;       // 出力ファイル名
+    this.ext = ext ? ext.toLowerCase() : null;
 
-    /**
-     * ファイルから画像情報を取得する
-     * @param {string} imageFile - 画像ファイルのパス
-     * @returns {Promise<ImageInfo>}
-     */
-    static async getImageInfo(imageFile) {
-        const image = sharp(imageFile);
-        const metadata = await image.metadata();
-        return new ImageInfo(metadata.format, metadata.width, metadata.height);
-    }
+    this.width = width ?? -1;
+    this.height = height ?? -1;
 
-    /**
-     * 画像ストリームから画像情報を取得する
-     * @param {Buffer} buffer - 画像データのバッファ
-     * @returns {Promise<ImageInfo>}
-     */
-    static async getImageInfoFromBuffer(buffer) {
-        const image = sharp(buffer);
-        const metadata = await image.metadata();
-        return new ImageInfo(metadata.format, metadata.width, metadata.height);
-    }
+    this.outWidth = -1;
+    this.outHeight = -1;
 
-    /**
-     * 画像形式を設定する
-     * @param {string} ext - 画像フォーマット
-     */
-    setExt(ext) {
-        this.ext = ext;
-    }
+    this.isCover = false;
+    this.rotateAngle = 0;
+  }
 
-    /**
-     * 画像形式を取得する
-     * @returns {string}
-     */
-    getExt() {
-        return this.ext;
-    }
+  // =========================
+  // static 生成メソッド
+  // =========================
 
-    /**
-     * mime形式の形式フォーマット文字列を取得する
-     * @returns {string}
-     */
-    getFormat() {
-        return `image/${this.ext === 'jpg' ? 'jpeg' : this.ext}`;
-    }
+  /** ファイルから画像情報を生成 */
+  static async getImageInfoFromFile(imageFile) {
+    const buffer = await fs.promises.readFile(imageFile);
+    return await ImageInfo.getImageInfo(buffer);
+  }
 
-    /**
-     * 画像のIDを設定する
-     * @param {string} id
-     */
-    setId(id) {
-        this.id = id;
-    }
+  /** 画像ストリーム / Buffer から画像情報を生成 */
+  static async getImageInfo(input) {
+    if (!input) return null;
 
-    /**
-     * 画像のIDを取得する
-     * @returns {string}
-     */
-    getId() {
-        return this.id;
-    }
+    try {
+      const metadata = await sharp(input).metadata();
 
-    /**
-     * 出力ファイル名を設定する
-     * @param {string} file
-     */
-    setOutFileName(file) {
-        this.outFileName = file;
-    }
+      if (!metadata || !metadata.format) return null;
 
-    /**
-     * 出力ファイル名を取得する
-     * @returns {string}
-     */
-    getOutFileName() {
-        return this.outFileName;
-    }
+      return new ImageInfo(
+        metadata.format,      // png jpeg webp gif avif など
+        metadata.width,
+        metadata.height
+      );
 
-    /**
-     * カバー画像かどうかを設定する
-     * @param {boolean} isCover
-     */
-    setIsCover(isCover) {
-        this.isCover = isCover;
+    } catch (e) {
+      return null;
     }
+  }
 
-    /**
-     * カバー画像かどうかを取得する
-     * @returns {boolean}
-     */
-    getIsCover() {
-        return this.isCover;
-    }
+  /** 既に幅高さが分かっている場合 */
+  static getImageInfoFromRaw(ext, width, height) {
+    return new ImageInfo(ext, width, height);
+  }
 
-    /**
-     * 画像の幅を設定する
-     * @param {number} width
-     */
-    setWidth(width) {
-        this.width = width;
-    }
+  // =========================
+  // getter / setter
+  // =========================
 
-    /**
-     * 画像の幅を取得する
-     * @returns {number}
-     */
-    getWidth() {
-        return this.width;
-    }
+  getId() {
+    return this.id;
+  }
 
-    /**
-     * 画像の高さを設定する
-     * @param {number} height
-     */
-    setHeight(height) {
-        this.height = height;
-    }
+  setId(id) {
+    this.id = id;
+  }
 
-    /**
-     * 画像の高さを取得する
-     * @returns {number}
-     */
-    getHeight() {
-        return this.height;
-    }
+  getOutFileName() {
+    return this.outFileName;
+  }
 
-    /**
-     * 出力画像の幅を設定する
-     * @param {number} outWidth
-     */
-    setOutWidth(outWidth) {
-        this.outWidth = outWidth;
-    }
+  setOutFileName(file) {
+    this.outFileName = file;
+  }
 
-    /**
-     * 出力画像の幅を取得する
-     * @returns {number}
-     */
-    getOutWidth() {
-        return this.outWidth;
-    }
+  setExt(ext) {
+    this.ext = ext?.toLowerCase();
+  }
 
-    /**
-     * 出力画像の高さを設定する
-     * @param {number} outHeight
-     */
-    setOutHeight(outHeight) {
-        this.outHeight = outHeight;
-    }
+  getExt() {
+    return this.ext;
+  }
 
-    /**
-     * 出力画像の高さを取得する
-     * @returns {number}
-     */
-    getOutHeight() {
-        return this.outHeight;
-    }
+  /** mime形式(image/png)を返す */
+  getFormat() {
+    if (!this.ext) return null;
+    return "image/" + (this.ext === "jpg" ? "jpeg" : this.ext);
+  }
+
+  getIsCover() {
+    return this.isCover;
+  }
+
+  setIsCover(isCover) {
+    this.isCover = isCover;
+  }
+
+  getWidth() {
+    return this.width;
+  }
+
+  setWidth(width) {
+    this.width = width;
+  }
+
+  getHeight() {
+    return this.height;
+  }
+
+  setHeight(height) {
+    this.height = height;
+  }
+
+  getOutWidth() {
+    return this.outWidth;
+  }
+
+  setOutWidth(outWidth) {
+    this.outWidth = outWidth;
+  }
+
+  getOutHeight() {
+    return this.outHeight;
+  }
+
+  setOutHeight(outHeight) {
+    this.outHeight = outHeight;
+  }
 }
