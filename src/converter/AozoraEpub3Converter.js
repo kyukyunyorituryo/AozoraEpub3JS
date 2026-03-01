@@ -780,8 +780,18 @@ export default class AozoraEpub3Converter {
           if (imageDotIdx > -1 && imageDotIdx < imageEndIdx) {
             // 画像ファイル名を取得し画像情報を格納
             const imageFileName = this.getImageChukiFileName(chukiTag, imageStartIdx);
+            // --- ★ ここで説明文を抽出 ---
+            let imageDesc = null;
+            const startIdx = chukiTag.indexOf('＃') + 1; // 「＃」の次から
+            if (startIdx < imageStartIdx) {
+              imageDesc = chukiTag.substring(startIdx, imageStartIdx).trim();
+            }
             if (imageFileName !== null) {
               imageInfoReader.addImageFileName(imageFileName);
+              // --- ★ alt情報を登録 ---
+              if (imageDesc && imageDesc.length > 0) {
+                imageInfoReader.addImageAlt(imageFileName, imageDesc);
+              }
               if (bookInfo.firstImageLineNum === -1) {
                 const imageInfo = imageInfoReader.getImageInfo(imageInfoReader.correctExt(imageFileName));
                 if (imageInfo && imageInfo.width > 64 && imageInfo.height > 64) {
@@ -797,6 +807,7 @@ export default class AozoraEpub3Converter {
           if (imageFileName !== null) {
             imageInfoReader.addImageFileName(imageFileName); // 画像がなければそのまま追加
             if (bookInfo.firstImageLineNum === -1) {
+              //小さい画像は無視
               const imageInfo = imageInfoReader.getImageInfo(imageInfoReader.correctExt(imageFileName));
               if (imageInfo && imageInfo.width > 64 && imageInfo.height > 64) {
                 bookInfo.firstImageLineNum = this.lineNum;
@@ -804,8 +815,12 @@ export default class AozoraEpub3Converter {
               }
             }
           }
+          let altText = this.getTagAttr(chukiTag, "alt");
+          if (altText == null || altText.length === 0) {
+            altText = ""; // ファイル名を代替
+          }
+          imageInfoReader.addImageAlt(imageFileName, altText);
         }
-
         // 次のマッチを探す
         m = this.chukiPattern.exec(noRubyLine);
       }
@@ -2392,10 +2407,11 @@ export default class AozoraEpub3Converter {
                     LogAppender.info(lineNum, "挿絵除外", chukiTag);
                   } else {
                     const dstFileName = this.writer.getImageFilePath(srcFilePath, lineNum);
+                    const altText = writer.getAlt(srcFilePath);
                     if (dstFileName != null) { // 先頭に移動してここで出力しない場合はnull
                       if (this.bookInfo.isImageSectionLine(lineNum)) noBr = true;
                       // 画像注記またはページ出力
-                      if (this.printImageChuki(out, buf, srcFilePath, dstFileName, this.hasImageCaption(chukiTag), lineNum)) noBr = true;
+                      if (this.printImageChuki(out, buf, srcFilePath, dstFileName, this.hasImageCaption(chukiTag), lineNum, altText)) noBr = true;
                     }
                   }
                 }
@@ -2583,61 +2599,105 @@ export default class AozoraEpub3Converter {
   }
   /** 画像タグを出力
 * @return 単ページ出力ならtrue */
-  async printImageChuki(out, buf, srcFileName, dstFileName, hasCaption, lineNum) {
-    //サイズを取得して画面サイズとの%を指定
-    const imagePageType = this.writer.getImagePageType(srcFileName, this.tagLevel, lineNum, hasCaption);
+  async printImageChuki(out, buf, srcFileName, dstFileName, hasCaption, lineNum, altText) {
+    if (altText == null) altText = "";
+    altText = this.escapeHtml(altText);
 
+    const imagePageType = this.writer.getImagePageType(
+      srcFileName,
+      this.tagLevel,
+      lineNum,
+      hasCaption
+    );
     //サイズを%で指定 倍率指定が無効または画像が小さいなら0
     const ratio = this.writer.getImageWidthRatio(srcFileName, hasCaption);
 
+    const getTpl = (key) => this.chukiMap.get(key)[0];
+
     if (imagePageType === PageBreakType.IMAGE_INLINE_W) {
-      if (ratio <= 0) buf.push(`${this.chukiMap.get("画像横")[0]}${dstFileName}`);
-      else buf.push(`${this.chukiMap.get("画像幅")[0]}${ratio}${dstFileName}`);
+      if (ratio <= 0)
+        buf.push(format(getTpl("画像横"), dstFileName, altText));
+      else
+        buf.push(format(getTpl("画像幅"), ratio, dstFileName, altText));
+
     } else if (imagePageType === PageBreakType.IMAGE_INLINE_H) {
-      if (ratio <= 0) buf.push(`${this.chukiMap.get("画像縦")[0]}${dstFileName}`);
-      else buf.push(`${this.chukiMap.get("画像幅")[0]}${ratio}${dstFileName}`);
+      if (ratio <= 0)
+        buf.push(format(getTpl("画像縦"), dstFileName, altText));
+      else
+        buf.push(format(getTpl("画像幅"), ratio, dstFileName, altText));
+
     } else if (imagePageType === PageBreakType.IMAGE_INLINE_TOP_W) {
-      if (ratio <= 0) buf.push(`${this.chukiMap.get("画像上横")[0]}${dstFileName}`);
-      else buf.push(`${this.chukiMap.get("画像幅上")[0]}${ratio}${dstFileName}`);
+      if (ratio <= 0)
+        buf.push(format(getTpl("画像上横"), dstFileName, altText));
+      else
+        buf.push(format(getTpl("画像幅上"), ratio, dstFileName, altText));
+
     } else if (imagePageType === PageBreakType.IMAGE_INLINE_BOTTOM_W) {
-      if (ratio <= 0) buf.push(`${this.chukiMap.get("画像下横")[0]}${dstFileName}`);
-      else buf.push(`${this.chukiMap.get("画像幅下")[0]}${ratio}${dstFileName}`);
+      if (ratio <= 0)
+        buf.push(format(getTpl("画像下横"), dstFileName, altText));
+      else
+        buf.push(format(getTpl("画像幅下"), ratio, dstFileName, altText));
+
     } else if (imagePageType === PageBreakType.IMAGE_INLINE_TOP) {
-      if (ratio <= 0) buf.push(`${this.chukiMap.get("画像上")[0]}${dstFileName}`);
-      else buf.push(`${this.chukiMap.get("画像幅上")[0]}${ratio}${dstFileName}`);
+      if (ratio <= 0)
+        buf.push(format(getTpl("画像上"), dstFileName, altText));
+      else
+        buf.push(format(getTpl("画像幅上"), ratio, dstFileName, altText));
+
     } else if (imagePageType === PageBreakType.IMAGE_INLINE_BOTTOM) {
-      if (ratio <= 0) buf.push(`${this.chukiMap.get("画像下")[0]}${dstFileName}`);
-      else buf.push(`${this.chukiMap.get("画像幅下")[0]}${ratio}${dstFileName}`);
+      if (ratio <= 0)
+        buf.push(format(getTpl("画像下"), dstFileName));
+      else
+        buf.push(format(getTpl("画像幅下"), ratio, dstFileName, altText));
+
     } else if (imagePageType !== PageBreakType.IMAGE_PAGE_NONE) {
+
       if (ratio !== -1 && this.imageFloatPage) {
         //単ページfloat表示
         if (imagePageType === PageBreakType.IMAGE_PAGE_W) {
-          buf.push(`${this.chukiMap.get("画像単横浮")[0]}${dstFileName}`);
+          buf.push(format(getTpl("画像単横浮"), dstFileName, altText));
         } else if (imagePageType === PageBreakType.IMAGE_PAGE_H) {
-          buf.push(`${this.chukiMap.get("画像単縦浮")[0]}${dstFileName}`);
+          buf.push(format(getTpl("画像単縦浮"), dstFileName, altText));
         } else {
-          if (ratio <= 0) buf.push(`${this.chukiMap.get("画像単浮")[0]}${dstFileName}`);
-          else buf.push(`${this.chukiMap.get("画像単幅浮")[0]}${ratio}${dstFileName}`);
+          if (ratio <= 0)
+            buf.push(format(getTpl("画像単浮"), dstFileName, altText));
+          else
+            buf.push(format(getTpl("画像単幅浮"), ratio, dstFileName, altText));
         }
       } else {
         //単ページ出力 タグの外のみ
         //改ページの前に文字があれば前のページに出力
-        if (buf.length > 0) this.printLineBuffer(out, buf.join("")[0], lineNum, true);
-        buf.push(`${this.chukiMap.get("画像")[0]}${dstFileName}`);
-        buf.push(this.chukiMap.get("画像終わり")[0]);
+        if (buf.length > 0) {
+          this.printLineBuffer(out, buf, lineNum, true);
+          buf.length = 0; // クリア
+        }
+
+        buf.push(format(getTpl("画像"), dstFileName, altText));
+        buf.push(getTpl("画像終わり"));
         //単ページ出力
-        this.printImagePage(out, buf, lineNum, srcFileName, dstFileName, imagePageType);
+        this.printImagePage(
+          out,
+          buf,
+          lineNum,
+          srcFileName,
+          dstFileName,
+          imagePageType
+        );
         return true;
       }
+
     } else {
-      if (ratio !== -1 && imageFloatBlock) {
-        //画像float表示
-        if (ratio <= 0) buf.push(`${this.chukiMap.get("画像浮")[0]}${dstFileName}`);
-        else buf.push(`${this.chukiMap.get("画像幅浮")[0]}${ratio}${dstFileName}`);
+      if (ratio !== -1 && this.imageFloatBlock) {
+        if (ratio <= 0)
+          buf.push(format(getTpl("画像浮"), dstFileName, altText));
+        else
+          buf.push(format(getTpl("画像幅浮"), ratio, dstFileName, altText));
       } else {
+        if (ratio <= 0)
         //画像通常表示
-        if (ratio <= 0) buf.push(`${this.chukiMap.get("画像")[0]}${dstFileName}`);
-        else buf.push(`${this.chukiMap.get("画像幅")[0]}${ratio}${dstFileName}`);
+          buf.push(format(getTpl("画像"), dstFileName, altText));
+        else
+          buf.push(format(getTpl("画像幅"), ratio, dstFileName, altText));
       }
     }
     //キャプショがある場合はタグを閉じない
@@ -2645,9 +2705,18 @@ export default class AozoraEpub3Converter {
       this.inImageTag = true;
       this.nextLineIsCaption = true;
     } else {
-      buf.push(this.chukiMap.get("画像終わり")[0]);
+      buf.push(getTpl("画像終わり"));
     }
+
     return false;
+  }
+  static escapeHtml(text) {
+    if (text == null) return "";
+    return text
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
   }
   /** 注記で分割された文字列単位でエスケープ処理を行う
    * <>&のエスケープと《》置換、IVSや不正な文字を除去して文字列を出力バッファに出力
@@ -3883,4 +3952,9 @@ export default class AozoraEpub3Converter {
     const code = char.charCodeAt(0);
     return code >= 0xD800 && code <= 0xDBFF;
   }
+}
+// %s / %d / %f を順番に置換する簡易版
+function format(template, ...args) {
+  let i = 0;
+  return template.replace(/%[sdf]/g, () => String(args[i++]));
 }

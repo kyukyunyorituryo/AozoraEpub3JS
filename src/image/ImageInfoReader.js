@@ -23,6 +23,8 @@ export default class ImageInfoReader {
         this.archiveTextParentPath = '';
         this.imageFileNames = [];
         this.imageFileInfos = new Map();
+        // LinkedHashMap 相当（挿入順を保持する）
+        this.imageAltMap = new Map();
     }
 
     /**
@@ -352,5 +354,12 @@ export default class ImageInfoReader {
         }
         return null;
     }
-
+    /**alt 属性（代替テキスト） を追加と取得
+    */
+    addImageAlt(fileName, altText) {
+    this.imageAltMap.set(this.correctExt(fileName), altText);
+    }
+    getImageAlt(fileName) {
+    return this.imageAltMap.get(this.correctExt(fileName));
+    }
 }

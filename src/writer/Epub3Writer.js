@@ -10,7 +10,7 @@ import ejs from 'ejs';
 import JSZip from "jszip";
 import AozoraEpub3Converter from '../converter/AozoraEpub3Converter.js';
 import PageBreakType from '../converter/PageBreakType.js';
-import ImageInfoReader from '../image/ImageInfoReader.js';
+import imageInfoReader from '../image/ImageInfoReader.js';
 import ImageUtils from '../image/ImageUtils.js';
 import BookInfo from '../info/BookInfo.js';
 import ChapterInfo from '../info/ChapterInfo.js';
@@ -252,6 +252,7 @@ export default class Epub3Writer {
         //EPUBの本文出力用
         this.currentSectionBuffer = "";
         this.currentSectionId = "";
+        this.imageInfoReader = imageInfoReader;
     }
 
     /** プログレスバー設定 */
@@ -1241,6 +1242,10 @@ export default class Epub3Writer {
         }).format(dateformat);
         const time = dateFor + 'Z';
         return time
+    }
+    /** ファイルパスから画像の代替テキストを取得 */
+    getAlt(srcFilePath) {
+    return this.imageInfoReader.getImageAlt(srcFilePath);
     }
 }
 
