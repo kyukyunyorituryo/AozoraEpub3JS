@@ -2568,33 +2568,33 @@ export default class AozoraEpub3Converter {
       //注記の後ろを文字開始位置に設定
       charStart = chukiStart + chukiTag.length;
     }
-      //注記の後ろの残りの文字
-      if (charStart < ch.length) {
-        this.convertEscapedText(buf, ch, charStart, ch.length);
-      }
-      //行末タグを追加
-      if (bufSuf.length > 0) buf.push(bufSuf.toString());
+    //注記の後ろの残りの文字
+    if (charStart < ch.length) {
+      this.convertEscapedText(buf, ch, charStart, ch.length);
+    }
+    //行末タグを追加
+    if (bufSuf.length > 0) buf.push(bufSuf.toString());
 
-      //底本：で前が改ページでなければ改ページ追加
-      if (this.separateColophon) {
-        if (this.sectionCharLength > 0 && buf.length > 2 && buf[0] === '底' && buf[1] === '本' && buf[2] === '：') {
-          //字下げ状態エラー出力
-          if (this.inJisage >= 0) {
-            LogAppender.error(this.inJisage, "字下げ注記エラー");
-          } else {
-            this.setPageBreakTrigger(this.pageBreakNoChapter);
-          }
+    //底本：で前が改ページでなければ改ページ追加
+    if (this.separateColophon) {
+      if (this.sectionCharLength > 0 && buf.length > 2 && buf[0] === '底' && buf[1] === '本' && buf[2] === '：') {
+        //字下げ状態エラー出力
+        if (this.inJisage >= 0) {
+          LogAppender.error(this.inJisage, "字下げ注記エラー");
+        } else {
+          this.setPageBreakTrigger(this.pageBreakNoChapter);
         }
       }
+    }
 
-      //ルビ変換＋自動縦中横してからバッファを出力
-      this.printLineBuffer(out, this.convertRubyText(buf.join("")), lineNum, noBr || this.inImageTag);
+    //ルビ変換＋自動縦中横してからバッファを出力
+    this.printLineBuffer(out, this.convertRubyText(buf.join("")), lineNum, noBr || this.inImageTag);
 
-      //クリア Kobo 調整中
-      /*if (clearRight && clearLeft) out.append(chukiMap.get("クリア")[0]);
-      else if (clearRight) out.append(chukiMap.get("右クリア")[0]);
-      else if (clearLeft) out.append(chukiMap.get("左クリア")[0]);*/
-    
+    //クリア Kobo 調整中
+    /*if (clearRight && clearLeft) out.append(chukiMap.get("クリア")[0]);
+    else if (clearRight) out.append(chukiMap.get("右クリア")[0]);
+    else if (clearLeft) out.append(chukiMap.get("左クリア")[0]);*/
+
 
 
   }
@@ -2695,7 +2695,7 @@ export default class AozoraEpub3Converter {
           buf.push(format(getTpl("画像幅浮"), ratio, dstFileName, altText));
       } else {
         if (ratio <= 0)
-        //画像通常表示
+          //画像通常表示
           buf.push(format(getTpl("画像"), dstFileName, altText));
         else
           buf.push(format(getTpl("画像幅"), ratio, dstFileName, altText));
