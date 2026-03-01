@@ -262,9 +262,9 @@ const chapterUseNextLine = getBool("ChapterUseNextLine");
 // Java:
 // !props.containsKey("ChapterSection") || "1".equals(...)
 const chapterSection =
-    props.get("ChapterSection") === undefined ||
-    getBool("ChapterSection");
-const chapterH  = getBool("ChapterH");
+  props.get("ChapterSection") === undefined ||
+  getBool("ChapterSection");
+const chapterH = getBool("ChapterH");
 const chapterH1 = getBool("ChapterH1");
 const chapterH2 = getBool("ChapterH2");
 const chapterH3 = getBool("ChapterH3");
@@ -277,7 +277,7 @@ const chapterNumParen = getBool("ChapterNumParen");
 const chapterNumParenTitle = getBool("ChapterNumParenTitle");
 let chapterPattern = "";
 if (getBool("ChapterPattern")) {
-    chapterPattern = getString("ChapterPatternText", "");
+  chapterPattern = getString("ChapterPatternText", "");
 }
 
 // オプション指定を反映
@@ -759,14 +759,20 @@ async function countRarText(rarFile) {
 }
 
 /** 入力ファイルと同じ名前の画像を取得
- * png, jpg, jpegの順で探す  */
+ * png, jpg, jpeg, webp の順で探す */
 async function getSameCoverFileName(srcFile) {
-  let baseFileName = srcFile;
-  baseFileName = baseFileName.substring(0, baseFileName.lastIndexOf('.') + 1);
-  const extensions = ['png', 'jpg', 'jpeg', 'PNG', 'JPG', 'JPEG', 'Png', 'Jpg', 'Jpeg'];
+  const dir = path.dirname(srcFile);
+  const name = path.basename(srcFile, path.extname(srcFile));
+  const basePath = path.join(dir, name);
+
+  const extensions = ["png", "jpg", "jpeg", "webp"];
+
   for (const ext of extensions) {
-    const coverFileName = `${baseFileName}${ext}`;
-    if (fs.existsSync(coverFileName)) return coverFileName;
+    const coverFileName = `${basePath}.${ext}`;
+    if (fs.existsSync(coverFileName)) {
+      return coverFileName;
+    }
   }
+
   return null;
 }
