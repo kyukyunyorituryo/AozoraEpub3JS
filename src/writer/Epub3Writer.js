@@ -408,7 +408,7 @@ export default class Epub3Writer {
         this.ejsData.bookInfo = bookInfo;
 
         // 更新日時
-        this.ejsData.modified = this.modified.toISOString();
+        this.ejsData.modified = this.bookInfo.modified.toISOString().replace(/\.\d{3}Z$/, 'Z');
 
         // 目次階層化
         this.ejsData.navNest = this.navNest;
