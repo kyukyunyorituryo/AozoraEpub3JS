@@ -1,14 +1,15 @@
 # AozoraEpub3JS
 [AozoraEpub3](https://github.com/kyukyunyorituryo/AozoraEpub3)のJavaScriptに移植版
 
-現状はepubファイルが生成されるが本文が出力されない。AozoraEpub3Converter.jsのconvertTextLineToEpub3あたりで止まっている感じがする。
+### 現状
+現状はepubファイルが生成されるが目次が出力されない。ChapterInfoを書き込むAozoraEpub3Converter.jsないが原因だと思われる。
 ### 目標
 * CLIの部分をnode.jsで書いて動作を可能にしたい
 * rollupでjsやフォントなどまとめてブラウザ上で動かしたい
 * electronでデスクトップアプリにしたい
 
-### 現状
-jsではJavaのライブラリが似た機能のライブラリを探す必要がある。
+### 変更点
+jsではJavaのライブラリが似た機能のライブラリに切り替えている
 
 * common compress、jszip
 * unrar、node-unrar-js
@@ -36,24 +37,12 @@ node.jsで同じファイル構造にすると、設定ファイルの変更が�
 * chuki_utf.txt
 
 * presets
-* template　velocityからejsに書き換えた
+* templateをvelocityからejsに書き換えた
 
-まだ
-* AozoraEpub3.java Epub3ImageWriterを除外
-* AozoraEpub3Applet.java
-
-書き換え中
-* converter　
-* image
-* info
-* swing
-* util
-* web
-* writer
 
 converterフォルダー　
 * AozoraEpub3Converter.java　確認済み
-* AozoraGaijiConverter.java　確認済みやや不安
+* AozoraGaijiConverter.java　確認済み
 * GlyphConverter.java　未使用
 * JisConverter.java　確認済み
 * LatinConverter.java　確認済み
@@ -62,7 +51,7 @@ converterフォルダー　
 
 imageフォルダー
 画像の情報の扱いはだいぶ違う
-* ImageInfoReader.java　画像編集をJimpにunrarとunzipを書き換え
+* ImageInfoReader.java　画像編集をJimpに書き換え
 * ImageUtils.java
 
 infoフォルダー
@@ -73,7 +62,7 @@ infoフォルダー
 * ChapterLineInfo.java
 * CoverEditInfo.java
 * GaijiInfo.java
-* ImageInfo.java　sharpにするかjimpにするか
+* ImageInfo.java　sharpにした
 * ProfileInfo.java
 * SectionInfo.java
 
@@ -86,7 +75,7 @@ swingフォルダー
 * JTocTable.java
 * NarrowTitledBorder.java
 
-変換はしたけどライブラリをどのように使う。ログツールはライブラリを使ってもいいが書き換えるのが面倒。Detectorは文字コード判別だがencoding.jsにエラー処理を書いた。log4js-nodeを入れようかな。
+変換はしたけどライブラリをどのように使う。ログツールはライブラリを使ってもいいが書き換えるのが面倒。Detectorは文字コード判別だがencoding.jsにエラー処理を書いた。
 
 utilフォルダー
 
@@ -109,8 +98,6 @@ AozoraEpub3を電子出版目的に使う場合に、審査が通るように修
 個人で開発しているので、開発継続のために支援していただければと思います。
 
 [GitHub Sponsors](https://github.com/sponsors/kyukyunyorituryo)
-
-[欲しい物リスト](https://www.amazon.co.jp/gp/registry/wishlist/PP7F9RZJ1B0Y/ref=nav_wishlist_lists_1)
 
 [Kindle商品サイト](https://kyukyunyorituryo.github.io/kindle_sale/)
 
@@ -154,6 +141,8 @@ node.js https://nodejs.jp/
 ------------
 #### インストール
 　[AozoraEpub3JS](https://github.com/kyukyunyorituryo/AozoraEpub3JS)のリポジトリをクローン
+
+npm installでnpmパッケージを追加
 
 AozoraEpub3JS\src\フォルダー内で
 使い方 CUI
