@@ -544,7 +544,7 @@ async function convertFile(srcFile, ext, outFile, aozoraConverter, epubWriter, e
 
       src = encoding.convert(buffer, {
         to: "UNICODE",
-        from: 'SJIS',
+        from: encType,
         type: "string"
       });
     }
