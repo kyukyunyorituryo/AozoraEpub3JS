@@ -2602,7 +2602,7 @@ export default class AozoraEpub3Converter {
 * @return 単ページ出力ならtrue */
   async printImageChuki(out, buf, srcFileName, dstFileName, hasCaption, lineNum, altText) {
     if (altText == null) altText = "";
-    altText = this.escapeHtml(altText);
+    altText = escapeHtml(altText);
 
     const imagePageType = this.writer.getImagePageType(
       srcFileName,
@@ -2711,14 +2711,7 @@ export default class AozoraEpub3Converter {
 
     return false;
   }
-  static escapeHtml(text) {
-    if (text == null) return "";
-    return text
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;");
-  }
+
   /** 注記で分割された文字列単位でエスケープ処理を行う
    * <>&のエスケープと《》置換、IVSや不正な文字を除去して文字列を出力バッファに出力
    * ルビ変換前に呼び出す */
@@ -3959,3 +3952,11 @@ function format(template, ...args) {
   let i = 0;
   return template.replace(/%[sdf]/g, () => String(args[i++]));
 }
+  function escapeHtml(text) {
+    if (text == null) return "";
+    return text
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
