@@ -57,8 +57,7 @@ nav#landmarks { display:none; }
 <% if (title_page) { -%>
 			<li><a epub:type="titlepage" href="xhtml/title.xhtml">扉</a></li>
 <% } -%>
-
-<% for (sections in sectionInfo) { -%>
+    <% if (sections && sections.length > 0) { -%>
 			<li><a epub:type="bodymatter" href="xhtml/<%= sectionInfo.sectionId %>.xhtml">本文</a></li>
 <% }; -%>
 		</ol>
@@ -67,32 +66,60 @@ nav#landmarks { display:none; }
 	<nav epub:type="toc" id="toc">
 		<h1>目　次</h1>
 		<ol>
+<%
+let hasItem = false;
+let openLevels = 0;
+%>
 <% if (bookInfo.InsertCoverPage && bookInfo.InsertCoverPageToc) { -%>
 			<li class="chapter" id="toccover"><a href="xhtml/cover.xhtml"><%= cover_name %></a></li>
+<%
+hasItem = true;
+%>
 <% } -%>
-<% for(var i = 0; i < chapters.length; i++) { -%>
-<% if (chapters[i].ChapterName) { -%>
-<% if ((!chapters[i].LevelStart && i > 1) || (!navNest && i != 1)) { -%>
-</li>
-<% } -%>
-<% if (navNest) { -%>
-<% for (start in chapters[i].LevelStart) { -%>
-		<ol>
+
+<% if (chapters && chapters.length > 0) { %>
+<% for(let i = 0; i < chapters.length; i++) { -%>
+<% const ch = chapters[i]; %>
+<% if (ch.ChapterName) { %>
+<%
+hasItem = true;
+%>
+<% if (navNest && ch.LevelStart) { %>
+  <% for (let s = 0; s < ch.LevelStart.length; s++) { %>
+    <ol>
+    <% openLevels++; %>
+  <% } %>
+<% } %>
+  <li>
+    <% if (ch.ChapterId) { %>
+      <a href="xhtml/<%= ch.sectionId %>.xhtml#<%= ch.ChapterId %>">
+        <%= ch.ChapterName %>
+      </a>
+    <% } else { %>
+      <a href="xhtml/<%= ch.sectionId %>.xhtml">
+        <%= ch.ChapterName %>
+      </a>
+    <% } %>
+  </li>
+<% if (navNest && ch.LevelEnd) { %>
+  <% for (let e = 0; e < ch.LevelEnd.length; e++) { %>
+    </ol>
+    <% openLevels--; %>
+  <% } %>
 <% }; -%>
 <% } -%>
-<% if (chapters[i].ChapterId) { -%>
-			<li><a href="xhtml/<%= chapters[i].SectionId -%>.xhtml#<%= chapters[i].ChapterId -%>"><%= chapters[i].ChapterName -%></a>
-<% } else { -%>
-			<li><a href="xhtml/<%= chapters[i].SectionId %>.xhtml"><%= chapters[i].ChapterName -%></a>
-<% } -%>
-<% if (navNest) { -%>
-	<% for (end in chapters[i].LevelEnd) { -%>
-		</li></ol>
-<% }; -%>
-<% } -%>
 <% } -%>
 <% }; -%>
-		</li></ol>
+<% if (!hasItem && sections && sections.length > 0) { %>
+  <li>
+    <a href="xhtml/<%= sections[0].sectionId %>.xhtml">本文</a>
+  </li>
+<% }; -%>
+<% while (openLevels > 0) { %>
+  </ol>
+  <% openLevels--; %>
+<% }; -%>
+</ol>
 	</nav>
 </body>
 </html>

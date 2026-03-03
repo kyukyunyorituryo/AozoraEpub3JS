@@ -10,28 +10,52 @@
     <text><%= title -%></text>
 </docTitle>
 <navMap>
-<% let idx = 0; -%>
+<% let idx = 0;
+let hasItem = false;
+-%>
 <% if (bookInfo.InsertCoverPage && bookInfo.InsertCoverPageToc) { -%>
-    <% idx++; -%>
+    <% idx++; hasItem = true; -%>
     <navPoint id="toccover" playOrder="<%= idx %>">
         <navLabel>
-            <text><%= cover_name -%></text>
+            <text><%= cover_name %></text>
         </navLabel>
         <content src="xhtml/cover.xhtml"/>
     </navPoint>
 <% } -%>
-<% for(var i = 0; i < chapters.length; i++) { -%>
-    <% if (chapters[i].ChapterName) { -%>
-        <% idx++; -%>
+<% if (chapters && chapters.length > 0) { -%>
+<% for (let i = 0; i < chapters.length; i++) { -%>
+<% const ch = chapters[i]; -%>
+<% if (ch.ChapterName) { -%>
+    <% idx++; hasItem = true; -%>
         <navPoint id="toc<%= idx -%>" playOrder="<%= idx -%>">
+        <navLabel>
+            <text><%= ch.NoTagChapterName %></text>
+        </navLabel>
+        <% if (ch.ChapterId) { -%>
+            <content src="xhtml/<%= ch.SectionId %>.xhtml#<%= ch.ChapterId %>"/>
+        <% } else { -%>
+            <content src="xhtml/<%= ch.SectionId %>.xhtml"/>
+        <% } -%>
+    </navPoint>
+<% } -%>
+<% } -%>
+<% } -%>
+<% if (!hasItem) { -%>
+    <% if (sections && sections.length > 0) { -%>
+        <% idx++; -%>
+        <navPoint id="toc<%= idx %>" playOrder="<%= idx %>">
             <navLabel>
-                <text><%= chapters[i].NoTagChapterName -%></text>
+                <text>本文</text>
             </navLabel>
-            <% if (chapters[i].ChapterId) { -%>
-                <content src="xhtml/<%= chapters[i].SectionId -%>.xhtml#<%= chapters[i].ChapterId -%>"/>
-            <% } else { -%>
-                <content src="xhtml/<%= chapters[i].SectionId -%>.xhtml"/>
-            <% } -%>
+            <content src="xhtml/<%= sections[0].sectionId %>.xhtml"/>
+        </navPoint>
+    <% } else { -%>
+        <% idx++; -%>
+        <navPoint id="toc<%= idx %>" playOrder="<%= idx %>">
+            <navLabel>
+                <text>目次</text>
+            </navLabel>
+            <content src="nav.xhtml"/>
         </navPoint>
     <% } -%>
 <% }; -%>
