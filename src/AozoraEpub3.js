@@ -510,7 +510,7 @@ function getOutFile(srcFile, dstPath, bookInfo, autoFileName, outExt) {
 async function getBookInfo(srcFile, ext, txtIdx, imageInfoReader, aozoraConverter, encType, titleType, pubFirst) {
   try {
     const textEntryName = [null];
-    const src = await getTextInputStream(srcFile, ext, imageInfoReader, textEntryName, txtIdx);
+    const src = await getTextInputStream(srcFile, ext, imageInfoReader, textEntryName, txtIdx, encType);
     if (src === null) return null;
     // タイトル、画像注記、左右中央注記、目次取得
     const bookInfo = await aozoraConverter.getBookInfo(srcFile, src, imageInfoReader, titleType, pubFirst);
@@ -570,13 +570,13 @@ async function convertFile(srcFile, ext, outFile, aozoraConverter, epubWriter, e
 * @return {Promise<InputStream>} テキストファイルのストリーム (close()は呼び出し側ですること)
 * @throws {Error}
 */
-async function getTextInputStream(srcFile, ext, imageInfoReader, textEntryName, txtIdx) {
+async function getTextInputStream(srcFile, ext, imageInfoReader, textEntryName, txtIdx, encType) {
   if (ext === 'txt') {
     const buffer = fs.readFileSync(srcFile);
 
     const src = encoding.convert(buffer, {
       to: "UNICODE",
-      from: 'SJIS',
+      from: encType,
       type: "string"
     });
     return src;
