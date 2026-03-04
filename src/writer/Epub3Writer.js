@@ -1001,45 +1001,56 @@ export default class Epub3Writer {
      * 重複していたら前に出力したときの連番ファイル名を返す
      * 返り値はxhtmlからの相対パスにする (../images/0001.jpg)
      * 変更前と変更後のファイル名はimageFileNamesに格納される (images/0001.jpg)
-     * @return 画像タグを出力しない場合はnullを返す
-     * @throws IOException */
+     * @return {string|null} 画像タグを出力しない場合は null
+     *  */
     async getImageFilePath(srcImageFileName, lineNum) {
         let isCover = false;
 
         let imageInfo = await this.imageInfoReader.getImageInfo(srcImageFileName);
         // 拡張子修正
-        if (imageInfo === null) {
-            // 画像があるかチェック
-            let altImageFileName = this.imageInfoReader.correctExt(srcImageFileName);
-            imageInfo = this.imageInfoReader.getImageInfo(altImageFileName);
-            if (imageInfo !== null) {
-                LogAppender.warn(lineNum, "画像拡張子変更", srcImageFileName);
-                srcImageFileName = altImageFileName;
+        if (!imageInfo) {
+            const altImageFileName = this.imageInfoReader.correctExt(srcImageFileName);
+            if (altImageFileName) {
+                imageInfo = this.imageInfoReader.getImageInfo(altImageFileName);
+                if (imageInfo) {
+                    LogAppender.warn(lineNum, "画像拡張子変更", srcImageFileName);
+                    srcImageFileName = altImageFileName;
+                }
             }
         }
-        this.imageIndex++; // 0001から開始 (本文内の順番に合せるため、ファイルが無くてもカウント)
-        if (imageInfo !== null) {
-            let imageId = imageInfo.getId();
-            // 画像は未だ出力されていない
-            if (imageId === null) {
-                imageId = this.decimalFormat.format(this.imageIndex);
+
+        this.imageIndex++;// 0001から開始 (本文内の順番に合せるため、ファイルが無くてもカウント)
+
+        if (imageInfo) {
+            let imageId = imageInfo.getId?.();
+            // 画像がまだ出力されていない場合
+            if (!imageId) {
+                imageId = String(this.imageIndex).padStart(4, "0");
+
                 this.imageInfos.push(imageInfo);
                 this.outImageFileNames.add(srcImageFileName);
-                if (this.imageIndex - 1 === this.bookInfo?.coverImageIndex) {
-                    // imageInfo.setIsCover(true);
+
+                if (this.imageIndex - 1 === this.bookInfo.coverImageIndex) {
                     isCover = true;
                 }
             }
-            let outImageFileName = imageId + "." + imageInfo.getExt().replace("jpeg", "jpg");
-            imageInfo.setId(imageId);
-            imageInfo.setOutFileName(outImageFileName);
+
+            const ext = imageInfo.getExt().replace(/^jpeg$/i, "jpg");
+            const outImageFileName = `${imageId}.${ext}`;
+
+            imageInfo.setId?.(imageId);
+            imageInfo.setOutFileName?.(outImageFileName);
 
             // 先頭に表紙ページ移動の場合でカバーページならnullを返して本文中から削除
-            if (this.bookInfo?.insertCoverPage && isCover) return null;
-            return "../" + this.IMAGES_PATH + outImageFileName;
+            if (this.bookInfo.insertCoverPage && isCover) {
+                return null;
+            }
+
+            return `../${IMAGES_PATH}${outImageFileName}`;
         } else {
             LogAppender.warn(lineNum, "画像ファイルなし", srcImageFileName);
         }
+
         return null;
     }
 
@@ -1245,7 +1256,7 @@ export default class Epub3Writer {
     }
     /** ファイルパスから画像の代替テキストを取得 */
     getAlt(srcFilePath) {
-    return this.imageInfoReader.getImageAlt(srcFilePath);
+        return this.imageInfoReader.getImageAlt(srcFilePath);
     }
 }
 
