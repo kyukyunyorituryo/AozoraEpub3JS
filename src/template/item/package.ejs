@@ -35,13 +35,13 @@
 <!-- 更新日 -->
         <meta property="dcterms:modified"><%= modified -%></meta>
 
-<% if (bookInfo.ImageOnly) { -%>
+<% if (bookInfo.imageOnly) { -%>
         <!-- Fixed-Layout Documents指定 -->
         <meta property="rendition:layout">pre-paginated</meta>
         <meta property="rendition:spread">landscape</meta>
-        <meta name="original-resolution" content="<%= coverImage.Width -%>x<%= coverImage.Height -%>"/>
+        <meta name="original-resolution" content="<%= coverImage.width -%>x<%= coverImage.height -%>"/>
 
-<% if (bookInfo.Vertical) { -%>
+<% if (bookInfo.vertical) { -%>
         <meta name="primary-writing-mode" content="horizontal-rl"/>
 <% } else { -%>
         <meta name="primary-writing-mode" content="horizontal-lr"/>
@@ -56,7 +56,7 @@
 <!-- navigation -->
         <item media-type="application/xhtml+xml" id="nav" href="nav.xhtml" properties="nav"/>
 <!-- style -->
-<% if (bookInfo.ImageOnly) { -%>
+<% if (bookInfo.imageOnly) { -%>
         <item id="svg_image" href="style/fixed-layout-jp.css" media-type="text/css"/>
 <% } else { -%>
         <item id="vertical" href="style/aozora.css" media-type="text/css"/>
@@ -70,14 +70,14 @@
 <% } -%>
 <!-- image -->
 <% for(var i = 0; i < images.length; i++) { -%>
-<% if (images[i].IsCover) { -%>
-        <item media-type="<%= images[i].Format -%>" id="img<%= images[i].Id -%>" href="image/<%= images[i].OutFileName -%>" properties="cover-image"/>
+<% if (images[i].isCover) { -%>
+        <item media-type="<%= images[i].format -%>" id="img<%= images[i].id -%>" href="image/<%= images[i].outFileName -%>" properties="cover-image"/>
 <% } else { -%>
-        <item id="img<%= images[i].Id -%>" href="image/<%= images[i].OutFileName -%>" media-type="<%= images[i].Format -%>"/>
+        <item id="img<%= images[i].id -%>" href="image/<%= images[i].outFileName -%>" media-type="<%= images[i].format -%>"/>
 <% } -%>
 <% }; -%>
 <!-- xhtml -->
-<% if (bookInfo.InsertCoverPage) { -%>
+<% if (bookInfo.insertCoverPage) { -%>
         <item media-type="application/xhtml+xml" id="cover-page" href="xhtml/cover.xhtml" properties="svg"/>
 
 <% } -%>
@@ -85,7 +85,7 @@
         <item id="title-page" href="xhtml/title.xhtml" media-type="application/xhtml+xml"/>
 <% } -%>
 
-<% if (bookInfo.ImageOnly) { -%>
+<% if (bookInfo.imageOnly) { -%>
     <% sections.forEach(function(section) { -%>
         <item media-type="application/xhtml+xml" id="sec<%= section.sectionId -%>" href="xhtml/<%= section.sectionId -%>.xhtml"  properties="svg"/>
     <% }) -%>
@@ -100,29 +100,29 @@
         <item href="toc.ncx" id="ncx" media-type="application/x-dtbncx+xml"/>
     </manifest>
 
-<% if (bookInfo.Vertical) { -%>
+<% if (bookInfo.vertical) { -%>
     <spine page-progression-direction="rtl" toc="ncx">
 <% } else { -%>
     <spine page-progression-direction="ltr" toc="ncx">
 <% } -%>
-<% if (bookInfo.InsertCoverPage) { -%>
+<% if (bookInfo.insertCoverPage) { -%>
            <itemref linear="yes" idref="cover-page" properties="rendition:page-spread-center"/>
 <% } -%>
 <% if (title_page) { -%>
         <itemref idref="title-page" linear="yes"/>
 <% } -%>
-<% if (bookInfo.InsertTocPage) { -%>
+<% if (bookInfo.insertTocPage) { -%>
         <itemref idref="nav" linear="yes"/>
 <% } -%>
 
 <% for(var i = 0; i < sections.length; i++) { -%>
-<% if (bookInfo.ImageOnly && bookInfo.Vertical) { -%>
+<% if (bookInfo.imageOnly && bookInfo.vertical) { -%>
 <% if ((index + 1) % 2 === 0) { -%>
         <itemref linear="yes" idref="sec<%= sections[i].sectionId -%>" properties="page-spread-left"/>
 <% } else { -%>
         <itemref linear="yes" idref="sec<%= sections[i].sectionId -%>" properties="page-spread-right"/>
 <% } -%>
-<% } else if (bookInfo.ImageOnly && !bookInfo.Vertical) { -%>
+<% } else if (bookInfo.imageOnly && !bookInfo.vertical) { -%>
 <% if ((index + 1) % 2 === 0) { -%>
         <itemref linear="yes" idref="sec<%= sections[i].sectionId -%>" properties="page-spread-right"/>
 <% } else { -%>
