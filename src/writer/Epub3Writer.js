@@ -921,7 +921,7 @@ export default class Epub3Writer {
      * チャプターのファイル名はcpaterFileNamesに追加される (0001)
      * @throws IOException */
     async nextSection(bw, lineNum, pageType, imagePageType, srcImageFilePath) {
-
+        if(bw.length==0)return
         //タイトル置き換え時は出力しない
         if (this.sectionIndex > 0) {
             await this.endSection();
