@@ -537,16 +537,7 @@ async function convertFile(srcFile, ext, outFile, aozoraConverter, epubWriter, e
     // 入力Stream再オープン
     let src = null;
     if (!bookInfo.imageOnly) {
-      //src = fs.createReadStream(srcFile, { encoding: encType });
-      //src = fs.createReadStream(srcFile);
-      //src = fs.readFileSync(srcFile, encType);
-      const buffer = fs.readFileSync(srcFile);
-
-      src = encoding.convert(buffer, {
-        to: "UNICODE",
-        from: encType,
-        type: "string"
-      });
+    src = await getTextInputStream(srcFile, ext, imageInfoReader, null, txtIdx, encType);
     }
     // ePub書き出し srcは中でクローズされる
     await epubWriter.write(aozoraConverter, src, srcFile, ext, outFile, bookInfo, imageInfoReader);
