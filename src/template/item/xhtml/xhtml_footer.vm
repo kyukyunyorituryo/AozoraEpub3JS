@@ -1,6 +1,0 @@
-#if (${sectionInfo.Middle} || ${sectionInfo.Bottom})
-</div>
-#end
-</div>
-</body>
-</html>
