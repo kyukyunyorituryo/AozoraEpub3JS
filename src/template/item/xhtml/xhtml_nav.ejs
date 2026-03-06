@@ -5,7 +5,7 @@
 <meta charset="UTF-8"/>
 <title><%= title %></title>
 <style type="text/css">
-<% if (bookInfo.TocVertical) { %>
+<% if (bookInfo.tocVertical) { %>
 @page {margin:.5em .5em 0 0;}
 html {
 	writing-mode: vertical-rl;
@@ -48,10 +48,10 @@ nav#landmarks { display:none; }
 	<nav epub:type="landmarks" id="landmarks" hidden="">
 		<h2>Guide</h2>
 		<ol>
-<% if (bookInfo.InsertCoverPage) { -%>
+<% if (bookInfo.insertCoverPage) { -%>
 			<li><a epub:type="cover" href="xhtml/cover.xhtml">表紙</a></li>
 <% } -%>
-<% if (bookInfo.InsertTocPage) { -%>
+<% if (bookInfo.insertTocPage) { -%>
 			<li><a epub:type="toc" href="nav.xhtml">目次</a></li>
 <% } -%>
 <% if (title_page) { -%>
@@ -70,7 +70,7 @@ nav#landmarks { display:none; }
 let hasItem = false;
 let openLevels = 0;
 %>
-<% if (bookInfo.InsertCoverPage && bookInfo.InsertCoverPageToc) { -%>
+<% if (bookInfo.insertCoverPage && bookInfo.insertCoverPageToc) { -%>
 			<li class="chapter" id="toccover"><a href="xhtml/cover.xhtml"><%= cover_name %></a></li>
 <%
 hasItem = true;
@@ -91,9 +91,9 @@ hasItem = true;
   <% } %>
 <% } %>
   <li>
-    <% if (ch.ChapterId) { %>
-      <a href="xhtml/<%= ch.sectionId %>.xhtml#<%= ch.ChapterId %>">
-        <%= ch.ChapterName %>
+    <% if (ch.chapterId) { %>
+      <a href="xhtml/<%= ch.sectionId %>.xhtml#<%= ch.chapterId %>">
+        <%= ch.chapterName %>
       </a>
     <% } else { %>
       <a href="xhtml/<%= ch.sectionId %>.xhtml">

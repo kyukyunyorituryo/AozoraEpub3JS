@@ -13,7 +13,7 @@
 <% let idx = 0;
 let hasItem = false;
 -%>
-<% if (bookInfo.InsertCoverPage && bookInfo.InsertCoverPageToc) { -%>
+<% if (bookInfo.insertCoverPage && bookInfo.insertCoverPageToc) { -%>
     <% idx++; hasItem = true; -%>
     <navPoint id="toccover" playOrder="<%= idx %>">
         <navLabel>
@@ -25,16 +25,16 @@ let hasItem = false;
 <% if (chapters && chapters.length > 0) { -%>
 <% for (let i = 0; i < chapters.length; i++) { -%>
 <% const ch = chapters[i]; -%>
-<% if (ch.ChapterName) { -%>
+<% if (ch.chapterName) { -%>
     <% idx++; hasItem = true; -%>
         <navPoint id="toc<%= idx -%>" playOrder="<%= idx -%>">
         <navLabel>
-            <text><%= ch.NoTagChapterName %></text>
+            <text><%= ch.noTagChapterName %></text>
         </navLabel>
-        <% if (ch.ChapterId) { -%>
-            <content src="xhtml/<%= ch.SectionId %>.xhtml#<%= ch.ChapterId %>"/>
+        <% if (ch.chapterId) { -%>
+            <content src="xhtml/<%= ch.sectionId %>.xhtml#<%= ch.chapterId %>"/>
         <% } else { -%>
-            <content src="xhtml/<%= ch.SectionId %>.xhtml"/>
+            <content src="xhtml/<%= ch.sectionId %>.xhtml"/>
         <% } -%>
     </navPoint>
 <% } -%>

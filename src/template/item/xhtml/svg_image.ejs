@@ -9,14 +9,14 @@
   <meta charset="UTF-8"/>
   <title><%= title %></title>
   <link rel="stylesheet" type="text/css" href="../style/fixed-layout-jp.css"/>
-  <meta name="viewport" content="width=<%= imageInfo.OutWidth %>, height=<%= imageInfo.OutHeight %>"/>
+  <meta name="viewport" content="width=<%= imageInfo.outWidth %>, height=<%= imageInfo.outHeight %>"/>
 </head>
 <body>
   <div class="main">
     <svg xmlns="http://www.w3.org/2000/svg" version="1.1"
       xmlns:xlink="http://www.w3.org/1999/xlink"
-      width="100%" height="100%" viewBox="0 0 <%= imageInfo.OutWidth %> <%= imageInfo.OutHeight %>">
-      <image width="<%= imageInfo.OutWidth %>" height="<%= imageInfo.OutHeight %>" xlink:href="../image/<%= imageInfo.OutFileName %>"/>
+      width="100%" height="100%" viewBox="0 0 <%= imageInfo.outWidth %> <%= imageInfo.outHeight %>">
+      <image width="<%= imageInfo.outWidth %>" height="<%= imageInfo.outHeight %>" xlink:href="../image/<%= imageInfo.outFileName %>"/>
     </svg>
   </div>
 </body>
