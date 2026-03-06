@@ -58,7 +58,7 @@ nav#landmarks { display:none; }
 			<li><a epub:type="titlepage" href="xhtml/title.xhtml">扉</a></li>
 <% } -%>
     <% if (sections && sections.length > 0) { -%>
-			<li><a epub:type="bodymatter" href="xhtml/<%= sectionInfo.sectionId %>.xhtml">本文</a></li>
+			<li><a epub:type="bodymatter" href="xhtml/<%= sections[0].sectionId %>.xhtml">本文</a></li>
 <% }; -%>
 		</ol>
 	</nav>
