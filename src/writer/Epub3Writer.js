@@ -912,7 +912,7 @@ export default class Epub3Writer {
             if (bw.length > 0) {
                 this.currentSectionBuffer += bw.join("");
             }
-            await this.endSection();
+            this.endSection();
         }
     }
 
@@ -920,7 +920,7 @@ export default class Epub3Writer {
     /** 次のチャプター用のZipArchiveEntryに切替え
      * チャプターのファイル名はcpaterFileNamesに追加される (0001)
      * @throws IOException */
-    async nextSection(bw, lineNum, pageType, imagePageType, srcImageFilePath) {
+    nextSection(bw, lineNum, pageType, imagePageType, srcImageFilePath) {
     // ここを追加
     if (bw && bw.length > 0 && this.currentSectionBuffer != null) {
         this.currentSectionBuffer += bw.join("");
@@ -928,14 +928,14 @@ export default class Epub3Writer {
     }
         //タイトル置き換え時は出力しない
         if (this.sectionIndex > 0) {
-            await this.endSection();
+            this.endSection();
         }
-        await this.startSection(lineNum, pageType, imagePageType, srcImageFilePath);
+        this.startSection(lineNum, pageType, imagePageType, srcImageFilePath);
     }
 
     /** セクション開始.
      * @throws IOException */
-    async startSection(lineNum, pageType, imagePageType, srcImageFilePath) {
+    startSection(lineNum, pageType, imagePageType, srcImageFilePath) {
         this.sectionIndex++;
 
         const sectionId = String(this.sectionIndex).padStart(4, "0");
@@ -976,7 +976,7 @@ export default class Epub3Writer {
 
     /** セクション終了.
      * @throws IOException */
-    async endSection() {
+    endSection() {
         // フッタ出力
 
         const footerTemplate = fs.readFileSync(path.resolve(__dirname, this.templatePath + Epub3Writer.OPS_PATH + Epub3Writer.XHTML_PATH + Epub3Writer.XHTML_FOOTER_EJS), 'utf-8');
