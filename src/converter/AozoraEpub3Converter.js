@@ -2858,33 +2858,33 @@ export default class AozoraEpub3Converter {
               CharUtils.isSameChars(ch, rubyTopStart + 1, i)) {
 
               if (!hasEnd) {
-                buf.push(rubyStartChuki);
+                buf.push(...rubyStartChuki);
               } else {
                 buf.splice(buf.length - rubyEndChuki.length, rubyEndChuki.length);
               }
 
               for (let j = 0; j < rubyTopStart - rubyStart; j++) {
                 this.convertReplacedChar(buf, ch, rubyStart + j, noTcy);
-                buf.push(this.chukiMap.get("ルビ前")[0]);
+                buf.push(...this.chukiMap.get("ルビ前")[0]);
                 this.convertReplacedChar(buf, ch, rubyTopStart + 1 + j, true);
-                buf.push(this.chukiMap.get("ルビ後")[0]);
+                buf.push(...this.chukiMap.get("ルビ後")[0]);
               }
 
-              buf.push(rubyEndChuki);
+              buf.push(...rubyEndChuki);
 
             } else {
 
               if (!hasEnd) {
-                buf.push(rubyStartChuki);
+                buf.push(...rubyStartChuki);
               } else {
                 buf.splice(buf.length - rubyEndChuki.length, rubyEndChuki.length);
               }
 
               this.convertTcyText(buf, ch, rubyStart, rubyTopStart, noTcy);
-              buf.push(this.chukiMap.get("ルビ前")[0]);
+              buf.push(...this.chukiMap.get("ルビ前")[0]);
               this.convertTcyText(buf, ch, rubyTopStart + 1, i, true);
-              buf.push(this.chukiMap.get("ルビ後")[0]);
-              buf.push(rubyEndChuki);
+              buf.push(...this.chukiMap.get("ルビ後")[0]);
+              buf.push(...rubyEndChuki);
             }
           }
 
