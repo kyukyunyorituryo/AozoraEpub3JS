@@ -334,7 +334,7 @@ export default class BookInfo {
 
   isPattern(num) {
     const chapterLineInfo = this.getChapterLineInfo(num);
-    if (!chapterLineInfo) return false;
+    if (chapterLineInfo == null) return false;
     return chapterLineInfo.isPattern();
   }
 
