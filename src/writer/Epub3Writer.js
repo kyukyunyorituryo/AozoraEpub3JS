@@ -477,22 +477,18 @@ export default class Epub3Writer {
             }
 
             // ルビと外字画像注記と縦中横注記(縦書きのみ)のみ変換する
-            let line = bookInfo.getTitleText();
-            if (line) this.ejsData.TITLE = converter.convertTitleLineToEpub3(line);
-            line = bookInfo.getSubTitleText();
-            if (line) this.ejsData.SUBTITLE = converter.convertTitleLineToEpub3(line);
-            line = bookInfo.getOrgTitleText();
-            if (line) this.ejsData.ORGTITLE = converter.convertTitleLineToEpub3(line);
-            line = bookInfo.getSubOrgTitleText();
-            if (line) this.ejsData.SUBORGTITLE = converter.convertTitleLineToEpub3(line);
-            line = bookInfo.getCreatorText();
-            if (line) this.ejsData.CREATOR = converter.convertTitleLineToEpub3(line);
-            line = bookInfo.getSubCreatorText();
-            if (line) this.ejsData.SUBCREATOR = converter.convertTitleLineToEpub3(line);
-            line = bookInfo.getSeriesText();
-            if (line) this.ejsData.SERIES = converter.convertTitleLineToEpub3(line);
-            line = bookInfo.getPublisherText();
-            if (line) this.ejsData.PUBLISHER = converter.convertTitleLineToEpub3(line);
+            const setTitle = (key, getter) => {
+                const line = getter.call(bookInfo);
+                this.ejsData[key] = line ? converter.convertTitleLineToEpub3(line) : null;
+            };
+            setTitle("TITLE", bookInfo.getTitleText);
+            setTitle("SUBTITLE", bookInfo.getSubTitleText);
+            setTitle("ORGTITLE", bookInfo.getOrgTitleText);
+            setTitle("SUBORGTITLE", bookInfo.getSubOrgTitleText);
+            setTitle("CREATOR", bookInfo.getCreatorText);
+            setTitle("SUBCREATOR", bookInfo.getSubCreatorText);
+            setTitle("SERIES", bookInfo.getSeriesText);
+            setTitle("PUBLISHER", bookInfo.getPublisherText);
 
             // package.opf内で目次前に出力
             const titleFileEntry = `${Epub3Writer.OPS_PATH}${Epub3Writer.XHTML_PATH}${Epub3Writer.TITLE_FILE}`;
