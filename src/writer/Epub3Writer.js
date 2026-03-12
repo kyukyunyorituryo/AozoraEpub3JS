@@ -921,11 +921,11 @@ export default class Epub3Writer {
      * チャプターのファイル名はcpaterFileNamesに追加される (0001)
      * @throws IOException */
     nextSection(bw, lineNum, pageType, imagePageType, srcImageFilePath) {
-    // ここを追加
-    if (bw && bw.length > 0 && this.currentSectionBuffer != null) {
-        this.currentSectionBuffer += bw.join("");
-        bw.length = 0;
-    }
+        // ここを追加
+        if (bw && bw.length > 0 && this.currentSectionBuffer != null) {
+            this.currentSectionBuffer += bw.join("");
+            bw.length = 0;
+        }
         //タイトル置き換え時は出力しない
         if (this.sectionIndex > 0) {
             this.endSection();
@@ -990,8 +990,10 @@ export default class Epub3Writer {
 
     /** 章を追加 */
     addChapter(chapterId, name, chapterLevel) {
-        let sectionInfo = this.sectionInfos.lastElement();
-        this.chapterInfos.push(new ChapterInfo(sectionInfo.sectionId, chapterId, name, chapterLevel));
+        const sectionInfo = this.sectionInfos[this.sectionInfos.length - 1];
+        this.chapterInfos.push(
+            new ChapterInfo(sectionInfo.sectionId, chapterId, name, chapterLevel)
+        );
     }
 
     /** 外字用フォントを追加 */
