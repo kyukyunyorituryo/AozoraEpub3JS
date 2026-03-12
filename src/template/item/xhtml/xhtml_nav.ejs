@@ -69,43 +69,42 @@ nav#landmarks { display:none; }
 <%
 let hasItem = false;
 let openLevels = 0;
-%>
+-%>
 <% if (bookInfo.insertCoverPage && bookInfo.insertCoverPageToc) { -%>
 			<li class="chapter" id="toccover"><a href="xhtml/cover.xhtml"><%= cover_name %></a></li>
 <%
 hasItem = true;
-%>
+-%>
 <% } -%>
-
-<% if (chapters && chapters.length > 0) { %>
+<% if (chapters && chapters.length > 0) { -%>
 <% for(let i = 0; i < chapters.length; i++) { -%>
-<% const ch = chapters[i]; %>
-<% if (ch.ChapterName) { %>
+<% const ch = chapters[i]; -%>
+<% if (ch.chapterName) { -%>
 <%
 hasItem = true;
-%>
-<% if (navNest && ch.LevelStart) { %>
-  <% for (let s = 0; s < ch.LevelStart.length; s++) { %>
+-%>
+<% if (navNest && ch.LevelStart) { -%>
+  <% for (let s = 0; s < ch.LevelStart.length; s++) { -%>
     <ol>
-    <% openLevels++; %>
-  <% } %>
-<% } %>
+    <% openLevels++; -%>
+  <% } -%>
+<% } -%>
   <li>
-    <% if (ch.chapterId) { %>
+    <% if (ch.chapterId) { -%>
       <a href="xhtml/<%= ch.sectionId %>.xhtml#<%= ch.chapterId %>">
-        <%= ch.chapterName %>
+        <%= ch.chapterName -%>
       </a>
-    <% } else { %>
+    <% } else { -%>
       <a href="xhtml/<%= ch.sectionId %>.xhtml">
-        <%= ch.ChapterName %>
+        <%= ch.chapterName -%>
       </a>
-    <% } %>
+    <% } -%>
   </li>
-<% if (navNest && ch.LevelEnd) { %>
-  <% for (let e = 0; e < ch.LevelEnd.length; e++) { %>
+<% if (navNest && ch.LevelEnd) { -%>
+  <% for (let e = 0; e < ch.LevelEnd.length; e++) { -%>
     </ol>
-    <% openLevels--; %>
-  <% } %>
+    <% openLevels--; -%>
+  <% } -%>
 <% }; -%>
 <% } -%>
 <% } -%>
