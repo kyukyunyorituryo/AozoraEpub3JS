@@ -757,14 +757,16 @@ export default class AozoraEpub3Converter {
             this.addChapterName = true; // 次の行を見出しとして利用
             this.addNextChapterName = -1;
           } else {
-            bookInfo.addChapterLineInfo({
-              lineNum: this.lineNum,
-              chapterType: chapterType,
-              addSectionChapter: this.addSectionChapter,
-              level: ChapterLineInfo.getLevel(chapterType),
-              isAfterEmptyLine: this.lastEmptyLine === this.lineNum - 1,
-              chapterName: this.getChapterName(noRubyLine.substring(m.index + chukiTag.length))
-            });
+            bookInfo.addChapterLineInfo(
+              new ChapterLineInfo(
+                this.lineNum,
+                ChapterLineInfo.TYPE_PATTERN,
+                this.addSectionChapter,
+                ChapterLineInfo.getLevel(ChapterLineInfo.TYPE_PATTERN),
+                this.lastEmptyLine === this.lineNum - 1,
+                this.getChapterName(noRubyLine)
+              )
+            );
             if (this.useNextLineChapterName) this.addNextChapterName = this.lineNum + 1; // 次の行を連結
             this.addChapterName = false; // 次の行を見出しとして利用しない
           }
