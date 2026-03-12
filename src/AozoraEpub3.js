@@ -106,14 +106,14 @@ epub3Writer = new Epub3Writer(`${jarPath}template/`);
 // 設定ファイルの読み込み
 if (propFileName) {
   props = propertiesReader({ sourceFile: propFileName });
-  // console.log(props)
+  //console.log(props.getAllProperties());
 }
 //ini取得ユーティリティ関数
 const getString = (key, def = null) =>
   props.get(key) ?? def;
 
 const getBool = (key) =>
-  props.get(key) === "1";
+  String(props.get(key))  === "1";
 
 const getInt = (key, def = 0) => {
   const v = parseInt(props.get(key));
@@ -128,7 +128,6 @@ const getFloat = (key, def = 0) => {
 let titleIndex = 0;
 // コマンドラインオプション以外
 const coverPage = getBool("CoverPage");// 表紙追加
-
 let titlePage = 0;
 if (getBool("TitlePageWrite")) {
   titlePage = getInt("TitlePage", 0);
