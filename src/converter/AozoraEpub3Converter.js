@@ -827,7 +827,7 @@ export default class AozoraEpub3Converter {
 
       // 見出し行パターン抽出 パターン抽出時はレベル+10
       // TODO パターンと目次レベルは設定可能にする 空行指定の場合はpreLines利用
-      if (this.autoChapter && bookInfo.getChapterLevel(this.lineNum) === 0) {
+      if (autoChapter && bookInfo.getChapterLevel(this.lineNum) === 0) {
         // 文字列から注記と前の空白を除去
         const noChukiLine = CharUtils.removeSpace(CharUtils.removeTag(noRubyLine));
 
