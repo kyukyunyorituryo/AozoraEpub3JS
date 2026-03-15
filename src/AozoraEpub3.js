@@ -95,7 +95,8 @@ if (commandLine.ini) {
 
 // 出力パス確認
 if (commandLine.dst) {
-  if (!fs.existsSync(commandLine.dst)) {
+  dstPath = path.resolve(commandLine.dst);
+  if (!fs.existsSync(commandLine.dst)|| !fs.statSync(dstPath).isDirectory()) {
     LogAppender.error(`-d : dst path not exist. ${commandLine.dst}:`);
   }
 }
