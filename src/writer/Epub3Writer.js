@@ -349,7 +349,10 @@ export default class Epub3Writer {
 
         // ファイルを読み込んでZIPに追加
         const fileData = fs.readFileSync(filePath); // ファイルの内容をバイナリデータとして読み込む
-        zos.file(fileName, fileData); // JSZipにファイルを追加
+        zos.file(fileName, fileData, {
+            compression: "DEFLATE",
+            compressionOptions: { level: 9 }
+        }); // JSZipにファイルを追加
     }
     /** epubファイルを出力
      * @param converter 青空文庫テキスト変換クラス 画像のみの場合と切り替えて利用する
