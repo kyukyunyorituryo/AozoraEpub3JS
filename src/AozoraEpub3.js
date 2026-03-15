@@ -291,7 +291,7 @@ let targetDevice = null;
 
 if (commandLine.t) titleIndex = parseInt(commandLine.t);
 if (commandLine.tf) useFileName = true;
-if (commandLine.c) coverFileName = commandLine.c;
+if (commandLine.cover) coverFileName = path.resolve(commandLine.cover);
 if (commandLine.enc) encType = commandLine.enc;
 if (commandLine.ext) outExt = commandLine.ext;
 if (commandLine.of) autoFileName = false;
