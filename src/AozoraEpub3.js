@@ -445,12 +445,12 @@ aozoraConverter.setChapterLevel(maxLength, chapterExclude, chapterUseNextLine, c
       bookInfo.insertCoverPage = coverPage;
       bookInfo.coverImageIndex = coverImageIndex;
       if (coverFileName != null && !coverFileName.startsWith("http")) {
-        let coverFile = new File(coverFileName);
-        if (!coverFile.exists()) {
-          coverFileName = srcFile.getParent() + "/" + coverFileName;
-          if (!new File(coverFileName).exists()) {
+        let coverFile = coverFileName;
+        if (!fs.existsSync(coverFile)) {
+          coverFileName = path.join(path.dirname(srcFile), coverFileName);
+          if (!fs.existsSync(coverFileName)) {
             coverFileName = null;
-            LogAppender.println("[WARN] 表紙画像ファイルが見つかりません : " + coverFile.getAbsolutePath());
+            LogAppender.println("[WARN] 表紙画像ファイルが見つかりません : " + path.resolve(coverFile));
           }
         }
       }
