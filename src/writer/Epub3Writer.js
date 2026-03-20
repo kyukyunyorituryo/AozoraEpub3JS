@@ -769,7 +769,7 @@ export default class Epub3Writer {
             }
             if (bookInfo.coverImage) {
                 // プレビューで編集されている場合
-                this.writeCoverImage(bookInfo.coverImage, zos, coverImageInfo);
+                this.writeCoverImage(bookInfo.coverImage, this.zos, coverImageInfo);
                 this.zos.file(`${Epub3Writer.OPS_PATH}${Epub3Writer.IMAGES_PATH}${coverImageInfo.getOutFileName()}`, zosdata, {
                     compression: "DEFLATE",
                     compressionOptions: { level: 9 }
@@ -780,7 +780,7 @@ export default class Epub3Writer {
 
             } else {
                 const bais = new Buffer.from(coverImageBytes);
-                this.writeCoverImage(bais, zos, coverImageInfo);
+                this.writeCoverImage(bais, this.zos, coverImageInfo);
 
                 this.zos.file(`${Epub3Writer.OPS_PATH}${Epub3Writer.IMAGES_PATH}${coverImageInfo.getOutFileName()}`, bais, {
                     compression: "DEFLATE",
@@ -805,7 +805,7 @@ export default class Epub3Writer {
                     } else {
                         const imageFile = imageInfoReader.getImageFile(srcImageFileName);
                         if (imageFile.exists()) {
-                            await this.writeImage(fis, zos, imageInfo);
+                            await this.writeImage(fis, this.zos, imageInfo);
 
                             const fis = fs.readFileSync(path.resolve(imageFile));
                             this.zos.file(`${Epub3Writer.OPS_PATH}${Epub3Writer.IMAGES_PATH}${imageInfo.getOutFileName()}`, fis, {
