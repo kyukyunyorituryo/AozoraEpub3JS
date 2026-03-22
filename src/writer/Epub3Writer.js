@@ -907,16 +907,18 @@ export default class Epub3Writer {
     }
 
     /** 表紙画像を出力 編集済の画像なのでリサイズしない */
-    async writeCoverImage(srcImage, zos, imageInfo) {
+    async writeCoverImage(srcImage, imageInfo) {
         imageInfo.rotateAngle = 0; // 回転させない
-        await ImageUtils.writeImage(null, srcImage, zos, imageInfo, this.jpegQuality, this.gammaOp,
+        const zos =null;
+        return await ImageUtils.writeImage(null, srcImage, zos, imageInfo, this.jpegQuality, this.gammaOp,
             0, 0, 0, this.dispW, this.dispH,
             0, 0, 0, 0, 0, 0);
     }
 
     /** 表紙画像を出力 */
-    async writeCoverImage(is, zos, imageInfo) {
+    async writeCoverImageFromStream(is, imageInfo) {
         imageInfo.rotateAngle = 0; // 回転させない
+        const zos =null;
         await ImageUtils.writeImage(is, null, zos, imageInfo, this.jpegQuality, this.gammaOp,
             0, this.coverW, this.coverH, this.dispW, this.dispH,
             0, 0, 0, 0, 0, 0);
