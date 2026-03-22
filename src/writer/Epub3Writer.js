@@ -759,16 +759,15 @@ export default class Epub3Writer {
                 let imgExt = coverImageInfo.getExt();
                 if (!imgExt.startsWith('jp')) {
                     if (!bookInfo.coverImage) {
-                        const bais = new Buffer.from(coverImageBytes);
-                        bookInfo.coverImage = await ImageUtils.readImage(imgExt, bais);
+                        bookInfo.coverImage = await ImageUtils.readImage(imgExt, coverImageBytes);
                     }
                     coverImageInfo.setExt('jpeg');
                 }
             }
             if (bookInfo.coverImage) {
                 // プレビューで編集されている場合
-                this.writeCoverImage(bookInfo.coverImage, this.zos, coverImageInfo);
-                this.zos.file(`${Epub3Writer.OPS_PATH}${Epub3Writer.IMAGES_PATH}${coverImageInfo.getOutFileName()}`, zosdata, {
+                const buffer = this.writeCoverImage(bookInfo.coverImage, coverImageInfo);
+                this.zos.file(`${Epub3Writer.OPS_PATH}${Epub3Writer.IMAGES_PATH}${coverImageInfo.getOutFileName()}`, buffer, {
                     compression: "DEFLATE",
                     compressionOptions: { level: 9 }
                 });
@@ -777,16 +776,16 @@ export default class Epub3Writer {
 
 
             } else {
-                const bais = new Buffer.from(coverImageBytes);
-                this.writeCoverImage(bais, this.zos, coverImageInfo);
-
-                this.zos.file(`${Epub3Writer.OPS_PATH}${Epub3Writer.IMAGES_PATH}${coverImageInfo.getOutFileName()}`, bais, {
+                const buffer = await this.writeCoverImage(coverImageBytes, coverImageInfo);
+                this.zos.file(`${Epub3Writer.OPS_PATH}${Epub3Writer.IMAGES_PATH}${coverImageInfo.getOutFileName()}`, buffer, {
                     compression: "DEFLATE",
                     compressionOptions: { level: 9 }
                 });
             }
             this.imageInfos.shift(); // カバー画像は出力済みなので削除
-            if (this.jProgressBar) this.jProgressBar.value += 10;
+            if (this.jProgressBar != null) {
+                this.jProgressBar.setValue(this.jProgressBar.getValue() + 10);
+            }
             //LogAppender.error(`表紙画像取得エラー: ${bookInfo.coverFileName}`);
         }
         if (this.canceled) return;
