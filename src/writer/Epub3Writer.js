@@ -527,15 +527,13 @@ export default class Epub3Writer {
             for (const imageInfo2 of this.imageInfos) {
                 imageInfo2.setIsCover(false);
             }
-            const bis = bookInfo.coverFileName.startsWith('http')
-                ? (await fetch(bookInfo.coverFileName)).body
-                : fs.createReadStream(bookInfo.coverFileName, { bufferSize: 8192 });
-            const baos = [];
-            for await (const chunk of bis) {
-                baos.push(chunk);
+            if (bookInfo.coverFileName.startsWith("http")) {
+                const res = await fetch(bookInfo.coverFileName);
+                const arrayBuffer = await res.arrayBuffer();
+                coverImageBytes = Buffer.from(arrayBuffer);
+            } else {
+                coverImageBytes = await fs.promises.readFile(bookInfo.coverFileName);
             }
-            coverImageBytes = Buffer.concat(baos);
-            bis.close();
             const bais = Buffer.from(coverImageBytes);
             coverImageInfo = await ImageInfo.getImageInfo(bais);
             const ext = this.isKindle || coverImageInfo.getExt() === 'jpeg' ? 'jpg' : coverImageInfo.getExt();
