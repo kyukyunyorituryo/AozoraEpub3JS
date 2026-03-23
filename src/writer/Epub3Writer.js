@@ -801,11 +801,10 @@ export default class Epub3Writer {
                         LogAppender.println(`[WARN] 画像ファイルなし: ${srcImageFileName}`);
                     } else {
                         const imageFile = imageInfoReader.getImageFile(srcImageFileName);
-                        if (imageFile.exists()) {
-                            await this.writeImage(fis, this.zos, imageInfo);
-
+                        if (fs.existsSync(imageFile)) {
                             const fis = fs.readFileSync(path.resolve(imageFile));
-                            this.zos.file(`${Epub3Writer.OPS_PATH}${Epub3Writer.IMAGES_PATH}${imageInfo.getOutFileName()}`, fis, {
+                            const buffer = await this.writeImage(fis, imageInfo);
+                            this.zos.file(`${Epub3Writer.OPS_PATH}${Epub3Writer.IMAGES_PATH}${imageInfo.getOutFileName()}`, buffer, {
                                 compression: "DEFLATE",
                                 compressionOptions: { level: 9 }
                             });
@@ -909,7 +908,7 @@ export default class Epub3Writer {
     /** 表紙画像を出力 編集済の画像なのでリサイズしない */
     async writeCoverImage(srcImage, imageInfo) {
         imageInfo.rotateAngle = 0; // 回転させない
-        const zos =null;
+        const zos = null;
         return await ImageUtils.writeImage(null, srcImage, zos, imageInfo, this.jpegQuality, this.gammaOp,
             0, 0, 0, this.dispW, this.dispH,
             0, 0, 0, 0, 0, 0);
@@ -918,22 +917,24 @@ export default class Epub3Writer {
     /** 表紙画像を出力 */
     async writeCoverImageFromStream(is, imageInfo) {
         imageInfo.rotateAngle = 0; // 回転させない
-        const zos =null;
+        const zos = null;
         await ImageUtils.writeImage(is, null, zos, imageInfo, this.jpegQuality, this.gammaOp,
             0, this.coverW, this.coverH, this.dispW, this.dispH,
             0, 0, 0, 0, 0, 0);
     }
 
     /** 画像を出力 */
-    async writeImage(is, zos, imageInfo) {
-        await ImageUtils.writeImage(is, null, zos, imageInfo, this.jpegQuality, this.gammaOp,
+    async writeImage(is, imageInfo) {
+        const zos = null
+        return await ImageUtils.writeImage(is, null, zos, imageInfo, this.jpegQuality, this.gammaOp,
             this.maxImagePixels, this.maxImageW, this.maxImageH, this.dispW, this.dispH,
             this.autoMarginLimitH, this.autoMarginLimitV, this.autoMarginWhiteLevel, this.autoMarginPadding, this.autoMarginNombre, this.autoMarginNombreSize);
     }
 
     /** 画像を出力 */
-    async writeImage(srcImage, zos, imageInfo) {
-        await ImageUtils.writeImage(null, srcImage, zos, imageInfo, this.jpegQuality, this.gammaOp,
+    async writeImageFromBuffered(srcImage, imageInfo) {
+        const zos = null
+        return await ImageUtils.writeImage(null, srcImage, zos, imageInfo, this.jpegQuality, this.gammaOp,
             this.maxImagePixels, this.maxImageW, this.maxImageH, this.dispW, this.dispH,
             this.autoMarginLimitH, this.autoMarginLimitV, this.autoMarginWhiteLevel, this.autoMarginPadding, this.autoMarginNombre, this.autoMarginNombreSize);
     }
