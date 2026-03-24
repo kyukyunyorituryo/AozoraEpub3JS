@@ -908,8 +908,7 @@ export default class Epub3Writer {
     /** 表紙画像を出力 編集済の画像なのでリサイズしない */
     async writeCoverImage(srcImage, imageInfo) {
         imageInfo.rotateAngle = 0; // 回転させない
-        const zos = null;
-        return await ImageUtils.writeImage(null, srcImage, zos, imageInfo, this.jpegQuality, this.gammaOp,
+        return await ImageUtils.writeImage(null, srcImage, imageInfo, this.jpegQuality, this.gammaOp,
             0, 0, 0, this.dispW, this.dispH,
             0, 0, 0, 0, 0, 0);
     }
@@ -917,24 +916,21 @@ export default class Epub3Writer {
     /** 表紙画像を出力 */
     async writeCoverImageFromStream(is, imageInfo) {
         imageInfo.rotateAngle = 0; // 回転させない
-        const zos = null;
-        await ImageUtils.writeImage(is, null, zos, imageInfo, this.jpegQuality, this.gammaOp,
+        await ImageUtils.writeImage(is, null, imageInfo, this.jpegQuality, this.gammaOp,
             0, this.coverW, this.coverH, this.dispW, this.dispH,
             0, 0, 0, 0, 0, 0);
     }
 
     /** 画像を出力 */
     async writeImage(is, imageInfo) {
-        const zos = null
-        return await ImageUtils.writeImage(is, null, zos, imageInfo, this.jpegQuality, this.gammaOp,
+        return await ImageUtils.writeImage(is, null, imageInfo, this.jpegQuality, this.gammaOp,
             this.maxImagePixels, this.maxImageW, this.maxImageH, this.dispW, this.dispH,
             this.autoMarginLimitH, this.autoMarginLimitV, this.autoMarginWhiteLevel, this.autoMarginPadding, this.autoMarginNombre, this.autoMarginNombreSize);
     }
 
     /** 画像を出力 */
     async writeImageFromBuffered(srcImage, imageInfo) {
-        const zos = null
-        return await ImageUtils.writeImage(null, srcImage, zos, imageInfo, this.jpegQuality, this.gammaOp,
+        return await ImageUtils.writeImage(null, srcImage, imageInfo, this.jpegQuality, this.gammaOp,
             this.maxImagePixels, this.maxImageW, this.maxImageH, this.dispW, this.dispH,
             this.autoMarginLimitH, this.autoMarginLimitV, this.autoMarginWhiteLevel, this.autoMarginPadding, this.autoMarginNombre, this.autoMarginNombreSize);
     }

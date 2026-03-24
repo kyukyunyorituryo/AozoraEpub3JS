@@ -87,7 +87,6 @@ export default class ImageUtils {
   static async writeImage(
     is,
     srcImage,
-    zos,
     imageInfo,
     jpegQuality,
     gammaOp,
