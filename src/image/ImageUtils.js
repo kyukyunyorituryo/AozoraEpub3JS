@@ -382,11 +382,11 @@ export default class ImageUtils {
       pngEncoder.encode(srcImage, zos);
       */
       // ImageIO.write(srcImage, "PNG", zos);
-      const imageWriter = getPngImageWriter();
+      const imageWriter = ImageUtils.getPngImageWriter();
       imageWriter.setOutput(await ImageIO.createImageOutputStream(zos));
       await imageWriter.write(srcImage);
     } else if (ext === 'jpeg' || ext === 'jpg') {
-      const imageWriter = getJpegImageWriter();
+      const imageWriter = ImageUtils.getJpegImageWriter();
       imageWriter.setOutput(await ImageIO.createImageOutputStream(zos));
       const iwp = imageWriter.getDefaultWriteParam();
       if (iwp.canWriteCompressed()) {
@@ -418,10 +418,10 @@ export default class ImageUtils {
   }
 
   static getJpegImageWriter() {
-    if (jpegImageWriter !== null) return jpegImageWriter;
+    if (this.jpegImageWriter !== null) return this.jpegImageWriter;
     const writers = ImageIO.getImageWritersByFormatName('jpg');
-    jpegImageWriter = writers.next().value;
-    return jpegImageWriter;
+    this.jpegImageWriter = writers.next().value;
+    return this.jpegImageWriter;
   }
 
 
