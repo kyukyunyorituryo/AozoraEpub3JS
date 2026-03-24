@@ -5,7 +5,7 @@ import LogAppender from '../util/LogAppender.js';
 import * as Jimp from 'jimp';
 
 export default class ImageUtils {
- /** 4bitグレースケール時のRGB階調カラーモデル Singleton */
+  /** 4bitグレースケール時のRGB階調カラーモデル Singleton */
   static GRAY16_COLOR_MODEL;
   /** 8bitグレースケール時のRGB階調カラーモデル Singleton */
   static GRAY256_COLOR_MODEL;
@@ -63,25 +63,25 @@ export default class ImageUtils {
 
   /** ストリームから画像を読み込み */
   static async readImage(ext, is) {
-      const image = await Jimp.read(is)
+    const image = await Jimp.read(is)
     return image;
   }
 
-	/** 大きすぎる画像は縮小して出力
-	 * @param is 画像の入力ストリーム srcImageがあれば利用しないのでnull
-	 * @param srcImage 読み込み済の場合は画像をこちらに設定 nullならisから読み込む
-	 * @param zos 出力先Zipストリーム
-	 * @param imageInfo 画像情報
-	 * @param jpegQuality jpeg画質 (低画質 0.0-1.0 高画質)
-	 * @param maxImagePixels 縮小する画素数
-	 * @param maxImageW 縮小する画像幅
-	 * @param maxImageH 縮小する画像高さ
-	 * @param dispW 画面幅 余白除去後の縦横比補正用
-	 * @param dispH 画面高さ 余白除去後の縦横比補正用
-	 * @param autoMarginLimitH 余白除去 最大%
-	 * @param autoMarginLimitV 余白除去 最大%
-	 * @param autoMarginWhiteLevel 白画素として判別する白さ 100が白
-	 * @param autoMarginPadding 余白除去後に追加するマージン */
+  /** 大きすぎる画像は縮小して出力
+   * @param is 画像の入力ストリーム srcImageがあれば利用しないのでnull
+   * @param srcImage 読み込み済の場合は画像をこちらに設定 nullならisから読み込む
+   * @param zos 出力先Zipストリーム
+   * @param imageInfo 画像情報
+   * @param jpegQuality jpeg画質 (低画質 0.0-1.0 高画質)
+   * @param maxImagePixels 縮小する画素数
+   * @param maxImageW 縮小する画像幅
+   * @param maxImageH 縮小する画像高さ
+   * @param dispW 画面幅 余白除去後の縦横比補正用
+   * @param dispH 画面高さ 余白除去後の縦横比補正用
+   * @param autoMarginLimitH 余白除去 最大%
+   * @param autoMarginLimitV 余白除去 最大%
+   * @param autoMarginWhiteLevel 白画素として判別する白さ 100が白
+   * @param autoMarginPadding 余白除去後に追加するマージン */
   /** ファイルまたはURLの文字列から画像を読み込む
    * 読み込めなければnull */
   static async writeImage(
@@ -360,8 +360,8 @@ export default class ImageUtils {
       console.error(e);
     }
   }
-	/** 画像を出力 マージン指定があればカット
-	 * //@param margin カットするピクセル数(left, top, right, bottom) */
+  /** 画像を出力 マージン指定があればカット
+   * //@param margin カットするピクセル数(left, top, right, bottom) */
   static async _writeImage(zos, srcImage, ext, jpegQuality) {
     if (ext === 'png') {
       /*//PNGEncoder kindlegenでエラーになるのと色が反映されない
@@ -424,15 +424,15 @@ export default class ImageUtils {
   }
 
 
-	/** 余白の画素数取得  左右のみずれ調整
-	 * @param image 余白を検出する画像
-	 * @param limitH 余白のサイズ横 0.0-1.0
-	 * @param limitV 余白のサイズ縦 0.0-1.0
-	 * @param whiteLevel 余白と判別する白レベル
-	 * @param startPixel 余白をチェック開始しする位置 初回が余白なら中へ違えば外が余白になるまで増やす
-	 * @param ignoreEdge 行列のチェック時に両端を無視するピクセル数
-	 * @param dustSize ゴミのピクセルサイズ
-	 * @return 余白画素数(left, top, right, bottom) */
+  /** 余白の画素数取得  左右のみずれ調整
+   * @param image 余白を検出する画像
+   * @param limitH 余白のサイズ横 0.0-1.0
+   * @param limitV 余白のサイズ縦 0.0-1.0
+   * @param whiteLevel 余白と判別する白レベル
+   * @param startPixel 余白をチェック開始しする位置 初回が余白なら中へ違えば外が余白になるまで増やす
+   * @param ignoreEdge 行列のチェック時に両端を無視するピクセル数
+   * @param dustSize ゴミのピクセルサイズ
+   * @return 余白画素数(left, top, right, bottom) */
 
   static getPlainMargin(image, limitH, limitV, whiteLevel, padding, startPixel, ignoreEdge, dustSize, nombreType, nombreSize) {
     const margin = [0, 0, 0, 0]; // left, top, right, bottom
@@ -619,12 +619,12 @@ export default class ImageUtils {
     return margin;
   }
 
-	/** 指定範囲の白い画素数の比率を返す
-	 * @param image 比率をチェックする画像
-	 * @param w 比率をチェックする幅
-	 * @param offsetY 画像内の縦位置
-	 * @param limitPixel これよりも黒部分が多かったら終了 値はlimit+1が帰る
-	 * @return 白画素の比率 0.0-1.0 */
+  /** 指定範囲の白い画素数の比率を返す
+   * @param image 比率をチェックする画像
+   * @param w 比率をチェックする幅
+   * @param offsetY 画像内の縦位置
+   * @param limitPixel これよりも黒部分が多かったら終了 値はlimit+1が帰る
+   * @return 白画素の比率 0.0-1.0 */
   static getColoredPixelsH(image, w, offsetY, rgbLimit, limitPixel, ignoreEdgeL, ignoreEdgeR, dustSize) {
     // 白でないピクセル数
     let coloredPixels = 0;
@@ -743,16 +743,16 @@ export default class ImageUtils {
   }
 
 }
-  
-  // Usage example
-  /*
-  (async () => {
-    const imageUrl = "https://example.com/image.png";
-    const canvas = await ImageUtils.loadImage(imageUrl);
-    if (canvas) {
-      document.body.appendChild(canvas);
-    } else {
-      console.log("Image could not be loaded.");
-    }
-  })();
+
+// Usage example
+/*
+(async () => {
+  const imageUrl = "https://example.com/image.png";
+  const canvas = await ImageUtils.loadImage(imageUrl);
+  if (canvas) {
+    document.body.appendChild(canvas);
+  } else {
+    console.log("Image could not be loaded.");
+  }
+})();
 */ 
