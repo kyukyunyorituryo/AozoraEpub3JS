@@ -233,7 +233,7 @@ export default class ImageUtils {
               const filterdImage = new BufferedImage(srcImage.width, srcImage.height, BufferedImage.TYPE_INT_RGB);
               srcImage = gammaOp.filter(srcImage, filterdImage);
             }
-            await this._writeImage(zos, srcImage, ext, jpegQuality);
+            await this._writeImage(srcImage, ext, jpegQuality);
             imageInfo.setOutWidth(srcImage.width);
             imageInfo.setOutHeight(srcImage.height);
             if (imageInfo.rotateAngle !== 0) {
@@ -345,7 +345,7 @@ export default class ImageUtils {
             outImage = filterdImage;
           }
         }
-        await this._writeImage(zos, outImage, ext, jpegQuality);
+        await this._writeImage(outImage, ext, jpegQuality);
         imageInfo.setOutWidth(outImage.width);
         imageInfo.setOutHeight(outImage.height);
         if (scale < 1) {
@@ -362,7 +362,7 @@ export default class ImageUtils {
   }
   /** 画像を出力 マージン指定があればカット
    * //@param margin カットするピクセル数(left, top, right, bottom) */
-  static async _writeImage(zos, srcImage, ext, jpegQuality) {
+  static async _writeImage(srcImage, ext, jpegQuality) {
     if (ext === 'png') {
       /*//PNGEncoder kindlegenでエラーになるのと色が反映されない
       PngEncoder pngEncoder = new PngEncoder();
