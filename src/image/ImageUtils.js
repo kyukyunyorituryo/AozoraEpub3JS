@@ -2,7 +2,7 @@
 //import com.github.hmdev.util.LogAppender;
 import ImageInfo from '../info/ImageInfo.js';
 import LogAppender from '../util/LogAppender.js';
-import * as Jimp from 'jimp';
+import { Jimp } from "jimp";
 
 export default class ImageUtils {
   /** 4bitグレースケール時のRGB階調カラーモデル Singleton */
@@ -345,7 +345,7 @@ export default class ImageUtils {
             outImage = filterdImage;
           }
         }
-        await this._writeImage(outImage, ext, jpegQuality);
+        const buffer = await this._writeImage(outImage, ext, jpegQuality);
         imageInfo.setOutWidth(outImage.width);
         imageInfo.setOutHeight(outImage.height);
         if (scale < 1) {
@@ -353,7 +353,7 @@ export default class ImageUtils {
           if (imageInfo.rotateAngle !== 0) LogAppender.append('回転');
           LogAppender.println(`: ${imageInfo.getOutFileName()} (${w},${h})→(${scaledW},${scaledH})`);
         }
-        zos.flush();
+        return buffer
       }
     } catch (e) {
       LogAppender.println(`画像読み込みエラー: ${imageInfo.getOutFileName()}`);
@@ -363,46 +363,60 @@ export default class ImageUtils {
   /** 画像を出力 マージン指定があればカット
    * //@param margin カットするピクセル数(left, top, right, bottom) */
   static async _writeImage(srcImage, ext, jpegQuality) {
-    if (ext === 'png') {
-      /*//PNGEncoder kindlegenでエラーになるのと色が反映されない
-      PngEncoder pngEncoder = new PngEncoder();
-      int pngColorType = PngEncoder.COLOR_TRUECOLOR;
-      switch (srcImage.getType()) {
-      case BufferedImage.TYPE_BYTE_BINARY:
-        pngColorType = PngEncoder.COLOR_INDEXED; break;
-      case BufferedImage.TYPE_BYTE_INDEXED:
-        pngColorType = PngEncoder.COLOR_INDEXED; break;
-      case BufferedImage.TYPE_BYTE_GRAY:
-        pngColorType = PngEncoder.COLOR_GRAYSCALE; break;
-      }
-      pngEncoder.setColorType(pngColorType);
-      pngEncoder.setCompression(PngEncoder.BEST_COMPRESSION);
-      pngEncoder.setIndexedColorMode(PngEncoder.INDEXED_COLORS_AUTO);
-      pngEncoder.encode(srcImage, zos);
-      */
-      // ImageIO.write(srcImage, "PNG", zos);
-      const imageWriter = ImageUtils.getPngImageWriter();
-      imageWriter.setOutput(await ImageIO.createImageOutputStream(zos));
-      await imageWriter.write(srcImage);
-    } else if (ext === 'jpeg' || ext === 'jpg') {
-      const imageWriter = ImageUtils.getJpegImageWriter();
-      imageWriter.setOutput(await ImageIO.createImageOutputStream(zos));
-      const iwp = imageWriter.getDefaultWriteParam();
-      if (iwp.canWriteCompressed()) {
-        try {
-          iwp.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
-          iwp.setCompressionQuality(jpegQuality);
-          await imageWriter.write(null, new IIOImage(srcImage, null, null), iwp);
-        } catch (e) {
-          console.error(e);
-        }
-      } else {
-        await imageWriter.write(srcImage);
-      }
+    let image = srcImage;
+
+    // 念のため clone（元画像破壊防止）
+    if (srcImage && srcImage.bitmap) {
+      // Jimpっぽいオブジェクト
+      image = srcImage.clone();
     } else {
-      await ImageIO.write(srcImage, ext, zos);
+      // Bufferなど → Jimpに変換
+      image = await Jimp.read(srcImage);
     }
-    await zos.flush();
+
+    // 出力フォーマット決定
+    let mime;
+    let buffer
+    if (ext === "jpg" || ext === "jpeg") {
+      mime = "image/jpeg";
+      buffer=await image.getBuffer('image/jpeg', { quality: Math.round(jpegQuality * 100) });
+      //image.quality(jpegQuality ?? Math.round(jpegQuality * 100));
+    } else if (ext === "png") {
+      mime = "image/png";
+    } else {
+      // fallback
+      mime = "image/jpeg";
+      image.quality(jpegQuality ?? Math.round(jpegQuality * 100));
+    }
+
+    return buffer;
+    /*
+        //----------------------------------------
+        // フォーマット別出力
+        //----------------------------------------
+        if (ext === "png") {
+    
+          return await image.getBufferAsync(Jimp.MIME_PNG);
+    
+        } else if (ext === "jpeg" || ext === "jpg") {
+          image.png({ quality: 80 })
+    
+          image.quality(Math.round(jpegQuality * 100));
+          return await image.getBufferAsync(Jimp.MIME_JPEG);
+    
+        } else if (ext === "webp") {
+    
+          // JimpはWebP未対応（環境依存）
+          // fallbackとしてJPEGで出すかPNGにする
+          image.quality(Math.round(jpegQuality * 100));
+          return await image.getBufferAsync(Jimp.MIME_JPEG);
+    
+        } else {
+    
+          // 不明フォーマット → PNG fallback
+          return await image.getBufferAsync(Jimp.MIME_PNG);
+        }
+    */
   }
 
   static getPngImageWriter() {
