@@ -187,7 +187,7 @@ export default class ImageUtils {
       if (scale >= 1 && (!gammaOp || srcImage.type === BufferedImage.TYPE_INT_RGB)) {
         if (!srcImage) {
           // 変更なしならそのままファイル出力
-          is.pipe(zos);
+          return is
         } else {
           if (!margin && imgBuf && imageInfo.rotateAngle === 0) {
             // 余白除去が無く画像も編集されていなければバッファからそのまま出力
