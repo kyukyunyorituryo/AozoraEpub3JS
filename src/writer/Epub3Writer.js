@@ -907,10 +907,14 @@ export default class Epub3Writer {
 
     /** 表紙画像を出力 編集済の画像なのでリサイズしない */
     async writeCoverImage(srcImage, imageInfo) {
+        //画像処理はまだ書いていない
+        return srcImage
+        /*
         imageInfo.rotateAngle = 0; // 回転させない
         return await ImageUtils.writeImage(null, srcImage, imageInfo, this.jpegQuality, this.gammaOp,
             0, 0, 0, this.dispW, this.dispH,
             0, 0, 0, 0, 0, 0);
+            */
     }
 
     /** 表紙画像を出力 */
@@ -923,9 +927,12 @@ export default class Epub3Writer {
 
     /** 画像を出力 */
     async writeImage(is, imageInfo) {
+        return is
+        /*
         return await ImageUtils.writeImage(is, null, imageInfo, this.jpegQuality, this.gammaOp,
             this.maxImagePixels, this.maxImageW, this.maxImageH, this.dispW, this.dispH,
             this.autoMarginLimitH, this.autoMarginLimitV, this.autoMarginWhiteLevel, this.autoMarginPadding, this.autoMarginNombre, this.autoMarginNombreSize);
+            */
     }
 
     /** 画像を出力 */
