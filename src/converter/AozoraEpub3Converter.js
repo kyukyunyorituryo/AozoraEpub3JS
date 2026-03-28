@@ -1944,7 +1944,7 @@ export default class AozoraEpub3Converter {
             if (srcFilePath !== null) {
               // 外字の場合 (注記末尾がフラグ文字列になっている)
               if (chukiTag.endsWith("#GAIJI#］")) {
-                let fileName = this.writer.getImageFilePath(srcFilePath.trim(), -1);
+                let fileName = this.writer.getImageFilePath(srcFilePath.trim(), -1, this.bookInfo);
                 switch (orient) {
                   case 0:
                     buf.push(this.chukiMap.get("外字画像")[0].replace("%s", fileName));
@@ -2388,7 +2388,7 @@ export default class AozoraEpub3Converter {
                 // 外字の場合 (注記末尾がフラグ文字列になっている)
                 if (chukiTag.endsWith("#GAIJI#］")) {
                   const orient = this.writer.getImageOrientation(srcFilePath);
-                  const imgFileName = this.writer.getImageFilePath(srcFilePath.trim(), lineNum);
+                  const imgFileName = this.writer.getImageFilePath(srcFilePath.trim(), lineNum, this.bookInfo);
                   if (imgFileName != null) {
                     switch (orient) {
                       case 0:
@@ -2408,7 +2408,7 @@ export default class AozoraEpub3Converter {
                   if (this.noIllust && !this.writer.isCoverImage()) {
                     LogAppender.info(lineNum, "挿絵除外", chukiTag);
                   } else {
-                    const dstFileName = this.writer.getImageFilePath(srcFilePath, lineNum);
+                    const dstFileName = this.writer.getImageFilePath(srcFilePath, lineNum, this.bookInfo);
                     const altText = this.writer.getAlt(srcFilePath);
                     if (dstFileName != null) { // 先頭に移動してここで出力しない場合はnull
                       if (this.bookInfo.isImageSectionLine(lineNum)) noBr = true;
@@ -2432,7 +2432,7 @@ export default class AozoraEpub3Converter {
                 LogAppender.error(lineNum, "画像注記エラー", chukiTag);
               } else {
                 // 単ページ画像の場合は<p>タグを出さない
-                const dstFileName = this.writer.getImageFilePath(srcFilePath.trim(), lineNum);
+                const dstFileName = this.writer.getImageFilePath(srcFilePath.trim(), lineNum, this.bookInfo);
                 if (dstFileName != null) { // 先頭に移動してここで出力しない場合はnull
                   if (this.bookInfo.isImageSectionLine(lineNum)) noBr = true;
                   // 画像注記またはページ出力
@@ -2791,7 +2791,7 @@ export default class AozoraEpub3Converter {
     let inRuby = false;
     let rubyCharType = RubyCharType.NULL;
 
-    const rubyStartChuki =  this.chukiMap.get("ルビ開始")[0];
+    const rubyStartChuki = this.chukiMap.get("ルビ開始")[0];
     const rubyEndChuki = this.chukiMap.get("ルビ終了")[0];
 
     let noTcy = false;

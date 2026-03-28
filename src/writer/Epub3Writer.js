@@ -1055,7 +1055,7 @@ export default class Epub3Writer {
      * 変更前と変更後のファイル名はimageFileNamesに格納される (images/0001.jpg)
      * @return {string|null} 画像タグを出力しない場合は null
      *  */
-    async getImageFilePath(srcImageFileName, lineNum) {
+    async getImageFilePath(srcImageFileName, lineNum, bookInfo) {
         let isCover = false;
 
         let imageInfo = await this.imageInfoReader.getImageInfo(srcImageFileName);
@@ -1082,7 +1082,7 @@ export default class Epub3Writer {
                 this.imageInfos.push(imageInfo);
                 this.outImageFileNames.add(srcImageFileName);
 
-                if (this.imageIndex - 1 === this.bookInfo.coverImageIndex) {
+                if (this.imageIndex - 1 === bookInfo.coverImageIndex) {
                     isCover = true;
                 }
             }
@@ -1094,7 +1094,7 @@ export default class Epub3Writer {
             imageInfo.setOutFileName?.(outImageFileName);
 
             // 先頭に表紙ページ移動の場合でカバーページならnullを返して本文中から削除
-            if (this.bookInfo.insertCoverPage && isCover) {
+            if (bookInfo.insertCoverPage && isCover) {
                 return null;
             }
 
