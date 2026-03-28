@@ -894,7 +894,7 @@ export default class Epub3Writer {
                     }
                 }
                 const fis = fs.readFileSync(path.resolve(imageFile));
-                this.zos.file(Epub3Writer.OPS_PATH + this.IMAGES_PATH + imageInfo.getOutFileName(), is, {
+                this.zos.file(Epub3Writer.OPS_PATH + Epub3Writer.IMAGES_PATH + imageInfo.getOutFileName(), is, {
                     compression: "DEFLATE",
                     compressionOptions: { level: 9 }
                 });
@@ -1098,7 +1098,7 @@ export default class Epub3Writer {
                 return null;
             }
 
-            return `../${IMAGES_PATH}${outImageFileName}`;
+            return `../${Epub3Writer.IMAGES_PATH}${outImageFileName}`;
         } else {
             LogAppender.warn(lineNum, "画像ファイルなし", srcImageFileName);
         }
