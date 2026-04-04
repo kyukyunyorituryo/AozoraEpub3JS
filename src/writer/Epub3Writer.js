@@ -796,7 +796,7 @@ export default class Epub3Writer {
             for (let srcImageFileName of imageInfoReader.getImageFileNames()) {
                 srcImageFileName = imageInfoReader.correctExt(srcImageFileName); // 拡張子修正
                 if (this.outImageFileNames.has(srcImageFileName)) {
-                    const imageInfo = imageInfoReader.getImageInfo(srcImageFileName);
+                    const imageInfo = await imageInfoReader.getImageInfo(srcImageFileName);
                     if (!imageInfo) {
                         LogAppender.println(`[WARN] 画像ファイルなし: ${srcImageFileName}`);
                     } else {
@@ -804,6 +804,7 @@ export default class Epub3Writer {
                         if (fs.existsSync(imageFile)) {
                             const fis = fs.readFileSync(path.resolve(imageFile));
                             const buffer = await this.writeImage(fis, imageInfo);
+
                             this.zos.file(`${Epub3Writer.OPS_PATH}${Epub3Writer.IMAGES_PATH}${imageInfo.getOutFileName()}`, buffer, {
                                 compression: "DEFLATE",
                                 compressionOptions: { level: 9 }
@@ -879,7 +880,7 @@ export default class Epub3Writer {
     /** アーカイブ内の画像を出力 */
     async writeArchiveImage(srcImageFileName, is) {
         srcImageFileName = this.imageInfoReader.correctExt(srcImageFileName); // 拡張子修正
-        const imageInfo = this.imageInfoReader.getImageInfo(srcImageFileName);
+        const imageInfo = await this.imageInfoReader.getImageInfo(srcImageFileName);
         // Zip内テキストの場合はidと出力ファイル名が登録されていなければ出力しない。
         if (imageInfo) {
             if (imageInfo.getId()) {
@@ -1063,7 +1064,7 @@ export default class Epub3Writer {
         if (!imageInfo) {
             const altImageFileName = this.imageInfoReader.correctExt(srcImageFileName);
             if (altImageFileName) {
-                imageInfo = this.imageInfoReader.getImageInfo(altImageFileName);
+                imageInfo = await this.imageInfoReader.getImageInfo(altImageFileName);
                 if (imageInfo) {
                     LogAppender.warn(lineNum, "画像拡張子変更", srcImageFileName);
                     srcImageFileName = altImageFileName;
@@ -1121,7 +1122,7 @@ export default class Epub3Writer {
     async getImagePageType(srcFilePath, tagLevel, lineNum, hasCaption) {
         let imageInfo = await this.imageInfoReader.getImageInfo(srcFilePath);
         // 拡張子修正
-        if (imageInfo === null) imageInfo = this.imageInfoReader.getImageInfo(this.imageInfoReader.correctExt(srcFilePath));
+        if (imageInfo === null) imageInfo = await this.imageInfoReader.getImageInfo(this.imageInfoReader.correctExt(srcFilePath));
 
         if (imageInfo === null) return PageBreakType.IMAGE_PAGE_NONE;
 

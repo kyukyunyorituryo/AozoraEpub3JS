@@ -1204,7 +1204,7 @@ export default class AozoraEpub3Converter {
    * @param {string} src              入力全文テキスト
    * @param {BookInfo} bookInfo
    */
-  convertTextToEpub3(out, src, bookInfo) {
+  async convertTextToEpub3(out, src, bookInfo) {
 
     try {
 
@@ -1293,7 +1293,7 @@ export default class AozoraEpub3Converter {
                 const targetOut =
                   this.lineNum <= lastZeroTagLevelLineNum ? orgOut : out;
 
-                this.convertTextLineToEpub3(
+                await this.convertTextLineToEpub3(
                   targetOut,
                   preTitleBuf[i++],
                   this.lineNum,
@@ -1381,36 +1381,36 @@ export default class AozoraEpub3Converter {
 
         if (this.lineNum === bookInfo.titleLine) {
           this.printLineBuffer(out, chuki("表題前"), -1, true);
-          this.convertTextLineToEpub3(out, line, this.lineNum, false, noImage);
+          await this.convertTextLineToEpub3(out, line, this.lineNum, false, noImage);
           this.printLineBuffer(out, chuki("表題後"), -1, true);
 
         } else if (this.lineNum === bookInfo.orgTitleLine) {
           this.printLineBuffer(out, chuki("原題前"), -1, true);
-          this.convertTextLineToEpub3(out, line, this.lineNum, false, noImage);
+          await this.convertTextLineToEpub3(out, line, this.lineNum, false, noImage);
           this.printLineBuffer(out, chuki("原題後"), -1, true);
 
         } else if (this.lineNum === bookInfo.subTitleLine) {
           this.printLineBuffer(out, chuki("副題前"), -1, true);
-          this.convertTextLineToEpub3(out, line, this.lineNum, false, noImage);
+          await this.convertTextLineToEpub3(out, line, this.lineNum, false, noImage);
           this.printLineBuffer(out, chuki("副題後"), -1, true);
 
         } else if (this.lineNum === bookInfo.subOrgTitleLine) {
           this.printLineBuffer(out, chuki("副原題前"), -1, true);
-          this.convertTextLineToEpub3(out, line, this.lineNum, false, noImage);
+          await this.convertTextLineToEpub3(out, line, this.lineNum, false, noImage);
           this.printLineBuffer(out, chuki("副原題後"), -1, true);
 
         } else if (this.lineNum === bookInfo.creatorLine) {
           this.printLineBuffer(out, chuki("著者前"), -1, true);
-          this.convertTextLineToEpub3(out, line, this.lineNum, false, noImage);
+          await this.convertTextLineToEpub3(out, line, this.lineNum, false, noImage);
           this.printLineBuffer(out, chuki("著者後"), -1, true);
 
         } else if (this.lineNum === bookInfo.subCreatorLine) {
           this.printLineBuffer(out, chuki("副著者前"), -1, true);
-          this.convertTextLineToEpub3(out, line, this.lineNum, false, noImage);
+          await this.convertTextLineToEpub3(out, line, this.lineNum, false, noImage);
           this.printLineBuffer(out, chuki("副著者後"), -1, true);
 
         } else {
-          this.convertTextLineToEpub3(out, line, this.lineNum, false, noImage);
+          await this.convertTextLineToEpub3(out, line, this.lineNum, false, noImage);
         }
 
         ////////////////////////////////
@@ -1977,7 +1977,7 @@ export default class AozoraEpub3Converter {
  * @param out 出力先Writer
  * @param line 変換前の行文字列
  * @param noBr 改行を出力しない */
-  convertTextLineToEpub3(out, line, lineNum, noBr, noImage) {
+  async convertTextLineToEpub3(out, line, lineNum, noBr, noImage) {
     let buf = [];
 
     // 外字変換後に前方参照注記変換
@@ -2408,7 +2408,8 @@ export default class AozoraEpub3Converter {
                   if (this.noIllust && !this.writer.isCoverImage()) {
                     LogAppender.info(lineNum, "挿絵除外", chukiTag);
                   } else {
-                    const dstFileName = this.writer.getImageFilePath(srcFilePath, lineNum, this.bookInfo);
+                    const dstFileName = await this.writer.getImageFilePath(srcFilePath, lineNum, this.bookInfo);
+                    console.log(dstFileName)
                     const altText = this.writer.getAlt(srcFilePath);
                     if (dstFileName != null) { // 先頭に移動してここで出力しない場合はnull
                       if (this.bookInfo.isImageSectionLine(lineNum)) noBr = true;
