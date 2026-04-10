@@ -8,7 +8,8 @@ export default class ImageInfo {
   constructor(ext, width, height) {
     this.id = null;                // ファイルID
     this.outFileName = null;       // 出力ファイル名
-    this.ext = ext ? ext.toLowerCase() : null;
+
+    this.setExt(ext);
 
     this.width = width ?? -1;
     this.height = height ?? -1;
@@ -37,12 +38,20 @@ export default class ImageInfo {
     try {
       const metadata = await sharp(input).metadata();
 
-      if (!metadata || !metadata.format) return null;
+      if (!metadata) return null;
+
+      // formatが取れないケース対策
+      let format = metadata.format;
+
+      if (!format) {
+        // fallback: jpeg扱い
+        format = "jpeg";
+      }
 
       return new ImageInfo(
-        metadata.format,      // png jpeg webp gif avif など
-        metadata.width,
-        metadata.height
+        format,
+        metadata.width ?? -1,
+        metadata.height ?? -1
       );
 
     } catch (e) {
@@ -75,18 +84,46 @@ export default class ImageInfo {
     this.outFileName = file;
   }
 
+  /** 拡張子を正規化してセット */
   setExt(ext) {
-    this.ext = ext?.toLowerCase();
+    if (!ext) {
+      this.ext = null;
+      return;
+    }
+
+    ext = ext.toLowerCase();
+
+    // 正規化
+    if (ext === "jpeg") ext = "jpg";
+
+    this.ext = ext;
   }
 
   getExt() {
     return this.ext;
   }
 
-  /** mime形式(image/png)を返す */
+  /** MIME形式を返す（image/jpegなど） */
   getFormat() {
     if (!this.ext) return null;
-    return "image/" + (this.ext === "jpg" ? "jpeg" : this.ext);
+
+    switch (this.ext) {
+      case "jpg":
+      case "jpeg":
+        return "image/jpeg";
+      case "png":
+      case "webp":
+      case "gif":
+      case "avif":
+        return "image/" + this.ext;
+      default:
+        return "image/" + this.ext;
+    }
+  }
+
+  /** Java互換：formatプロパティとしてもアクセス可能 */
+  get format() {
+    return this.getFormat();
   }
 
   getIsCover() {
