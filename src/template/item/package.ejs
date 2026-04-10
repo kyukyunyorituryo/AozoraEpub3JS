@@ -95,7 +95,7 @@
     <% }) -%>
 <% } -%>
 <% for(var i = 0; i < vecGaijiInfo.length; i++) { -%>
-        <item id="gaiji_<%= i + 1 -%>" href="gaiji/<%= vecGaijiInfo[i].FileName -%>" media-type="application/font-sfnt"/>
+        <item id="gaiji_<%= i + 1 -%>" href="gaiji/<%= vecGaijiInfo[i].getFileName() -%>" media-type="application/font-sfnt"/>
 <% }; -%>
         <item href="toc.ncx" id="ncx" media-type="application/x-dtbncx+xml"/>
     </manifest>

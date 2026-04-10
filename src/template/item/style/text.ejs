@@ -43,11 +43,11 @@ html.vrtl {
 /** 外字フォント */
 <% vecGaijiInfo.forEach(gaijiInfo => { %>
 @font-face {
-    font-family: "<%= gaijiInfo.ClassName %>";
-    src: url(../gaiji/<%= gaijiInfo.FileName %>);
+    font-family: "<%= gaijiInfo.className %>";
+    src: url(../gaiji/<%= gaijiInfo.getFileName() %>);
 }
-.<%= gaijiInfo.ClassName %> {
-    font-family: "<%= gaijiInfo.ClassName %>";
+.<%= gaijiInfo.className %> {
+    font-family: "<%= gaijiInfo.className %>";
 }
 <% }); %>
 
