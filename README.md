@@ -2,7 +2,7 @@
 [AozoraEpub3](https://github.com/kyukyunyorituryo/AozoraEpub3)のJavaScriptに移植版
 
 ### 現状
-現状はepubファイルが生成されるが目次が出力されない。ChapterInfoを書き込むAozoraEpub3Converter.jsないが原因だと思われる。
+EPUBチェックを通過するepubファイルが生成される。
 ### 目標
 * CLIの部分をnode.jsで書いて動作を可能にしたい
 * rollupでjsやフォントなどまとめてブラウザ上で動かしたい
