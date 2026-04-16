@@ -23,7 +23,7 @@
 <body class="p-titlepage<%= kindle_cls -%>">
   <div class="main vrtl block-align-center">
     <% if (PUBLISHER) { -%>
-      <div class="publisher"><%= PUBLISHER -%></div>
+      <div class="publisher"><%- PUBLISHER -%></div>
       <br/>
     <% } -%>
 
@@ -36,24 +36,24 @@
 
     <div class="book-title start-2em">
       <% if (SERIES) { -%>
-        <div class="series book-title-before"><p><%= SERIES -%></p></div>
+        <div class="series book-title-before"><p><%- SERIES -%></p></div>
       <% } -%>
-      <div class="title book-title-main"><p><%= TITLE -%></p></div>
+      <div class="title book-title-main"><p><%- TITLE -%></p></div>
       <% if (ORGTITLE) { -%>
-        <div class="orgtitle pt1"><%= ORGTITLE -%></div>
+        <div class="orgtitle pt1"><%- ORGTITLE -%></div>
       <% } -%>
       <% if (SUBTITLE) { -%>
-        <div class="subtitle pt1"><%= SUBTITLE -%></div>
+        <div class="subtitle pt1"><%- SUBTITLE -%></div>
       <% } -%>
       <% if (SUBORGTITLE) { -%>
-        <div class="suborgtitle pt2"><%= SUBORGTITLE -%></div>
+        <div class="suborgtitle pt2"><%- SUBORGTITLE -%></div>
       <% } -%>
     </div>
     <% if (CREATOR) { -%>
-      <div class="creator btm pb2 author"><%= CREATOR -%></div>
+      <div class="creator btm pb2 author"><%- CREATOR -%></div>
     <% } -%>
     <% if (SUBCREATOR) { -%>
-      <div class="subcreator btm pb2 author"><%= SUBCREATOR -%></div>
+      <div class="subcreator btm pb2 author"><%- SUBCREATOR -%></div>
     <% } -%>
   </div>
 </body>

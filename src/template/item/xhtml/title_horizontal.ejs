@@ -17,30 +17,30 @@
     <div class="book-title">
       <% if (SERIES) { -%>
       <div class="book-title-before">
-        <p><%= SERIES %></p>
+        <p><%- SERIES %></p>
       </div>
       <% } -%>
       <div class="book-title-main">
-        <p><%= TITLE -%></p>
+        <p><%- TITLE -%></p>
       </div>
       <% if (SUBTITLE) { -%>
       <div class="book-title-after">
-        <p><%= SUBTITLE -%></p>
+        <p><%- SUBTITLE -%></p>
       </div>
       <% } -%>
     </div>
 
     <div class="author">
       <% if (CREATOR) { -%>
-      <p><%= CREATOR %></p>
+      <p><%- CREATOR %></p>
       <% } -%>
       <% if (SUBCREATOR) { -%>
-      <p><%= SUBCREATOR %></p>
+      <p><%- SUBCREATOR %></p>
       <% } -%>
     </div>
     <% if (PUBLISHER) { -%>
     <div class="label">
-      <p class="label-name"><%= PUBLISHER %></p>
+      <p class="label-name"><%- PUBLISHER %></p>
     </div>
     <% } -%>
   </div>
