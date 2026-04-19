@@ -2409,7 +2409,6 @@ export default class AozoraEpub3Converter {
                     LogAppender.info(lineNum, "挿絵除外", chukiTag);
                   } else {
                     const dstFileName = await this.writer.getImageFilePath(srcFilePath, lineNum, this.bookInfo);
-                    console.log(dstFileName)
                     const altText = this.writer.getAlt(srcFilePath);
                     if (dstFileName != null) { // 先頭に移動してここで出力しない場合はnull
                       if (this.bookInfo.isImageSectionLine(lineNum)) noBr = true;
