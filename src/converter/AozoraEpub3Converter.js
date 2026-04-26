@@ -3773,7 +3773,7 @@ export default class AozoraEpub3Converter {
         this.pageBreakImageAuto.srcFileName = srcFileName;
         this.pageBreakImageAuto.dstFileName = dstFileName;
     }
-    this.printLineBuffer(out, buf, lineNum, true);
+    this.printLineBuffer(out, buf.join(""), lineNum, true);
 
     if (hasPageBreakTriger) this.setPageBreakTrigger(this.pageBreakNormal);
     else this.setPageBreakTrigger(this.pageBreakNoChapter);
