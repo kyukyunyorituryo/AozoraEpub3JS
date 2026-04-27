@@ -2184,7 +2184,7 @@ export default class AozoraEpub3Converter {
             } else {
               this.setPageBreakTrigger(this.pageBreakImageAuto);
               this.pageBreakImageAuto.srcFileName = this.bookInfo.getImageSectionFileName(lineNum + 1);
-              this.pageBreakImageAuto.imagePageType = this.writer.getImagePageType(
+              this.pageBreakImageAuto.imagePageType = await this.writer.getImagePageType(
                 this.pageBreakTrigger.srcFileName,
                 this.tagLevel,
                 lineNum,
@@ -2387,8 +2387,8 @@ export default class AozoraEpub3Converter {
                 }
                 // 外字の場合 (注記末尾がフラグ文字列になっている)
                 if (chukiTag.endsWith("#GAIJI#］")) {
-                  const orient = this.writer.getImageOrientation(srcFilePath);
-                  const imgFileName = this.writer.getImageFilePath(srcFilePath.trim(), lineNum, this.bookInfo);
+                  const orient = await this.writer.getImageOrientation(srcFilePath);
+                  const imgFileName = await this.writer.getImageFilePath(srcFilePath.trim(), lineNum, this.bookInfo);
                   if (imgFileName != null) {
                     switch (orient) {
                       case 0:
@@ -2432,7 +2432,7 @@ export default class AozoraEpub3Converter {
                 LogAppender.error(lineNum, "画像注記エラー", chukiTag);
               } else {
                 // 単ページ画像の場合は<p>タグを出さない
-                const dstFileName = this.writer.getImageFilePath(srcFilePath.trim(), lineNum, this.bookInfo);
+                const dstFileName = await this.writer.getImageFilePath(srcFilePath.trim(), lineNum, this.bookInfo);
                 if (dstFileName != null) { // 先頭に移動してここで出力しない場合はnull
                   if (this.bookInfo.isImageSectionLine(lineNum)) noBr = true;
                   // 画像注記またはページ出力
@@ -2613,7 +2613,7 @@ export default class AozoraEpub3Converter {
       hasCaption
     );
     //サイズを%で指定 倍率指定が無効または画像が小さいなら0
-    const ratio = this.writer.getImageWidthRatio(srcFileName, hasCaption);
+    const ratio = await this.writer.getImageWidthRatio(srcFileName, hasCaption);
 
     const getTpl = (key) => this.chukiMap.get(key)[0];
 
