@@ -2606,7 +2606,7 @@ export default class AozoraEpub3Converter {
     if (altText == null) altText = "";
     altText = escapeHtml(altText);
 
-    const imagePageType = this.writer.getImagePageType(
+    const imagePageType = await this.writer.getImagePageType(
       srcFileName,
       this.tagLevel,
       lineNum,
